@@ -8,7 +8,6 @@
 /*
 Offen:
 - Funktionen in .h / .c Dateien auslagern (Webreader Zeitschrift)
-- einlesen vom analogen Signal
 - int und float nach USART senden
 */
 
@@ -24,12 +23,15 @@ Offen:
 #define UART_SETTING	((F_CPU/16UL/UART_BAUDRATE)-1) // (check data sheet for calculation)
 
 // declaration of functions
+// USART
 void USART_init(void);
 void USART_sendChar(unsigned char data);
 unsigned char USART_receive(void);
 void USART_writeString(char* StringPtr);
-void ADC_init();
-void ADC_startConversion();
+//ADC
+void ADC_init(void);
+uint16_t ADC_readAnalogPin(uint8_t channel);
+void ADC_startConversionAndWait();
 
 const float baselineTemp = 20.0;
 char baselineTempToChar[2];
@@ -42,7 +44,7 @@ int main(void)
     USART_init();
 	ADC_init();
 	
-	// set output pins for the three LEDs
+	// set output pins for the three LEDs (Data Direction Register)
 	DDRD = (1 << DDD2) | (1 << DDD3) | (1 << DDD4);
 	
 	// switch all LEDs off (ensure that the default value of 0 is set to the entire Port D)
@@ -57,7 +59,7 @@ int main(void)
     while(1)
     {
 		// read analog signal from temperature sensor (tmp36 - https://www.analog.com/media/en/technical-documentation/data-sheets/TMP35_36_37.pdf
-		uint16_t tempSensorValue = ADC; // should have values between 0 and 1023 (i.e. 10 bits)
+		uint16_t tempSensorValue = ADC_readAnalogPin(0); // result should have values between 0 and 1023 (i.e. 10 bits)
 		itoa(tempSensorValue, tempSensorValueToChar, 10);
 		USART_writeString("Sensor Value: ");
 		USART_writeString(tempSensorValueToChar);
@@ -74,9 +76,20 @@ int main(void)
 		USART_writeString(", degrees C: ");
 		USART_writeString(temperatureToChar);
 		
+		// switch on LEDs based on the temperature
+		if(temperature >= baselineTemp && temperature < baselineTemp+3) {
+			PORTD = 0x00 | (1 << PD2);
+		} else if (temperature >= baselineTemp+3 && temperature < baselineTemp+5) {
+			PORTD = 0x00 | (1 << PD2) | (1 << PD3);
+		} else if (temperature >= baselineTemp+5) {
+			PORTD = 0x00 | (1 << PD2) | (1 << PD3) | (1 << PD4);
+		} else {
+			PORTD = 0x00;
+		}
 		
 		USART_writeString("\r\n");
 		_delay_ms(5000);
+
     }
 }
 
@@ -131,10 +144,11 @@ void USART_writeString(char* StringPtr)
 	}
 }
 
-void ADC_init()
+// initialize the ADC
+void ADC_init(void)
 {
 	// REFS0 defines the reference voltage of 5V
-	// MUX3..0 within port ADMUX defines the input pin. As I use ADC0, all of them will stay with their default value of 0.
+	// MUX3..0 within port ADMUX defines the input pin.
 	ADMUX = (1 << REFS0);
 	
 	// ADEN set to 1 enables the ADC converter
@@ -143,12 +157,37 @@ void ADC_init()
 	ADCSRA = (1 << ADEN) | (1 << ADIE) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 	
 	// turn off the digital input register for analog pin 0. 
+	// this prevents from accidentally reading and processing the digital input signal from the analog pin.
 	DIDR0 = (1 << ADC0D);
 	
-	ADC_startConversion();
+	// after activation of the ADC a "Dummy-Readout" is recommended
+  	// ADC is initially being read, otherwise the result of the upcoming conversion will not be taken
+	ADC_startConversionAndWait();
+	(void) ADC;
 }
 
-void ADC_startConversion()
+/* ADC measurement for a single channel */
+uint16_t ADC_readAnalogPin(uint8_t channel)
 {
+	// select pin without changing other bits within ADMUX.
+	// pin selection for ATMega328P is only the bits 3..0
+	ADMUX = (ADMUX & ~(0x1F)) | (channel & 0x1F);
+	
+	ADC_startConversionAndWait();
+	
+	// read ADC and return value
+	return ADC;
+}
+
+
+
+// Start ADC conversion and wait until the conversion is completed
+void ADC_startConversionAndWait()
+{
+	// Start Conversion
 	ADCSRA |= (1 << ADSC);
+	
+	// wait until conversion is completed
+	while (ADCSRA & (1<<ADSC) ) {}
+	
 }
