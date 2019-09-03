@@ -8,36 +8,37 @@
 /*
 Offen:
 - Funktionen in .h / .c Dateien auslagern (Webreader Zeitschrift)
-- int und float nach USART senden
+- int und float nach USART senden (https://www.mikrocontroller.net/articles/FAQ#Aktivieren_der_Floating_Point_Version_von_sprintf_beim_WinAVR_mit_AVR-Studio)
 */
 
 #define F_CPU 16000000L
 #include <avr/io.h>
+#include <stdio.h>
 #include <util/delay.h>
 #include <stdlib.h>
-// #include <c:\users\michael\Documents\Atmel Studio\7.0\SerialMonitor\SerialMonitor\serial.h>
 
 // set baud rate
 #define UART_BAUDRATE	9600
 // calculate configuration parameter
 #define UART_SETTING	((F_CPU/16UL/UART_BAUDRATE)-1) // (check data sheet for calculation)
 
-// declaration of functions
+/* declaration of functions */
 // USART
 void USART_init(void);
 void USART_sendChar(unsigned char data);
 unsigned char USART_receive(void);
 void USART_writeString(char* StringPtr);
+// USART helper functions
+char* float2str(float floatValue);
+char* uint162char(uint16_t uint16Value);
 //ADC
 void ADC_init(void);
 uint16_t ADC_readAnalogPin(uint8_t channel);
 void ADC_startConversionAndWait();
 
-const float baselineTemp = 20.0;
-char baselineTempToChar[2];
-char tempSensorValueToChar[4];
-char voltageToChar[4];
-char temperatureToChar[2];
+/* program properties */
+const uint16_t baselineTemp = 20;
+
 
 int main(void)
 {
@@ -52,29 +53,25 @@ int main(void)
 	
 	// send initial welcoming message to TX
 	USART_writeString("Baseline temperature: ");
-	itoa(baselineTemp, baselineTempToChar, 10);
-	USART_writeString(baselineTempToChar);
+	USART_writeString(uint162char(baselineTemp));
 	USART_writeString("\r\n");
 	
     while(1)
     {
 		// read analog signal from temperature sensor (tmp36 - https://www.analog.com/media/en/technical-documentation/data-sheets/TMP35_36_37.pdf
 		uint16_t tempSensorValue = ADC_readAnalogPin(0); // result should have values between 0 and 1023 (i.e. 10 bits)
-		itoa(tempSensorValue, tempSensorValueToChar, 10);
 		USART_writeString("Sensor Value: ");
-		USART_writeString(tempSensorValueToChar);
+		USART_writeString(uint162char(tempSensorValue));
 		
-		// calculate ADC-value into volt
+		// calculate ADC-value into volt (see data sheet of temp sensor)
 		float voltage = 5.0 * (tempSensorValue/1024.0);
-		itoa(voltage, voltageToChar, 10);
 		USART_writeString(", Volts: ");
-		USART_writeString(voltageToChar);
-		
+        USART_writeString(float2str(1000.0F*voltage));
+ 		
 		// calculate voltage into temperature in degrees
-		float temperature = 100 * (voltage - 0.5);
-		itoa(temperature, temperatureToChar, 10);
-		USART_writeString(", degrees C: ");
-		USART_writeString(temperatureToChar);
+		float temperature = 100.0F * (voltage - 0.5F); // see data sheet of temp sensor
+		USART_writeString("mV, degrees C: ");
+		USART_writeString(float2str(temperature));
 		
 		// switch on LEDs based on the temperature
 		if(temperature >= baselineTemp && temperature < baselineTemp+3) {
@@ -143,6 +140,21 @@ void USART_writeString(char* StringPtr)
 		StringPtr++;
 	}
 }
+
+char* float2str(float floatValue)
+{
+	static char retnum[20];       // Enough for 20 digits
+	sprintf(retnum,"%d.%02d", (int)floatValue , (int) (100*((floatValue)-(int)floatValue)));
+	return retnum;
+}
+
+char* uint162char(uint16_t uint16Value)
+{
+    static char buffer[2];
+	itoa(uint16Value, buffer, 10);
+	return buffer;
+}
+
 
 // initialize the ADC
 void ADC_init(void)
