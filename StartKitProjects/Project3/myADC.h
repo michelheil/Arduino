@@ -10,7 +10,8 @@
 #define MYADC_H_
 
 void ADC_init(void);
-uint16_t ADC_readAnalogPin(uint8_t channel);
 void ADC_startConversionAndWait();
+uint16_t ADC_readAnalogPin(uint8_t channel);
+void ADC_disableDigitalInput(uint8_t channel);
 
 #endif /* MYADC_H_ */

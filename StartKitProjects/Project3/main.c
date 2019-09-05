@@ -19,7 +19,7 @@ const uint16_t baselineTemp = 20;
 
 int main(void)
 {
-    USART_init();
+	USART_init();
 	ADC_init();
 	
 	// set output pins for the three LEDs (Data Direction Register)
@@ -33,6 +33,9 @@ int main(void)
 	USART_writeString(uint162char(baselineTemp));
 	USART_writeString("\r\n");
 	
+	// switch off digital input for analog pin 0
+	ADC_disableDigitalInput(0);
+	
     while(1)
     {
 		// read analog signal from temperature sensor (tmp36 - https://www.analog.com/media/en/technical-documentation/data-sheets/TMP35_36_37.pdf
@@ -43,7 +46,7 @@ int main(void)
 		// calculate ADC-value into volt (see data sheet of temp sensor)
 		float voltage = 5.0 * (tempSensorValue/1024.0);
 		USART_writeString(", Volts: ");
-        USART_writeString(float2str(1000.0F*voltage));
+		USART_writeString(float2str(1000.0F*voltage));
  		
 		// calculate voltage into temperature in degrees
 		float temperature = 100.0F * (voltage - 0.5F); // see data sheet of temp sensor
