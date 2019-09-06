@@ -28,8 +28,11 @@ int main(void)
 
 	/* Non-inverting PWM Mode initialization */	
 	// set non-inverting fast PWM mode
+	// bit WGM22 in port TCCR2B is set to 0 by default, which means setting of COM2A1 (and COM2A0) enables PWM mode
+	// COM = Compare Output Mode.
+	// WGM = Waveform Generation Mode
 	TCCR2A = (1 << COM2A1) | (1 << WGM21) | (1 << WGM20);
-	// set scaler to 1024
+	// set scaler (PWM frequency) to 1024
 	TCCR2B = (1 << CS22) | (1 << CS21) | (1 << CS20);
 	
     /* Replace with your application code */
