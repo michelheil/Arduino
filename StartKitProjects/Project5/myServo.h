@@ -10,8 +10,9 @@
 #define MYSERVO_H_
 
 void PWM16_init();
-uint16_t Servo_setAngle(uint32_t angle);
-uint32_t Servo_map10BitToAngle(uint16_t analogRead);
+void Servo_setAngle(uint32_t angle);
 void Servo_set10Bit(uint16_t analogRead);
+void Servo_setMs(float dutyCycleInMs);
+uint32_t Servo_map10BitToAngle(uint16_t analogRead);
 
 #endif /* MYSERVO_H_ */

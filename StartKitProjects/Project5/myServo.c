@@ -25,14 +25,18 @@ Now, trying out the 0 and 180 degree values. Results:
 90 degree will be reached when PULSE_90DEG = (PULSE_180DEG + PULSE_0DEG) / 2
 A change of one degree is calculated as (PULSE_180DEG - PULSE_0DEG) / 180
 
-These calculations require a Phase Correct Waveform Generation (see Port TCCR1A and TCCR1B).
+These calculations require a Phase Correct Waveform Generation (see ports TCCR1A and TCCR1B).
 */
+
+/* PWM constants */
+#define PWM_PERIOD_IN_MS 20 // => PWM frequency = 50Hz (depends on the selection of pre-scaler, in this case the pre-scaler is set to 8)
 #define TOP_COUNTER 39999
+
+/* Servo constants */
 #define PULSE_0DEG 559
 #define PULSE_180DEG 2300
 #define PULSE_90DEG (PULSE_180DEG + PULSE_0DEG) / 2
 #define ONE_DEGREE (PULSE_180DEG - PULSE_0DEG) / 180
-
 
 
 /* Non-inverting 16-bit PWM Mode initialization (= Timer/Counter1) */
@@ -47,7 +51,7 @@ void PWM16_init(){
 	TCCR1A |= (1 << WGM11);
 	TCCR1B = (1 << WGM13);
 	
-	// set scaler (PWM frequency) to 8
+	// set pre-scaler to 8
 	TCCR1B |= (1 << CS11);
 	
 	// set cycle length (ICR1 = TOP in chosen Waveform Generation Mode)
@@ -62,48 +66,48 @@ void PWM16_init(){
 
 
 // transform angle into a pulse width and set 16-bit output compare register
-uint16_t Servo_setAngle(uint32_t angle)
+void Servo_setAngle(uint32_t angle)
 {
-	uint16_t pulse = PULSE_0DEG + (angle * ONE_DEGREE);
-	OCR1A = pulse;
+	uint16_t dutyCycleInTicks;
+		
+	if (angle < 0) 
+		dutyCycleInTicks = PULSE_0DEG;
+	else if (angle > 180)
+		dutyCycleInTicks = PULSE_180DEG;
+	else
+		dutyCycleInTicks = PULSE_0DEG + (angle * ONE_DEGREE);
+
+	OCR1A = dutyCycleInTicks;		
+}
+
+
+// set servo position based on a 10-bit value, e.g. an analog input read
+void Servo_set10Bit(uint16_t analogRead)
+{
+	Servo_setAngle(Servo_map10BitToAngle(analogRead));
+}
+
+
+// set servo position based on the duty cycle in milliseconds
+void Servo_setMs(float dutyCycleInMs)
+{
+	uint16_t dutyCycleInTicks;
 	
-	return pulse;
+	if (dutyCycleInMs < 0)
+		dutyCycleInTicks = 0;
+	else if (dutyCycleInMs > PWM_PERIOD_IN_MS)
+		dutyCycleInTicks = TOP_COUNTER;
+	else
+		dutyCycleInTicks = dutyCycleInMs * (1 + TOP_COUNTER) / PWM_PERIOD_IN_MS; // for Phase Correct PWM 
+	
+	// set 16-bit value Output Compare Register
+	OCR1A = dutyCycleInTicks;
+
 }
 
 
 // map 10-bit input to angle
 uint32_t Servo_map10BitToAngle(uint16_t analogRead)
 {
-	 return ((uint32_t) analogRead * 180) / 1024;
+	return ((uint32_t) analogRead * 180) / 1024;
 }
-
-// set Servo position based on a 10-bit value, e.g. an analog input read
-void Servo_set10Bit(uint16_t analogRead)
-{
-	Servo_setAngle(Servo_map10BitToAngle(analogRead));
-}
-
-// write functions to set servo position given a pulse width in percentage, an angle or ...?
-// for setAngle: ensure that values below 0 get assigned to 0 and values greater then 180 to 180.
-// 
-/* debug Mode: dann werden alle ZwischenWerte nach USART geschrieben.
-#include "myUSART.h"
-USART_init();
-
-					USART_writeString("Poti: ");
-					USART_writeString(uint162char(potiValue));
-			
-			
-				USART_writeString(", Angle: ");
-				USART_writeString(uint162char(angle));
-		
-		
-		USART_writeString(", Pulse: ");
-		USART_writeString(uint162char(pulse));
-		
-		USART_writeString("\r\n");
-
-*/
-
-
-// Wenn man ein Knopf drueckt dann wird das Poti bzw. der Input Kanal kalibriert, d.h. die Spanne von Maximum und Minimum wird ausgelesen und entsprechend koennen dann die uebrigen Werte berechnet werden.
