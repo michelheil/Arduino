@@ -1,7 +1,7 @@
 # Content
 This repository contains the source code written in C of the projects mentioned in the Arduino StarterKit. My motivation is to use Atmel Studio 7 on Windows 10 and write all necessary functions purely in C.
 
-The proejct are slightly modified but always include the most important (new) functionalities compared to the previous project.
+The projects are slightly modified but always include the most important (new) functionalities compared to the previous project.
 
 ## useful links for setting up the environment
 https://medium.com/@eestuffs/how-to-program-arduino-using-atmel-studio-7-1ece76c80bdb
