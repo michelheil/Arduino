@@ -1,5 +1,5 @@
 # Content
-This repository contains the source code written in C of the projects mentioned in the Arduino StarterKit. My motivation is to use Atmel Studio 7 on Windows 10 and write all necessary functions purely in C.
+This repository contains the source code written in C of the projects mentioned in the Arduino StarterKit. My motivation is to use Atmel Studio 7 on Windows 10 and write all necessary functions purely in C. The Arduino works with a ATmega328P micro controller.
 
 The projects are slightly modified but always include the most important (new) functionalities compared to the previous project.
 
