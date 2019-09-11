@@ -25,6 +25,7 @@ int main(void)
 		// read analog signal from poti sensor
 		uint16_t potiValue = ADC_readAnalogPin(0); // result should have values between 0 and 1023 (i.e. 10 bits)
 
+		// use input signal to set Servo position
 		Servo_set10Bit(potiValue);
 	}
 	
