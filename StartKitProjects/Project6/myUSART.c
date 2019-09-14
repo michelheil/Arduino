@@ -9,7 +9,9 @@
 #include <stdlib.h>
 
 // set frequency [Hz]
+#ifndef F_CPU // should be defined in main function
 #define F_CPU 16000000L
+#endif
 
 // set baud rate
 #define UART_BAUDRATE	9600

@@ -16,18 +16,25 @@
 #include "myADC.h"
 #include "myUSART.h"
 
+// helper functions (macros) to support bit operations
+#define sbi(PORT, bit) (PORT |= (1 << bit))  // set bit in PORT
+#define cbi(PORT, bit) (PORT &= ~(1 << bit)) // clear bit in PORT
+#define tgl(PORT, bit) (PORT ^= (1 << bit))  // set bit in PORT
+
+// constant values/parameters for this particular project
 #define ANALOG_INPUT_CHANNEL 0
 
 
 uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t minDetectedValue, uint16_t maxDetectedValue, uint16_t minFullRangeValue, uint16_t maxFullRangeValue);
-struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations);
 void Timer1A_interrupt_init();
 
-struct inputMinMax {
-	uint16_t sensorLowerBound;
-	uint16_t sensorUpperBound;
-	};
-	
+
+
+// ToDo: define global variables with
+// struct (noch umbenennen)
+// F_CPU
+// sbi, cbi, tgl macros
+
 
 int main(void)
 {
@@ -39,8 +46,16 @@ int main(void)
 	/* START INTERRUPT DISABLED CODE */
 	cli(); // disable global interrupt setting
 	
+		// set PB5 to 1 to indicate the start of calibration
+		DDRB |= (1 << DDB5);
+		PORTB |= (1 << PORTB5);
+	
 	// calibrate input values to cover a given range
 	struct inputMinMax detectedSensorValues = ADC_calibrateAnalogPin(ANALOG_INPUT_CHANNEL, 10);
+	
+		// switch on-board LED off to indicate the end of calibration
+		PORTB &= ~(1 << PORTB5);
+		
 		
 	// set bits in Timer 1A registers
 	Timer1A_interrupt_init();
@@ -66,6 +81,12 @@ int main(void)
 		// therefore, the counter is set to 0 when it already exceeded the compare value
 		if(TCNT1 > OCR1A) TCNT1 = 0;
 		
+		USART_writeString("Sensor Value: ");
+		USART_writeString(uint162char(sensorValue));
+		USART_writeString(", Mapped Sensor Value: ");
+		USART_writeString(uint162char(mappedSensorValue));
+		USART_writeString("\r\n");
+		
 		// give the sound time to establish
 		_delay_ms(100);
 
@@ -76,13 +97,15 @@ int main(void)
 uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t detectedMinValue, uint16_t detectedMaxValue, uint16_t minFullRangeValue, uint16_t maxFullRangeValue) {
 	
 	// scale detected range to expected range and round to an 16-bit integer
-	uint16_t mappedValue = (double) (maxFullRangeValue - minFullRangeValue) / (detectedMaxValue - detectedMinValue) * (sValue - detectedMinValue);
+	if (detectedMaxValue == detectedMinValue) detectedMaxValue = detectedMinValue + 1; // ensure that no division by 0 is happening
+	uint16_t mappedValue = (double) (maxFullRangeValue - minFullRangeValue) / (detectedMaxValue - detectedMinValue) * sValue + (minFullRangeValue - detectedMinValue);
 	
 	// if measured sensor value exceeds detected min-max range during runtime, set the values to the given full range boundaries
-	if(sValue < detectedMinValue) {
+	// or if rounding errors lead to a mapped value below or above the fullRangeValues
+	if((sValue < detectedMinValue) | (mappedValue < detectedMinValue)) {
 		 return minFullRangeValue;
 	}
-	else if (sValue > detectedMaxValue) {
+	else if ((sValue > detectedMaxValue) | (mappedValue > detectedMaxValue)) {
 		return maxFullRangeValue;
 	}
 	else {
@@ -108,48 +131,6 @@ void Timer1A_interrupt_init() {
 	// OCIE1A Timer/Counter1, Output Compare A Match Interrupt Enable
 	TIMSK1 = (1 << OCIE1A);
 }
-
-
-struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations) {
-
-		uint16_t readValue;
-		struct inputMinMax resultDetectedValues = {1023, 0};
-
-		// set PB5 to 1 to indicate the start of calibration
-		DDRB |= (1 << DDB5);
-		PORTB |= (1 << PORTB5);
-		
-		// calibrate the input signal for the first 5 seconds after code upload
-		for (int i = 0; i < calibrations; i++) {
-			
-			readValue = ADC_readAnalogPin(channel);
-			USART_writeString("SensorValue: ");
-			USART_writeString(uint162char(readValue));
-			
-			if(readValue > resultDetectedValues.sensorUpperBound) {
-				resultDetectedValues.sensorUpperBound = readValue;
-			}
-			if(readValue < resultDetectedValues.sensorLowerBound) {
-				resultDetectedValues.sensorLowerBound = readValue;
-			}
-			
-			USART_writeString(", Upper Bound: ");
-			USART_writeString(uint162char(resultDetectedValues.sensorUpperBound));
-			USART_writeString(", Lower Bound: ");
-			USART_writeString(uint162char(resultDetectedValues.sensorLowerBound));
-			USART_writeString("\r\n");
-			
-			// check new values every half second
-			_delay_ms(500);
-			
-		}
-
-		// switch on-board LED off to indicate the end of calibration
-		PORTB &= ~(1 << PORTB5);
-		
-		return resultDetectedValues;
-}
-
 
 // Interrupt Service Routine
 ISR(TIMER1_COMPA_vect) {
