@@ -39,25 +39,7 @@ int main(void)
 	// disable global interrupt setting
 	cli();
 	
-	/* START INTERRUPT INIT */
-	// ToDo: write Interrupt_init()
-	// Timer/Counter Control Register 1A/1B
-	TCCR1A = 0; // normal port operation, OCA1/OCB1 disconnected
-
-	// The Output Compare Registers (OCR1A) contain a 16-bit value that is continuously compared
-	// with the counter value (TCNT1). A match can be used to generate an Output Compare interrupt.
-	OCR1A = 15624; // max value = 65535 (1 second = (15624 + 1) = 16MHz / 1024
-
-	// Setting only WGM12 on TCCR1B activates the CTC (Clear Timer on Compare Match) mode
-	// Bits on CS12 and CS10 set the pre scale factor to 1024
-	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
-
-	// Timer/Counter Interrupt Mask Register
-	// OCIE1A Timer/Counter1, Output Compare A Match Interrupt Enable
-	TIMSK1 = (1 << OCIE1A);
-	/* END INTERRUPT INIT */
-
-
+	
 	/* START CALIBRATION */
 	// ToDo: write calibration function
 	/* Input: channel = 0, how many time = 10 */
@@ -92,7 +74,25 @@ int main(void)
 
 	// switch on-board LED off to indicate the end of calibration
 	PORTB &= ~(1 << PORTB5);
-	/* END CALIBRATION */	
+	/* END CALIBRATION */
+		
+	/* START INTERRUPT INIT */
+	// ToDo: write Interrupt_init()
+	// Timer/Counter Control Register 1A/1B
+	TCCR1A = 0; // normal port operation, OCA1/OCB1 disconnected
+
+	// The Output Compare Registers (OCR1A) contain a 16-bit value that is continuously compared
+	// with the counter value (TCNT1). A match can be used to generate an Output Compare interrupt.
+	OCR1A = 15624; // max value = 65535 (1 second = (15624 + 1) = 16MHz / 1024
+
+	// Setting only WGM12 on TCCR1B activates the CTC (Clear Timer on Compare Match) mode
+	// Bits on CS12 and CS10 set the pre scale factor to 1024
+	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
+
+	// Timer/Counter Interrupt Mask Register
+	// OCIE1A Timer/Counter1, Output Compare A Match Interrupt Enable
+	TIMSK1 = (1 << OCIE1A);
+	/* END INTERRUPT INIT */
 
 	sei();
 	/* END INTERRUPT DISABLED CODE */
@@ -100,14 +100,21 @@ int main(void)
 
     while (1) 
     {
-		// read sensorValue and map it to full range of possible compare match values (as we use 16-bit, max value is 65535)
+		// read sensorValue and map it to range of possible compare match values (as we use 16-bit, max value is 65535)
+		// Minimum value is 1
+		// Maximum Value is 500 ms = 15624 / 2 = 7812
 		// this mapped value is then set as the Compare Value for Timer 1A (OCR1A)
 		sensorValue = ADC_readAnalogPin(0);
-		uint16_t mappedSensorValue = mapSensorValueToFullRange(sensorValue, sensorLowerBound, sensorUpperBound, 0, 65535);
+		uint16_t mappedSensorValue = mapSensorValueToFullRange(sensorValue, sensorLowerBound, sensorUpperBound, 100, 500);
 		OCR1A = mappedSensorValue;
 		
+		// when the sensorValue decreases it could be the case that the counter already passed the old compare match value
+		// in that case the counter will continue to count until TOP (= max value = 65535) which means nothing happens for a few seconds
+		// therefore, the counter is set to 0 when it already exceeded the compare value
+		if(TCNT1 > OCR1A) TCNT1 = 0;
+		
 		// give the sound time to establish
-		_delay_ms(10);
+		_delay_ms(100);
 
     }
 }
