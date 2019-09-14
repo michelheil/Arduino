@@ -16,87 +16,40 @@
 #include "myADC.h"
 #include "myUSART.h"
 
+#define ANALOG_INPUT_CHANNEL 0
+
 
 uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t minDetectedValue, uint16_t maxDetectedValue, uint16_t minFullRangeValue, uint16_t maxFullRangeValue);
+struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations);
+void Timer1A_interrupt_init();
 
+struct inputMinMax {
+	uint16_t sensorLowerBound;
+	uint16_t sensorUpperBound;
+	};
+	
 
 int main(void)
 {
-	
-	// start with initial boundaries that will be adjusted during calibration
 	uint16_t sensorValue;
-	uint16_t sensorLowerBound = 1023;
-	uint16_t sensorUpperBound = 0;
-
+	
 	ADC_init();
 	USART_init();
-	USART_writeString("\r\n");
+	
+	/* START INTERRUPT DISABLED CODE */
+	cli(); // disable global interrupt setting
+	
+	// calibrate input values to cover a given range
+	struct inputMinMax detectedSensorValues = ADC_calibrateAnalogPin(ANALOG_INPUT_CHANNEL, 10);
+		
+	// set bits in Timer 1A registers
+	Timer1A_interrupt_init();
+
+	sei(); // enable global interrupt setting
+	/* END INTERRUPT DISABLED CODE */
 	
 	// set PB4 as output pin
-	DDRB = (1 << DDB4);
-
-	/* START INTERRUPT DISABLED CODE */
-	// disable global interrupt setting
-	cli();
-	
-	
-	/* START CALIBRATION */
-	// ToDo: write calibration function
-	/* Input: channel = 0, how many time = 10 */
-	DDRB |= (1 << DDB5);
-
-	// set PB5 to 1 to indicate the start of calibration
-	PORTB |= (1 << PORTB5);
-	
-	// calibrate the input signal for the first 5 seconds after code upload
-	for(int i = 0; i < 10; i++) {
-		
-		sensorValue = ADC_readAnalogPin(0);
-		USART_writeString("SensorValue: ");
-		USART_writeString(uint162char(sensorValue));
-		
-		if(sensorValue > sensorUpperBound) {
-			sensorUpperBound = sensorValue;
-		}
-		if(sensorValue < sensorLowerBound) {
-			sensorLowerBound = sensorValue;
-		}
-		
-		USART_writeString(", Upper Bound: ");
-		USART_writeString(uint162char(sensorUpperBound));
-		USART_writeString(", Lower Bound: ");
-		USART_writeString(uint162char(sensorLowerBound));
-		USART_writeString("\r\n");
-		
-		_delay_ms(500);
-		
-	}
-
-	// switch on-board LED off to indicate the end of calibration
-	PORTB &= ~(1 << PORTB5);
-	/* END CALIBRATION */
-		
-	/* START INTERRUPT INIT */
-	// ToDo: write Interrupt_init()
-	// Timer/Counter Control Register 1A/1B
-	TCCR1A = 0; // normal port operation, OCA1/OCB1 disconnected
-
-	// The Output Compare Registers (OCR1A) contain a 16-bit value that is continuously compared
-	// with the counter value (TCNT1). A match can be used to generate an Output Compare interrupt.
-	OCR1A = 15624; // max value = 65535 (1 second = (15624 + 1) = 16MHz / 1024
-
-	// Setting only WGM12 on TCCR1B activates the CTC (Clear Timer on Compare Match) mode
-	// Bits on CS12 and CS10 set the pre scale factor to 1024
-	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
-
-	// Timer/Counter Interrupt Mask Register
-	// OCIE1A Timer/Counter1, Output Compare A Match Interrupt Enable
-	TIMSK1 = (1 << OCIE1A);
-	/* END INTERRUPT INIT */
-
-	sei();
-	/* END INTERRUPT DISABLED CODE */
-
+	DDRB |= (1 << DDB4);
 
     while (1) 
     {
@@ -104,8 +57,8 @@ int main(void)
 		// Minimum value is 1
 		// Maximum Value is 500 ms = 15624 / 2 = 7812
 		// this mapped value is then set as the Compare Value for Timer 1A (OCR1A)
-		sensorValue = ADC_readAnalogPin(0);
-		uint16_t mappedSensorValue = mapSensorValueToFullRange(sensorValue, sensorLowerBound, sensorUpperBound, 100, 500);
+		sensorValue = ADC_readAnalogPin(ANALOG_INPUT_CHANNEL);
+		uint16_t mappedSensorValue = mapSensorValueToFullRange(sensorValue, detectedSensorValues.sensorLowerBound, detectedSensorValues.sensorUpperBound, 100, 500);
 		OCR1A = mappedSensorValue;
 		
 		// when the sensorValue decreases it could be the case that the counter already passed the old compare match value
@@ -136,6 +89,67 @@ uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t detectedMinValue, u
 		return mappedValue;
 	}
 }
+
+// initialize Timer 1A with interrupt and a Clear Timer on Compare Match and a pre-scaler of 1024
+void Timer1A_interrupt_init() {
+	// ToDo:
+	// Timer/Counter Control Register 1A/1B
+	TCCR1A = 0; // normal port operation, OCA1/OCB1 disconnected
+
+	// The Output Compare Registers (OCR1A) contain a 16-bit value that is continuously compared
+	// with the counter value (TCNT1). A match can be used to generate an Output Compare interrupt.
+	OCR1A = 15624; // max value = 65535 (1 second = (15624 + 1) = 16MHz / 1024
+
+	// Setting only WGM12 on TCCR1B activates the CTC (Clear Timer on Compare Match) mode
+	// Bits on CS12 and CS10 set the pre scale factor to 1024
+	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
+
+	// Timer/Counter Interrupt Mask Register
+	// OCIE1A Timer/Counter1, Output Compare A Match Interrupt Enable
+	TIMSK1 = (1 << OCIE1A);
+}
+
+
+struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations) {
+
+		uint16_t readValue;
+		struct inputMinMax resultDetectedValues = {1023, 0};
+
+		// set PB5 to 1 to indicate the start of calibration
+		DDRB |= (1 << DDB5);
+		PORTB |= (1 << PORTB5);
+		
+		// calibrate the input signal for the first 5 seconds after code upload
+		for (int i = 0; i < calibrations; i++) {
+			
+			readValue = ADC_readAnalogPin(channel);
+			USART_writeString("SensorValue: ");
+			USART_writeString(uint162char(readValue));
+			
+			if(readValue > resultDetectedValues.sensorUpperBound) {
+				resultDetectedValues.sensorUpperBound = readValue;
+			}
+			if(readValue < resultDetectedValues.sensorLowerBound) {
+				resultDetectedValues.sensorLowerBound = readValue;
+			}
+			
+			USART_writeString(", Upper Bound: ");
+			USART_writeString(uint162char(resultDetectedValues.sensorUpperBound));
+			USART_writeString(", Lower Bound: ");
+			USART_writeString(uint162char(resultDetectedValues.sensorLowerBound));
+			USART_writeString("\r\n");
+			
+			// check new values every half second
+			_delay_ms(500);
+			
+		}
+
+		// switch on-board LED off to indicate the end of calibration
+		PORTB &= ~(1 << PORTB5);
+		
+		return resultDetectedValues;
+}
+
 
 // Interrupt Service Routine
 ISR(TIMER1_COMPA_vect) {
