@@ -78,7 +78,7 @@ struct pairOfTwoUint16 ADC_calibrateAnalogPin(uint8_t channel, int calibrations)
 		}
 
 		// check new values every half second
-		_delay_ms(5000);
+		_delay_ms(500);
 		
 	}
 
