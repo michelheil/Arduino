@@ -9,6 +9,12 @@
 # ifndef MYUSART_H_
 # define MYUSART_H_
 
+#include "globalDefines.h"
+
+#include <avr/io.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 void USART_init(void);
 void USART_sendChar(unsigned char data);
 unsigned char USART_receive(void);

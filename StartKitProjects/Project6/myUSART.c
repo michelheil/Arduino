@@ -4,14 +4,7 @@
  * Created: 03.09.2019 22:53:01
  *  Author: Michael
  */ 
-#include <avr/io.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-// set frequency [Hz]
-#ifndef F_CPU // should be defined in main function
-#define F_CPU 16000000L
-#endif
+#include "myUSART.h"
 
 // set baud rate
 #define UART_BAUDRATE	9600

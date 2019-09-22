@@ -4,22 +4,14 @@
  * Created: 03.09.2019 22:53:01
  *  Author: Michael
  */ 
-#include <avr/io.h>
-#include <util/delay.h>
+
 #include "myADC.h"
-#include "myUSART.h"
 
-#define F_CPU 16000000L
-
-// helper functions to support bit operations
-#define sbi(PORT, bit) (PORT |= (1 << bit))  // set bit in PORT
-#define cbi(PORT, bit) (PORT &= ~(1 << bit)) // clear bit in PORT
-#define tgl(PORT, bit) (PORT ^= (1 << bit))  // set bit in PORT
 
 void ADC_init(void);
 void ADC_startConversionAndWait();
 uint16_t ADC_readAnalogPin(uint8_t channel);
-struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations);
+struct pairOfTwoUint16 ADC_calibrateAnalogPin(uint8_t channel, int calibrations);
 void ADC_disableDigitalInput(uint8_t channel);
 
 
@@ -68,17 +60,15 @@ uint16_t ADC_readAnalogPin(uint8_t channel)
 
 
 // 
-struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations) {
+struct pairOfTwoUint16 ADC_calibrateAnalogPin(uint8_t channel, int calibrations) {
 
 	uint16_t readValue;
-	struct inputMinMax resultDetectedValues = {1023, 0};
+	struct pairOfTwoUint16 resultDetectedValues = {1023, 0};
 
 	// calibrate the input signal for the first few seconds (dependent on the input parameter calibrations) after code upload
 	for (int i = 0; i < calibrations; i++) {
 		
 		readValue = ADC_readAnalogPin(channel);
-		USART_writeString("SensorValue: ");
-		USART_writeString(uint162char(readValue));
 		
 		if(readValue > resultDetectedValues.sensorUpperBound) {
 			resultDetectedValues.sensorUpperBound = readValue;
@@ -87,12 +77,6 @@ struct inputMinMax ADC_calibrateAnalogPin(uint8_t channel, int calibrations) {
 			resultDetectedValues.sensorLowerBound = readValue;
 		}
 
-		USART_writeString(", Upper Bound: ");
-		USART_writeString(uint162char(resultDetectedValues.sensorUpperBound));
-		USART_writeString(", Lower Bound: ");
-		USART_writeString(uint162char(resultDetectedValues.sensorLowerBound));
-		USART_writeString("\r\n");
-		
 		// check new values every half second
 		_delay_ms(5000);
 		

@@ -5,7 +5,7 @@
  * Author : Michael
  */ 
 
-#define F_CPU 16000000L
+#include "globalDefines.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h> // includes cli(), sei(), ISR(*_vector)
@@ -16,26 +16,13 @@
 #include "myADC.h"
 #include "myUSART.h"
 
-// helper functions (macros) to support bit operations
-#define sbi(PORT, bit) (PORT |= (1 << bit))  // set bit in PORT
-#define cbi(PORT, bit) (PORT &= ~(1 << bit)) // clear bit in PORT
-#define tgl(PORT, bit) (PORT ^= (1 << bit))  // set bit in PORT
-
-// constant values/parameters for this particular project
+// constants/parameters/function for this particular project
 #define ANALOG_INPUT_CHANNEL 0
-
-
 uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t minDetectedValue, uint16_t maxDetectedValue, uint16_t minFullRangeValue, uint16_t maxFullRangeValue);
 void Timer1A_interrupt_init();
 
 
-
-// ToDo: define global variables with
-// struct (noch umbenennen)
-// F_CPU
-// sbi, cbi, tgl macros
-
-
+// calibrate input and steer Piezo
 int main(void)
 {
 	uint16_t sensorValue;
@@ -46,16 +33,15 @@ int main(void)
 	/* START INTERRUPT DISABLED CODE */
 	cli(); // disable global interrupt setting
 	
-		// set PB5 to 1 to indicate the start of calibration
-		DDRB |= (1 << DDB5);
-		PORTB |= (1 << PORTB5);
+	// set PB5 to 1 to indicate the start of calibration
+	DDRB |= (1 << DDB5);
+	PORTB |= (1 << PORTB5);
 	
 	// calibrate input values to cover a given range
-	struct inputMinMax detectedSensorValues = ADC_calibrateAnalogPin(ANALOG_INPUT_CHANNEL, 10);
+	struct pairOfTwoUint16 detectedSensorValues = ADC_calibrateAnalogPin(ANALOG_INPUT_CHANNEL, 10);
 	
-		// switch on-board LED off to indicate the end of calibration
-		PORTB &= ~(1 << PORTB5);
-		
+	// switch on-board LED off to indicate the end of calibration
+	PORTB &= ~(1 << PORTB5);
 		
 	// set bits in Timer 1A registers
 	Timer1A_interrupt_init();
