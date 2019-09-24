@@ -17,6 +17,8 @@
 #include <util/delay.h>
 
 #include "myUSART.h"
+#include "myADC.h"
+#include "myVariableTypes.h"
 
 // global Variable (volatile) that can be changed by interrupt routines and used throughout the program.
 volatile uint8_t motorSwitch = 0b00000000; // switched by PB1
@@ -35,6 +37,17 @@ int main(void)
 	USART_writeString(", Motor Direction: ");
 	USART_writeString(uint82char(motorDirection));
 	USART_writeString("\r\n");
+	
+	// clear global interrupt flag to allow for interrupted calibration of the input analog Pin without any interrupts
+	cli();
+	
+	// initialize ADC and calibrate poti for 5 seconds
+	ADC_init();
+	struct pairOfTwoUint16 detectedMinMaxPotiValue = ADC_calibrateAnalogPin(0, 10);
+	
+	// set PD2 and PD3 as output Pins and start with 0
+	DDRD = (1 << DDD3) | (1 << DDD2);
+	PORTD &= ~((1 << PORTD3) | (1 << PORTD2));
 
 	// set PB1 as input PIN (pull-up resistor in PORTB not required as we use pull-down register on bread board)
 	DDRB &= ~((1 << DDB2) | (1 << DDB1));
@@ -56,7 +69,26 @@ int main(void)
 
     while (1) 
     {
+		uint16_t potiValue = ADC_readAnalogPin(0);
+		uint16_t calibratedPotiValue = mapSensorValueToFullRange(potiValue, detectedMinMaxPotiValue.sensorLowerBound, detectedMinMaxPotiValue.sensorUpperBound, 0, 1023);
+		USART_writeString("Poti Value: ");
+		USART_writeString(uint162char(potiValue));
+		USART_writeString(", Calibrated Poti Value: ");
+		USART_writeString(uint162char(calibratedPotiValue));
+		USART_writeString("\r\n");
 		
+		// adjust the direction of motor rotation
+		if (motorDirection == 0) {
+			sbi(PORTD,3);
+			cbi(PORTD,2);
+		} else if (motorDirection == 1) {
+			cbi(PORTD,3);
+			sbi(PORTD,2);
+		} else {
+			USART_writeString("Unknown Motor Direction!\r\n");
+		}
+		
+		_delay_ms(1000);
     }
 }
 
