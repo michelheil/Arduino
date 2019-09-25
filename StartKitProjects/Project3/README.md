@@ -1,3 +1,6 @@
-## Content
-- Analog Input (temperature measurement)
-- Serial Input
+## Used Features
+- read analog input pin
+- write strings and floats to USART
+
+## Used Libraries
+- myADC.h
