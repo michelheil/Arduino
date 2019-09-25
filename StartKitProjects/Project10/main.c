@@ -76,7 +76,7 @@ int main(void)
     while (1) 
     {
 		uint16_t potiValue = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
-		uint16_t calibratedPotiValue = mapSensorValueToFullRange(potiValue, detectedMinMaxPotiValue.sensorLowerBound, detectedMinMaxPotiValue.sensorUpperBound, 0, 1023);
+		uint16_t calibratedPotiValue = mapSensorValueToFullRange(potiValue, detectedMinMaxPotiValue.sensorLowerBound, detectedMinMaxPotiValue.sensorUpperBound, 5000, 29999);
 		USART_writeString("Poti Value: ");
 		USART_writeString(uint162char(potiValue));
 		USART_writeString(", Calibrated Poti Value: ");
@@ -95,10 +95,8 @@ int main(void)
 				USART_writeString("Unknown Motor Direction!\r\n");
 			}
 			
-			// add PWM
-			OCR1A = 1000;
-			
-			
+			// add PWM (by setting the comparison value)
+			OCR1A = calibratedPotiValue;
 			
 		} else {
 			// when both driver input pin of the half-H are set to HIGH or LOW at the same time, the motor will stop
@@ -138,8 +136,7 @@ ISR(PCINT0_vect) {
 
 }
 
-
-
+// initialize PWM output pin PB1 (Arduino Pin ~9) with pre-scaler 8 in Waveform Generation Mode and Phase Correct non-inverting mode starting with counter = 0.
 void PWM16_init(){
 
 	// set non-inverting fast PWM mode for both pins

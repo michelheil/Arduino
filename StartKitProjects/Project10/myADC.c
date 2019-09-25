@@ -105,10 +105,10 @@ uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t detectedMinValue, u
 	
 	// if measured sensor value exceeds detected min-max range during runtime, set the values to the given full range boundaries
 	// or if rounding errors lead to a mapped value below or above the fullRangeValues
-	if((sValue < detectedMinValue) | (mappedValue < detectedMinValue)) {
+	if ((sValue < detectedMinValue) | (mappedValue < minFullRangeValue)) {
 		return minFullRangeValue;
 	}
-	else if ((sValue > detectedMaxValue) | (mappedValue > detectedMaxValue)) {
+	else if ((sValue > detectedMaxValue) | (mappedValue > maxFullRangeValue)) {
 		return maxFullRangeValue;
 	}
 	else {
