@@ -95,6 +95,23 @@ int16_t TWI_readThermistor() {
 }
 
 
+// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp
+void readGrid(float* tempValues) {
+    
+    uint8_t rawGridData[128];
+    for (uint8_t i=0; i<128; i++){
+        rawGridData[i]=0;
+    }
+
+    TWI_readAMG8833ThermistorBytes(&rawGridData[0]);
+    for(uint16_t ii = 0; ii < 64; ii++) {
+        tempValues[ii] = (float) ((int16_t) ( (int16_t) rawGridData[2*ii + 1] << 8) | rawGridData[2*ii]);
+        tempValues[ii] *=0.25f; // scale to get temperatures in degrees C
+    }
+
+}
+
+
 int TWI_readAMG8833ThermistorBytes(uint8_t * dest) {
         
     uint8_t twcr, twst = 0;
@@ -210,19 +227,4 @@ int TWI_readAMG8833ThermistorBytes(uint8_t * dest) {
     LCD_setCursorTo(0, 2);
     LCD_sendDataString("Sent STOP");
     return bytesReceived;
-}
-
-// https://tttapa.github.io/ESP8266/Chap06%20-%20Uploading.html
-void AMG8833::readGrid(float* tempValues){
-
-    readBytes(AMG8833_ADDRESS, AMG8833_DATA01L, 128, &rawData[0]);
-
-    for(uint16_t ii = 0; ii < 64; ii++) {
-
-        tempValues[ii] = (float) ((int16_t) ( (int16_t) rawData[2*ii + 1] << 8) | rawData[2*ii]);
-
-        tempValues[ii] *=0.25f; // scale to get temperatures in degrees C
-
-    }
-
 }
