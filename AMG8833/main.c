@@ -4,6 +4,7 @@
  * Example code: www.nongnu.org/avr-libc/user-manual/group__twi__demo.html
  * Documentation of util/twi.h: www.nongnu.org/avr-libc/user-manual/group__util__twi.html
  * Schaltplan mit Arduino: learn.adafruit.com/assets/43127
+ * Sehr gute Hilfen: embedds.com/programming-avr-i2c-interface/
  *
  * Created: 28.09.2019 22:41:28
  * Author : Michael
@@ -15,10 +16,12 @@ ToDo:
 - write general function to read out bytes with parameters: device/slave address, register address, expected bytes, buffer to store data
 - handle all Status
 - write individual function for sending start, stop signal through Control Register
-- Auslagerung in myTWI.h
+- Auslagerung in myTWI.h and myAMG8833.h
 - define constants for 8x8 128 bytes gridRead
 - convert string of 64 uint16 into 8x8 matrix
+- initialize I2C for Arduino?
 - initialize AMG8833 (setting mode, interrupts disabled, frames per second...)
+- internal Pin-up resistors aktivieren
 */
 
 #define F_CPU                   16000000L
@@ -86,39 +89,156 @@ ToDo:
 // TWAR = (AMG8833_SLAVE_ADDRESS << 1); // move one bit to left as bit0 of TWAR is used for General Call
 
 
-float therm;
-
-
+void    TWI_init(void);
 float   TWI_readThermistor(void);
-float   TWI_signedMag12ToFloat(uint16_t val);
-float   TWI_int12ToFloat(uint16_t val);
+float   AMG8833_signedMag12ToFloat(uint16_t val);
+float   AMG8833_int12ToFloat(uint16_t val);
 float * TWI_readGrid(void);
 int     TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest);
+
+void TWI_startTransmission(void);
+void TWI_writeSlaW(void);
+void TWI_writeByte(uint8_t addr);
+void TWI_writeRegisterAddress(uint8_t addr);
+void TWI_repeatStartTransmission(void);
+void TWI_writeSlaR(void);
+void TWI_stopTransmission(void);
+
+
+
+int     AMG8833_init();
 
 
 int main(void)
 {
-        // Initialize LCD display
-        LCD_init();
+    float therm;
+    
+    // Initialize LCD display, TWI ports and AMG8833 device
+    LCD_init();
+    TWI_init();
+    AMG8833_init();
 
-        // start Cursor at Home
-        LCD_setCursorHome();
-        LCD_sendDataString("Temperature:");
+    // start LCD Cursor at Home
+    LCD_setCursorHome();
+    LCD_sendDataString("Temperature:");
         
     
     while (1) 
     {
+        // Write to beginning of second line in LCD
         LCD_setCursorTo(0, 2);
+        
+        // read out Thermistor value and print it on display
         therm = TWI_readThermistor();
         LCD_sendDataByte((uint8_t) therm);
         LCD_sendDataString(" Celsius");
         
+        // repeat measure every 5 seconds
         _delay_ms(5000);
     }
     
     return 0;
 
 }
+
+// enabled TWI and set frequency for SCL
+void TWI_init(void)
+{
+    // set SCL to 100kHz
+    TWSR |= TWI_PRESCALER_VALUE; // using "|=" instead of only "=" because status bits are initially set to 1
+    TWBR = TWI_BIT_RATE;
+    
+    // The TWEN bit enables TWI operation and activates the TWI interface. When TWEN is written to one, the TWI
+    // takes control over the I/O pins connected to the SCL and SDA pins, enabling the slew-rate limiters and
+    // spike filters. If this bit is written to zero, the TWI is switched off and all TWI transmissions are 
+    // terminated, regardless of any ongoing operation.
+    TWCR = (1<<TWEN);
+}
+
+// entering normal mode for AMG8833, restarting and setting general registers
+int AMG8833_init()
+{
+
+    ////////// enter normal mode
+    // start transmission
+    TWI_startTransmission();
+    // SLA + W
+    TWI_writeSlaW();
+    // device register
+    // PCTL - Power Control Register 0x00
+    TWI_writeRegisterAddress(0x00);
+    // write 1 byte
+    /*Command Operating mode
+    0x00 Normal mode
+    0x10 Sleep mode
+    0x20 Stand-by mode (60sec intermittence)
+    0x21 Stand-by mode (10sec intermittence)
+    */
+    TWI_writeByte(0x00);
+    // stop transmission
+    TWI_stopTransmission();
+    
+
+    ///////////// software reset
+    // start transmission
+    TWI_startTransmission();
+    // SLA + W
+    TWI_writeSlaW();
+    // device register
+    // RST - Reset Register 0x01
+    TWI_writeRegisterAddress(0x01);
+    // write 1 byte
+    /*
+    0x30 Flag reset
+    0x3F Initial reset
+    else -
+    */
+    TWI_writeByte(0x3F);
+    // stop transmission
+    TWI_stopTransmission();
+
+
+    ///////////// set to 10 FPS
+    // start transmission
+    TWI_startTransmission();
+    // SLA + W
+    TWI_writeSlaW();
+    // device register
+    // FPSC - Frame Rate Register 0x02
+    TWI_writeRegisterAddress(0x02);
+    // write 1 byte
+    /*
+    bit0: Setting Frame Mode 
+    1: 1FPS 0: 10FPS 
+    */
+    TWI_writeByte(0x00);
+    // stop transmission
+    TWI_stopTransmission();
+
+
+
+    ///////////// disable interrupts by default
+    // start transmission
+    TWI_startTransmission();
+    // SLA + W
+    TWI_writeSlaW();
+    // device register
+    // INTC - Interrupt Control Register 0x03
+    TWI_writeRegisterAddress(0x03);
+    // write 1 byte
+    // INTEN (bit0) = 0
+    TWI_writeByte(0x00);
+    // stop transmission
+    TWI_stopTransmission();
+    
+    _delay_ms(100);
+
+    return 0;
+
+}
+
+
+
 
 
 // wrapper function for handing over buffer array to readAMG833Bytes
@@ -133,19 +253,19 @@ float TWI_readThermistor(void) {
     uint16_t data = (int16_t) (((int16_t) rawData[1] << 8) | rawData[0]);
     
     // return Thermistor bytes as one 16-bit variable
-    return TWI_signedMag12ToFloat(data) * AMG8833_THERMISTOR_CONVERSION;
+    return AMG8833_signedMag12ToFloat(data) * AMG8833_THERMISTOR_CONVERSION;
 }
 
 
 // convert a 12-bit signed magnitude value to a floating point number
 // According to data sheet AMG8833: 12-bit Thermistor resolution is indicated as code (sign) + absolute value
-float TWI_signedMag12ToFloat(uint16_t val)
+float AMG8833_signedMag12ToFloat(uint16_t val)
 {
 	//take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
 	uint16_t absVal = (val & 0x7FF);
     
     // if 12th bit (0x800) is 1 (= minus) the return negative absolute value, otherwise just return positive (absolute) value
-	return (val & 0x800) ? 0 - (float)absVal : (float)absVal ;
+	return (val & 0x800) ? 0 - (float) absVal : (float )absVal ;
 }
 
 
@@ -165,7 +285,7 @@ float * TWI_readGrid(void) {
         uint16_t combinedBytes = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
         
         // convert the two's complement form (Zweierkomplement) and multiply by Celsius conversion factor
-        tempValues[ii] = TWI_int12ToFloat(combinedBytes) * AMG8833_PIXEL_CONVERSION;
+        tempValues[ii] = AMG8833_int12ToFloat(combinedBytes) * AMG8833_PIXEL_CONVERSION;
     }
     
     return tempValues;
@@ -173,39 +293,32 @@ float * TWI_readGrid(void) {
 
 // convert a 12-bit integer two's complement value to a floating point number
 // According to data sheet AMG8833: 12-bit Pixel resolution is indicated as two's complement form (Zweierkomplement)
-float TWI_int12ToFloat(uint16_t val)
+float AMG8833_int12ToFloat(uint16_t val)
 {
     // shift to left so that sign bit of 12 bit integer number is placed on sign bit of 16 bit signed integer number
-	int16_t sVal = (val << 4); 
+    int16_t sVal = (val << 4); 
 
-	// shift back the signed number, return converts to float
+    // shift back the signed number, return converts to float
     return sVal >> 4;
 }
 
 
 
+void TWI_startTransmission(void) 
+{
+        // Start Condition
+        TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
-// Use I2C (Two-Wire Protocol) to get data from AMG8833
-int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
-        
-    uint8_t twcr, twst = 0;
-    int bytesReceived = 0;
-        
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Configure transmission speed        
-    TWSR |= TWI_PRESCALER_VALUE;
-    TWBR = TWI_BIT_RATE;
+        // Wait for TWINT Flag set. This indicates that the START condition has been transmitted
+        while ((TWCR & (1 << TWINT)) == 0);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Start Condition
-    TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
+        // Check value of TWI Status Register. Mask prescaler bit1 and bit0, bit2 is unused anyway. If status different from START go to ERROR
+        if ((TWSR & 0xF8) != TW_START) LCD_sendDataString("ERROR: A"); // do not send stop after start condition
+}
 
-    // Wait for TWINT Flag set. This indicates that the START condition has been transmitted
-    while ((TWCR & (1 << TWINT)) == 0);
 
-    // Check value of TWI Status Register. Mask prescaler bit1 and bit0, bit2 is unused anyway. If status different from START go to ERROR
-    if ((TWSR & 0xF8) != TW_START) LCD_sendDataString("ERROR: A"); // do not send stop after start condition
-
+void TWI_writeSlaW(void)
+{
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Write SLA+W (means Slave Address + Write-Flag) into TWI Data Register => entering Master Transmitter Mode
     TWDR = AMG8833_SLA_W;
@@ -218,22 +331,36 @@ int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_SLA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MT_SLA_ACK) LCD_sendDataString("ERROR: B");
-    else goto stopSignal;
+    else TWI_stopTransmission();
+}
 
+
+void TWI_writeByte(uint8_t addr)
+{
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Load Register Address in device into TWDR Register
-    TWDR = reg;
+    // Load local Register Address (not the I2C slave address) of device into TWDR Register
+    TWDR = addr;
 
     // Clear TWINT bit in TWCR to start transmission of data
-    TWCR = (1<<TWINT) | (1<<TWEN);
+    TWCR = (1 << TWINT) | (1 << TWEN);
 
     // Wait for TWINT Flag set. This indicates that the DATA has been transmitted, and ACK/NACK has been received.
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_DATA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MT_DATA_ACK) LCD_sendDataString("ERROR: C");
-    else goto stopSignal;
+    else TWI_stopTransmission();
+}
 
+
+void TWI_writeRegisterAddress(uint8_t addr)
+{
+    TWI_writeByte(addr);
+}
+
+
+void TWI_repeatStartTransmission(void)
+{
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Repeated Start Condition
     TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
@@ -243,8 +370,12 @@ int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from REP_START go to ERROR
     if ((TWSR & 0xF8) != TW_REP_START) LCD_sendDataString("ERROR: D");
-    else goto stopSignal;
+    else TWI_stopTransmission();
+}
 
+
+void TWI_writeSlaR(void)
+{
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Write SLA+R (means Slave Address + Read-Flag) into TWI Data Register => entering Master Receiver Mode
     TWDR = AMG8833_SLA_R;
@@ -257,10 +388,32 @@ int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MR_SLA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MR_SLA_ACK) LCD_sendDataString("ERROR: E");
-    else goto stopSignal;
+    else TWI_stopTransmission();
+}
+
+
+void TWI_stopTransmission(void)
+{
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Stop Condition
+    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
+}
+
+
+// Use I2C (Two-Wire Protocol) to get data from AMG8833
+int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
+        
+    TWI_startTransmission();
+    TWI_writeSlaW();
+    TWI_writeRegisterAddress(reg);
+    TWI_repeatStartTransmission();
+    TWI_writeSlaR();
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // receive Data
+    uint8_t twcr, twst = 0;
+    int bytesReceived = 0;
+
     // TWEA - TWI Enable Acknowledge Bit (setting this bit will send back ACK as confirmation of receiving a byte)
     for (twcr = (1 << TWINT) | (1 << TWEN) | (1 << TWEA); len > 0; len--)
     {
@@ -284,20 +437,18 @@ int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
             case TW_MR_DATA_ACK:
                 *dest++ = TWDR;
                 bytesReceived++;
-                if(twst == TW_MR_DATA_NACK) goto stopSignal;
+                if(twst == TW_MR_DATA_NACK) TWI_stopTransmission();
                 break;
             default:
                 LCD_sendDataString("ERROR: F");
-                goto stopSignal;
+                TWI_stopTransmission();
         }
             
     }
         
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Stop Condition
-    stopSignal:
-    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
+    TWI_stopTransmission();
     LCD_setCursorTo(0, 2);
     LCD_sendDataString("Sent STOP");
     return bytesReceived;
 }
+
