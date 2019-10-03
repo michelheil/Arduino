@@ -17,7 +17,8 @@ ToDo:
 - write individual function for sending start, stop signal through Control Register
 - Auslagerung in myTWI.h
 - define constants for 8x8 128 bytes gridRead
-- convert string of 64 uint16
+- convert string of 64 uint16 into 8x8 matrix
+- initialize AMG8833 (setting mode, interrupts disabled, frames per second...)
 */
 
 #define F_CPU                   16000000L
@@ -59,31 +60,38 @@ ToDo:
 
 
 // AMG8833 I2C Slave Address is 0x69
-#define AMG8833_SLAVE_ADDRESS       0x69
-#define AMG8833_SLA_W               ((AMG8833_SLAVE_ADDRESS << 1) | TW_WRITE) // shifted by one as the address is stored in the higher 7-bits
-#define AMG8833_SLA_R               ((AMG8833_SLAVE_ADDRESS << 1) | TW_READ)  // TW_WRITE (=0) and TW_READ (=1) are defined in util/twi.h
+#define AMG8833_SLAVE_ADDRESS           0x69
+#define AMG8833_SLA_W                   ((AMG8833_SLAVE_ADDRESS << 1) | TW_WRITE) // shifted by one as the address is stored in the higher 7-bits
+#define AMG8833_SLA_R                   ((AMG8833_SLAVE_ADDRESS << 1) | TW_READ)  // TW_WRITE (=0) and TW_READ (=1) are defined in util/twi.h
 
 // Thermistor Register
-#define AMG8833_THERMISTOR_BYTES    2       // Thermistor value consist of 2 bytes. bits T7..0 in lower byte and T10..8 in higher byte
-                                            // bit3 in higher byte carries sign (1=minus; 0=plus)
-#define AMG8833_TTHL                0x0E    // Thermistor Temperature Register (lower level)
-#define AMG8833_TTHH                0x0F    // Thermistor Temperature Register (higher level)
+#define AMG8833_THERMISTOR_BYTES        2       // Thermistor value consist of 2 bytes. bits T7..0 in lower byte and T10..8 in higher byte
+                                                // bit3 in higher byte carries sign (1=minus; 0=plus)
+#define AMG8833_TTHL                    0x0E    // Thermistor Temperature Register (lower level)
+#define AMG8833_TTHH                    0x0F    // Thermistor Temperature Register (higher level)
+#define AMG8833_THERMISTOR_CONVERSION   .0625   // According to data sheet: "1 LSB has 12 bit resolution which is equivalent to 0.0625℃"
+
 
 // 8x8 Temperature Grid Register
-#define AMG8833_GRID_BYTES          128     // Thermistor value consist of 8x8 witch 2 bytes each. bits T7..0 in lower byte and T10..8 in higher byte
-                                            // bit3 in higher byte carries sign (1=minus; 0=plus)
-#define AMG8833_T01L                0x80    // Pixel 1 Temperature Register (lower level)
-#define AMG8833_T01H                0x81    // Pixel 1 Temperature Register (higher level)
-#define AMG8833_T64L                0xFE    // Pixel 64
-#define AMG8833_T64H                0xFF    // Pixel 64
-
+#define AMG8833_GRID_BYTES              128     // Thermistor value consist of 8x8 witch 2 bytes each. bits T7..0 in lower byte and T10..8 in higher byte
+                                                // bit3 in higher byte carries sign (1=minus; 0=plus)
+#define AMG8833_T01L                    0x80    // Pixel 1 Temperature Register (lower level)
+#define AMG8833_T01H                    0x81    // Pixel 1 Temperature Register (higher level)
+#define AMG8833_T64L                    0xFE    // Pixel 64
+#define AMG8833_T64H                    0xFF    // Pixel 64
+#define AMG8833_PIXEL_CONVERSION        .25     // According to data sheet: "1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25℃"
 
 
 // setting TWAR is only required when the ATmega328p is in slave mode
 // TWAR = (AMG8833_SLAVE_ADDRESS << 1); // move one bit to left as bit0 of TWAR is used for General Call
-float temp = 0;
 
-int16_t TWI_readThermistor(void);
+
+float therm;
+
+
+float   TWI_readThermistor(void);
+float   TWI_signedMag12ToFloat(uint16_t val);
+float   TWI_int12ToFloat(uint16_t val);
 float * TWI_readGrid(void);
 int     TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest);
 
@@ -101,9 +109,9 @@ int main(void)
     while (1) 
     {
         LCD_setCursorTo(0, 2);
-        temp = 0.0265f * TWI_readThermistor();
-        LCD_sendDataByte((uint8_t) temp);
-        LCD_sendDataString(" Celcius");
+        therm = TWI_readThermistor();
+        LCD_sendDataByte((uint8_t) therm);
+        LCD_sendDataString(" Celsius");
         
         _delay_ms(5000);
     }
@@ -113,36 +121,71 @@ int main(void)
 }
 
 
-// wrapper function for handing over buffer array to readAMG833ThermistorBytes
-int16_t TWI_readThermistor(void) {
+// wrapper function for handing over buffer array to readAMG833Bytes
+float TWI_readThermistor(void) {
     // initialize buffer for the two bytes of Thermistor
     uint8_t rawData[2] = {0, 0};
 
     // read two bytes from Thermistor
     TWI_readAMG8833Bytes(AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
     
+    // combine two bytes into uint16_t
+    uint16_t data = (int16_t) (((int16_t) rawData[1] << 8) | rawData[0]);
+    
     // return Thermistor bytes as one 16-bit variable
-    return (int16_t) (((int16_t) rawData[1] << 8) | rawData[0]);
+    return TWI_signedMag12ToFloat(data) * AMG8833_THERMISTOR_CONVERSION;
 }
 
 
+// convert a 12-bit signed magnitude value to a floating point number
+// According to data sheet AMG8833: 12-bit Thermistor resolution is indicated as code (sign) + absolute value
+float TWI_signedMag12ToFloat(uint16_t val)
+{
+	//take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
+	uint16_t absVal = (val & 0x7FF);
+    
+    // if 12th bit (0x800) is 1 (= minus) the return negative absolute value, otherwise just return positive (absolute) value
+	return (val & 0x800) ? 0 - (float)absVal : (float)absVal ;
+}
+
+
+// wrapper function for handing over buffer array to readAMG833Bytes
 // github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp
 // call method: float * tempGridValues = readGrid();
 float * TWI_readGrid(void) {
     
-    static float tempValues[64];
-    uint8_t rawGridData[128] = {0};
+    static float tempValues[64]; // return value buffer
+    uint8_t rawGridData[128] = {0}; // raw input from AMG8833
 
+    // read Grid Bytes starting with lower bit from first Pixel
     TWI_readAMG8833Bytes(AMG8833_T01L, AMG8833_GRID_BYTES, &rawGridData[0]);
+    
     for(uint16_t ii = 0; ii < 64; ii++) {
-        tempValues[ii] = (float) ((int16_t) ( (int16_t) rawGridData[2*ii + 1] << 8) | rawGridData[2*ii]);
-        tempValues[ii] *=0.25f; // scale to get temperatures in degrees C. Refer to data sheet "Temperature Output Resolution"
+        // combine two bytes for each Pixel
+        uint16_t combinedBytes = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
+        
+        // convert the two's complement form (Zweierkomplement) and multiply by Celsius conversion factor
+        tempValues[ii] = TWI_int12ToFloat(combinedBytes) * AMG8833_PIXEL_CONVERSION;
     }
     
     return tempValues;
 }
 
+// convert a 12-bit integer two's complement value to a floating point number
+// According to data sheet AMG8833: 12-bit Pixel resolution is indicated as two's complement form (Zweierkomplement)
+float TWI_int12ToFloat(uint16_t val)
+{
+    // shift to left so that sign bit of 12 bit integer number is placed on sign bit of 16 bit signed integer number
+	int16_t sVal = (val << 4); 
 
+	// shift back the signed number, return converts to float
+    return sVal >> 4;
+}
+
+
+
+
+// Use I2C (Two-Wire Protocol) to get data from AMG8833
 int TWI_readAMG8833Bytes(uint8_t reg, uint8_t len, uint8_t * dest) {
         
     uint8_t twcr, twst = 0;
