@@ -23,12 +23,14 @@ ToDo:
 - initialize AMG8833 (setting mode, interrupts disabled, frames per second...) (done)
 - internal Pin-up resistors aktivieren (PC4 und PC5) (done)
 - rename readThermistor so dass man Device und register addresse verwenden kann (nach erfolgreichem test)
+- schreibe alle USART Befehler nur mit #ifdef "DEBUG"
 */
 
 #define F_CPU                   16000000L
 
 #include <avr/io.h>
 #include <stdio.h>
+#include <stdlib.h> // www.nongnu.org/avr-libc//user-manual/group__avr__stdlib.html
 #include <util/twi.h>
 #include <util/delay.h>
 #include "myLCD.h"
@@ -99,7 +101,7 @@ ToDo:
                                                 // bit3 in higher byte carries sign (1=minus; 0=plus)
 #define AMG8833_TTHL                    0x0E    // Thermistor Temperature Register (lower level)
 #define AMG8833_TTHH                    0x0F    // Thermistor Temperature Register (higher level)
-#define AMG8833_THERMISTOR_CONVERSION   .0625f  // According to data sheet: "1 LSB has 12 bit resolution which is equivalent to 0.0625?"
+#define AMG8833_THERMISTOR_CONVERSION   0.0625  // According to data sheet: "1 LSB has 12 bit resolution which is equivalent to 0.0625"
 
 
 // AMG8833 8x8 Temperature Grid Register
@@ -109,8 +111,10 @@ ToDo:
 #define AMG8833_T01H                    0x81    // Pixel 1 Temperature Register (higher level)
 #define AMG8833_T64L                    0xFE    // Pixel 64
 #define AMG8833_T64H                    0xFF    // Pixel 64
-#define AMG8833_PIXEL_CONVERSION        .25f    // According to data sheet: "1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25?"
+#define AMG8833_PIXEL_CONVERSION        0.25    // According to data sheet: "1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25"
 
+#define DTOSTR_ALWAYS_SIGN   0x01
+#define DTOSTR_PLUS_SIGN   0x02 /* put '+' rather than ' ' */
 
 // setting TWAR is only required when the ATmega328p is in slave mode
 // TWAR = (AMG8833_SLAVE_ADDRESS << 1); // move one bit to left as bit0 of TWAR is used for General Call
@@ -139,13 +143,8 @@ float   AMG8833_int12ToFloat(uint16_t val);
 
 int main(void)
 {
-    float therm;
-    char thermConverter[4];
-    
-    thermConverter[0] = 1 + '0';
-    thermConverter[1] = 2 + '0';
-    thermConverter[2] = '.';
-    thermConverter[3] = 3 + '0';
+    float thermFloatValue;
+    char stringBuffer[10];
     
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
@@ -169,13 +168,14 @@ USART_writeString("\r\n\r\n");
 USART_writeString("Reading Thermistor:");
 USART_writeString("\r\n");        
         
-        therm = TWI_readThermistor();
-    //snprintf(thermConverter, 2, "%f", therm);
-        LCD_sendDataString(thermConverter);
-        LCD_sendDataString(" Celsius");
+        thermFloatValue = TWI_readThermistor();
+dtostrf(thermFloatValue, 9, 4, stringBuffer);
+//dtostre(thermFloatValue, stringBuffer, 4, (DTOSTR_ALWAYS_SIGN | DTOSTR_PLUS_SIGN));
+        LCD_sendDataString(&stringBuffer[0]);
+        LCD_sendDataString(" C");
         
         // repeat measure every 5 seconds
-        _delay_ms(10000);
+        _delay_ms(5000);
     }
     
     return 0;
@@ -274,7 +274,11 @@ USART_writeString("\r\n");
 USART_writeString("...Thermistor reading done!");
 
     // combine two bytes into uint16_t
-    uint16_t data = (int16_t) (((int16_t) rawData[1] << 8) | rawData[0]);
+    uint16_t data =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
+USART_writeString("\r\n");
+USART_sendChar((rawData[0]>>7)+101);
+USART_writeString("\r\n");
+USART_sendChar(rawData[1]+100);
 USART_writeString("\r\n");
 USART_writeString("Combined two bytes to uint16_t");    
     
@@ -287,18 +291,20 @@ USART_writeString("Combined two bytes to uint16_t");
 // According to data sheet AMG8833: 12-bit Thermistor resolution is indicated as code (sign) + absolute value
 float AMG8833_signedMag12ToFloat(uint16_t val)
 {
-	//take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
-	uint16_t absVal = (val & 0x7FF);
+    //take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
+    uint16_t absVal = (val & 0x7FF);
     
-    // if 12th bit (0x800) is 1 (= minus) the return negative absolute value, otherwise just return positive (absolute) value
-	return (val & 0x800) ? 0 - (float) absVal : (float )absVal ;
+uint8_t temp = (uint8_t) absVal;
+USART_writeString("\r\n");
+USART_sendChar(temp);
+    
+    // if 12th bit (0x800) is 0 (= minus) then return negative absolute value, otherwise just return positive (absolute) value
+    return (val & 0x800) ? 0 - (float) absVal : (float) absVal;
 }
 
 
 // wrapper function for handing over buffer array to readAMG833Bytes
-// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp
-// call method: float * tempGridValues = readGrid();
-float * TWI_readGrid(void) {
+// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp// call method: float * tempGridValues = readGrid();float * TWI_readGrid(void) {
     
     static float tempValues[64]; // return value buffer
     uint8_t rawGridData[128] = {0}; // raw input from AMG8833
