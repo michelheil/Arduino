@@ -29,6 +29,10 @@
 #define LCD_DISPLAY_PRECISION       2       // amount of decimal digits
 #define LCD_DISPLAY_VALUE_LENGTH    (LCD_DISPLAY_PRECISION + 4) // + '.' + 2 digits before decimal point + sign
 
+// if dtostre is used (and not dtostrf)
+#define LCD_DTOSTR_ALWAYS_SIGN   0x01
+#define LCD_DTOSTR_PLUS_SIGN   0x02 /* put '+' rather than ' ' */
+// Usage: dtostre(thermFloatValue, stringBuffer, LCD_DISPLAY_PRECISION, (LCD_DTOSTR_PLUS_SIGN | LCD_DTOSTR_ALWAYS_SIGN));
 
 ////////////////////////////////////////////////////////////////////////////////
 // E-Cycle times (MS=milliseconds, US=microseconds)

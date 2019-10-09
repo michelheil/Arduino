@@ -7,9 +7,9 @@
 #include "myUSART.h"
 
 // set baud rate
-#define UART_BAUDRATE	9600
+#define USART_BAUDRATE	9600
 // calculate configuration parameter
-#define UART_SETTING	((F_CPU/16UL/UART_BAUDRATE)-1) // (check data sheet for calculation)
+#define USART_SETTING	((F_CPU/16UL/USART_BAUDRATE)-1) // (check data sheet for calculation)
 
 /* declaration of functions */
 void USART_init(void);
@@ -31,8 +31,8 @@ void USART_init(void)
 	// the USART baud rate register consist of 12 bits
 	// 4 bits in "H" for high frequencies and
 	// 8 bits in "L" for low frequencies
-	UBRR0H = (uint8_t) (UART_SETTING >> 8); // move value 8 bits to right as these other 8 bits are stored in "L"
-	UBRR0L = (uint8_t) (UART_SETTING);
+	UBRR0H = (uint8_t) (USART_SETTING >> 8); // move value 8 bits to right as these other 8 bits are stored in "L"
+	UBRR0L = (uint8_t) (USART_SETTING);
 
 	// enable receiver and transmitter
 	UCSR0B = (1 << RXEN0) | (1 << TXEN0);
