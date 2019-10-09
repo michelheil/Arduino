@@ -25,6 +25,10 @@
 // LCD E (Enable) linked to:
 #define LCD_E         PD3 // (1=impulse for data)
 
+// define float precision on display
+#define LCD_DISPLAY_PRECISION       2       // amount of decimal digits
+#define LCD_DISPLAY_VALUE_LENGTH    (LCD_DISPLAY_PRECISION + 4) // + '.' + 2 digits before decimal point + sign
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // E-Cycle times (MS=milliseconds, US=microseconds)
@@ -105,6 +109,7 @@ void LCD_sendCommandByte(uint8_t data);
 void LCD_sendDataByte(uint8_t data);
 void LCD_sendDataString(const char *data);
 void LCD_sendDataUint(unsigned char *data);
+void LCD_sendDataFloat(float val);
 void LCD_setCursorHome(void);
 void LCD_setCursorTo(uint8_t col, uint8_t row);
 

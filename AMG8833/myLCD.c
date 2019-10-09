@@ -11,6 +11,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdlib.h> // www.nongnu.org/avr-libc//user-manual/group__avr__stdlib.html
 #include "myLCD.h"
 
 
@@ -140,12 +141,25 @@ void LCD_sendDataString(const char *data)
     }
 }
 
+// sends data as a unsinged char to the current cursor position
 void LCD_sendDataUint(unsigned char *data)
 {
     while(*data != '\0') {
         LCD_sendDataByte(*data++);
     }
 }
+
+// send data as float to the current cursor position
+void LCD_sendDataFloat(float val)
+{
+    // create Buffer
+    char stringBuffer[LCD_DISPLAY_VALUE_LENGTH+1]; // +1 for the ending '\0'
+    dtostrf(val, LCD_DISPLAY_VALUE_LENGTH, LCD_DISPLAY_PRECISION, stringBuffer);
+    LCD_sendDataString(&stringBuffer[0]);
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt ein Zeichen in den Character Generator RAM

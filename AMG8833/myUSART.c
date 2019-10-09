@@ -15,7 +15,10 @@
 void USART_init(void);
 void USART_sendChar(unsigned char data);
 unsigned char USART_receive(void);
-void USART_writeString(char* StringPtr);
+void USART_writeString(char * StringPtr);
+void USART_writeStringLn(char * StringPtr);
+void USART_writeFloat(float val);
+void USART_newLine();
 
 // helper functions
 char* float2str(float floatValue);
@@ -36,6 +39,8 @@ void USART_init(void)
 
 	// set frame format: asynchronous USART, parity mode disabled, 1stop bit, 8-bit data
 	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01);
+    
+    USART_newLine();
 }
 
 // sends one char
@@ -61,7 +66,7 @@ unsigned char USART_receive(void)
 }
 
 // write an entire string (collection of characters)
-void USART_writeString(char* StringPtr)
+void USART_writeString(char * StringPtr)
 {
 	// taking advantage that in C every string is terminated with a null character
 	// check if there is still more chars to send
@@ -71,6 +76,35 @@ void USART_writeString(char* StringPtr)
 	}
 }
 
+// write an entire String with a line feed at the end
+void USART_writeStringLn(char * StringPtr)
+{
+    USART_writeString(StringPtr);
+    USART_newLine();
+}
+
+// write value of a float variable
+void USART_writeFloat(float val)
+{
+    USART_writeString(float2str(val));
+}
+
+
+// start new line
+void USART_newLine()
+{
+    USART_writeString("\r\n");
+}
+
+// create a headline that stands out compared to regular Strings
+void USART_Headline(char * StringPtr)
+{
+    USART_newLine();
+    USART_writeString("--------------------------------------------------");
+    USART_newLine();
+    USART_writeString(StringPtr);
+    USART_newLine();
+}
 
 // www.mikrocontroller.net/articles/FAQ#Aktivieren_der_Floating_Point_Version_von_sprintf_beim_WinAVR_mit_AVR-Studio
 char* float2str(float floatValue)

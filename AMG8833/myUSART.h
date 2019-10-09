@@ -19,6 +19,10 @@ void USART_init(void);
 void USART_sendChar(unsigned char data);
 unsigned char USART_receive(void);
 void USART_writeString(char* StringPtr);
+void USART_writeStringLn(char * StringPtr);
+void USART_writeFloat(float val);
+void USART_newLine();
+void USART_Headline(char * StringPtr);
 
 // helper functions
 char* float2str(float floatValue);

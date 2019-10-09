@@ -30,7 +30,6 @@ ToDo:
 
 #include <avr/io.h>
 #include <stdio.h>
-#include <stdlib.h> // www.nongnu.org/avr-libc//user-manual/group__avr__stdlib.html
 #include <util/twi.h>
 #include <util/delay.h>
 #include "myLCD.h"
@@ -103,7 +102,6 @@ ToDo:
 #define AMG8833_TTHH                    0x0F    // Thermistor Temperature Register (higher level)
 #define AMG8833_THERMISTOR_CONVERSION   0.0625  // According to data sheet: "1 LSB has 12 bit resolution which is equivalent to 0.0625"
 
-
 // AMG8833 8x8 Temperature Grid Register
 #define AMG8833_GRID_BYTES              128     // Thermistor value consist of 8x8 witch 2 bytes each. bits T7..0 in lower byte and T10..8 in higher byte
                                                 // bit3 in higher byte carries sign (1=minus; 0=plus)
@@ -113,6 +111,8 @@ ToDo:
 #define AMG8833_T64H                    0xFF    // Pixel 64
 #define AMG8833_PIXEL_CONVERSION        0.25    // According to data sheet: "1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25"
 
+// if dtostre is used (and not dtostrf)
+// Usage of dtostre: dtostre(thermFloatValue, stringBuffer, 4, (DTOSTR_ALWAYS_SIGN | DTOSTR_PLUS_SIGN));
 #define DTOSTR_ALWAYS_SIGN   0x01
 #define DTOSTR_PLUS_SIGN   0x02 /* put '+' rather than ' ' */
 
@@ -134,7 +134,6 @@ void    TWI_writeByte(uint8_t addr);
 void    TWI_writeSlaR(void);
 void    TWI_stopTransmission(void);
 
-
 // AMG8833 specific functions
 int     AMG8833_init();
 float   AMG8833_signedMag12ToFloat(uint16_t val);
@@ -144,15 +143,13 @@ float   AMG8833_int12ToFloat(uint16_t val);
 int main(void)
 {
     float thermFloatValue;
-    char stringBuffer[10];
+
     
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
     TWI_init();
-    USART_init();
-    USART_writeString("\r\n");
+    USART_init(); // includes writing of a newLine
     AMG8833_init();
-
 
     // start LCD Cursor at Home
     LCD_setCursorHome();
@@ -164,14 +161,8 @@ int main(void)
         LCD_setCursorTo(0, 2);
         
         // read out Thermistor value and print it on display
-USART_writeString("\r\n\r\n");
-USART_writeString("Reading Thermistor:");
-USART_writeString("\r\n");        
-        
         thermFloatValue = TWI_readThermistor();
-dtostrf(thermFloatValue, 9, 4, stringBuffer);
-//dtostre(thermFloatValue, stringBuffer, 4, (DTOSTR_ALWAYS_SIGN | DTOSTR_PLUS_SIGN));
-        LCD_sendDataString(&stringBuffer[0]);
+        LCD_sendDataFloat(thermFloatValue);
         LCD_sendDataString(" C");
         
         // repeat measure every 5 seconds
@@ -206,9 +197,7 @@ int AMG8833_init()
 {
     /////////////////////////////////////////////////
     // set Operating Mode
-    USART_writeString("\r\n");
-    USART_writeString("Set Operating Mode:");
-    USART_writeString("\r\n");    
+    USART_Headline("Set Operating Mode:");
     TWI_startTransmission();
     TWI_writeSlaW();
     TWI_writeRegisterAddress(AMG8833_PCTL);
@@ -218,9 +207,7 @@ int AMG8833_init()
 
     /////////////////////////////////////////////////
     // software reset
-    USART_writeString("\r\n\r\n");
-    USART_writeString("Perform Software Reset:");
-    USART_writeString("\r\n");
+    USART_Headline("Perform Software Reset:");
     TWI_startTransmission();
     TWI_writeSlaW();
     TWI_writeRegisterAddress(AMG8833_RST);
@@ -230,9 +217,7 @@ int AMG8833_init()
 
     /////////////////////////////////////////////////
     // set frame rate
-    USART_writeString("\r\n\r\n");
-    USART_writeString("Set Frame Rate:");
-    USART_writeString("\r\n");
+    USART_Headline("Set Frame Rate:");
     TWI_startTransmission();
     TWI_writeSlaW();
     TWI_writeRegisterAddress(AMG8833_FPSC);
@@ -242,9 +227,7 @@ int AMG8833_init()
 
     /////////////////////////////////////////////////
     // disable interrupts
-    USART_writeString("\r\n\r\n");
-    USART_writeString("Disable Interrupts:");
-    USART_writeString("\r\n");    
+    USART_Headline("Disable Interrupts:");
     TWI_startTransmission();
     TWI_writeSlaW();
     TWI_writeRegisterAddress(AMG8833_INTC);
@@ -263,24 +246,14 @@ float TWI_readThermistor(void) { /// ToDo: Rename to read2BytesFromAddress
     // initialize buffer for the two bytes of Thermistor
     uint8_t rawData[2] = {0, 0};
 
-USART_writeString("\r\n");
-USART_writeString("Prepared rawData[2]");
+USART_Headline("Read Thermistor");
 
-USART_writeString("\r\n");
-USART_writeString("Start reading Thermistor...");
     // read two bytes from Thermistor
     TWI_readAMG8833Bytes(AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
-USART_writeString("\r\n");
-USART_writeString("...Thermistor reading done!");
+USART_writeStringLn("...Thermistor reading done!");
 
     // combine two bytes into uint16_t
     uint16_t data =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
-USART_writeString("\r\n");
-USART_sendChar((rawData[0]>>7)+101);
-USART_writeString("\r\n");
-USART_sendChar(rawData[1]+100);
-USART_writeString("\r\n");
-USART_writeString("Combined two bytes to uint16_t");    
     
     // return Thermistor bytes as one 16-bit variable
     return AMG8833_signedMag12ToFloat(data) * AMG8833_THERMISTOR_CONVERSION;
@@ -293,11 +266,7 @@ float AMG8833_signedMag12ToFloat(uint16_t val)
 {
     //take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
     uint16_t absVal = (val & 0x7FF);
-    
-uint8_t temp = (uint8_t) absVal;
-USART_writeString("\r\n");
-USART_sendChar(temp);
-    
+
     // if 12th bit (0x800) is 0 (= minus) then return negative absolute value, otherwise just return positive (absolute) value
     return (val & 0x800) ? 0 - (float) absVal : (float) absVal;
 }
@@ -338,7 +307,6 @@ float AMG8833_int12ToFloat(uint16_t val)
 
 void TWI_startTransmission(void) 
 {
-USART_writeString("\r\n");
 USART_writeString("Start");
     
         // Start Condition
@@ -350,13 +318,12 @@ USART_writeString("...");
 
         // Check value of TWI Status Register. Mask prescaler bit1 and bit0, bit2 is unused anyway. If status different from START go to ERROR
         if ((TWSR & 0xF8) != TW_START) LCD_sendDataString("ERR:1"); // do not send stop after start condition
-USART_writeString("success!");
+USART_writeStringLn("success!");
 }
 
 
 void TWI_writeSlaW(void)
 {
-USART_writeString("\r\n");
 USART_writeString("SLA+W");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +340,7 @@ USART_writeString("...");
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_SLA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MT_SLA_ACK) LCD_sendDataString("ERR:2");
     
-USART_writeString("success!");    
+USART_writeStringLn("success!");    
 }
 
 
@@ -381,7 +348,6 @@ void TWI_writeByte(uint8_t val)
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Load local Register Address (not the I2C slave address) of device into TWDR Register
-USART_writeString("\r\n");
 USART_writeString("Write Byte");
     TWDR = val;
 
@@ -394,7 +360,7 @@ USART_writeString("...");
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_DATA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MT_DATA_ACK) LCD_sendDataString("ERR:3");
-USART_writeString("success!");
+USART_writeStringLn("success!");
 }
 
 
@@ -406,7 +372,6 @@ void TWI_writeRegisterAddress(uint8_t addr)
 
 void TWI_repeatStartTransmission(void)
 {
-USART_writeString("\r\n");
 USART_writeString("Repeat Start");
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Repeated Start Condition
@@ -418,13 +383,12 @@ USART_writeString("...");
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from REP_START go to ERROR
     if ((TWSR & 0xF8) != TW_REP_START) LCD_sendDataString("ERR:4");
-USART_writeString("success!");    
+USART_writeStringLn("success!");    
 }
 
 
 void TWI_writeSlaR(void)
 {
-USART_writeString("\r\n");
 USART_writeString("SLA+R");    
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Write SLA+R (means Slave Address + Read-Flag) into TWI Data Register => entering Master Receiver Mode
@@ -439,80 +403,67 @@ USART_writeString("...");
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MR_SLA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MR_SLA_ACK) LCD_sendDataString("ERR:5");
-USART_writeString("success!");        
+USART_writeStringLn("success!");        
 }
 
 
 void TWI_stopTransmission(void)
 {
-USART_writeString("\r\n");
-USART_writeString("STOP");    
+USART_writeString("STOP...");    
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Stop Condition
     TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
-USART_writeString(" success!");   
+USART_writeStringLn("successfully transmitted data!");   
 }
 
 
 // Use I2C (Two-Wire Protocol) to get data from AMG8833
-int TWI_readAMG8833Bytes(uint8_t reg, int len, uint8_t * dest) {
-        
+int TWI_readAMG8833Bytes(uint8_t reg, int len, uint8_t * dest)
+{
     TWI_startTransmission();
     TWI_writeSlaW();
     TWI_writeRegisterAddress(reg);
     TWI_repeatStartTransmission();
     TWI_writeSlaR();
     
-USART_writeString("\r\n");        
-USART_writeString("In this stage: Start, SLA+W, RegAddr, RepStart, SLA+R is done!");
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // receive Data
     uint8_t twcr, twst = 0;
     int bytesReceived = 0;
 
-USART_writeString("\r\n"); 
-USART_writeString("Begin for loop");
+USART_writeString("Read Data Bytes");
     // TWEA - TWI Enable Acknowledge Bit (setting this bit will send back ACK as confirmation of receiving a byte)
     for (twcr = (1 << TWINT) | (1 << TWEN) | (1 << TWEA); len > 0; len--)
     {
-USART_writeString(" Durchlauf ");
+USART_writeString(".");
         // After the last byte has been received, the MR should inform the ST by sending a NACK after the last received data byte.
         if (len == 1) { // if len == 1 then this is the last byte
             twcr = (1 << TWINT) | (1 << TWEN); /* send NOT ACK this time */
-USART_writeString("len == 1");
         }
             
         // clear int to start transmission of either ACK or NACK after the last byte
         TWCR = twcr;
             
         // wait for transmission
-USART_writeString(" Anfang Warten ");        
         while ((TWCR & (1 << TWINT)) == 0);
-USART_writeString(" Fertig Warten ");
             
         switch (twst = (TWSR & 0xF8)) // masked Status Register
         {
             case TW_MR_DATA_NACK:
                 len = 0; // force end of the loop
-                USART_writeString(" TW_MR_DATA_NACK ");
                 // FALLTHROUGH: no "break;" here means that the next case will be executed
             case TW_MR_DATA_ACK:
                 *dest++ = TWDR;
                 bytesReceived++;
-                if(twst == TW_MR_DATA_NACK) TWI_stopTransmission();
-                USART_writeString(" TW_MR_DATA_ACK ");
+                if(twst == TW_MR_DATA_NACK) {USART_newLine();TWI_stopTransmission();}
                 break;
             default:
-            LCD_setCursorTo(0,2);
+            LCD_setCursorTo(0, 2);
             LCD_sendDataString("ERR:6");
             TWI_stopTransmission();
         }
     }
-    
-USART_writeString("\r\n");
-USART_writeString("End for loop");    
-        
-    TWI_stopTransmission();
+
     return bytesReceived;
 }
 
