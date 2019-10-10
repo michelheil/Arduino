@@ -56,12 +56,10 @@ uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int
 
 
 // wrapper function for handing over buffer array to readAMG833Bytes
-// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp// usage: uint16_t results[n];//        float gridValue = TWI_int12ToFloat(Raw) * CONVERSION;uint16_t * TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix)
+// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp// usage: uint16_t results[n];//        TWI_readPairBytesFromAddressRaw(..., ..., ..., &results[0]);//        float gridValue = TWI_int12ToFloat(Raw) * CONVERSION;void TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray)
 {
     int numberBytes = numberPix * 2;
     
-    static uint16_t tempValues[64]; // buffer for return value
-    memset(tempValues, 0, numberPix*sizeof(uint16_t));
     uint8_t rawGridData[numberBytes]; // buffer for raw input from device
     memset(rawGridData, 0, numberBytes*sizeof(uint8_t));
 
@@ -70,10 +68,8 @@ uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int
     
     for(uint16_t ii = 0; ii < numberPix; ii++) {
         // combine two bytes for each Pixel
-        tempValues[ii] = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
+        *resultArray++ = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
     }
-    
-    return tempValues;
 }
 
 

@@ -41,7 +41,7 @@
 // TWI general function
 void        TWI_init(void);
 uint16_t    TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberBytes);
-uint16_t *  TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix);
+void        TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray);
 int         TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
 
 // TWI function for transmissions
