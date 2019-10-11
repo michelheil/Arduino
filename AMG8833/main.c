@@ -12,17 +12,7 @@
 
 /*
 ToDo:
-- AMG8833 soldering (done!)
-- write general function to read out bytes with parameters: device/slave address, register address, expected bytes, buffer to store data
 - handle all Status aus dem TWSR (nach erfolgreichem test)
-- write individual function for sending start, stop signal through Control Register (done)
-- Auslagerung in myTWI.h and myAMG8833.h (nach erfolgreichem test)
-- define constants for 8x8 128 bytes gridRead (done)
-- convert string of 64 uint16 into 8x8 matrix (nach erfolgreichem test)
-- initialize I2C for ATMega328p (done)
-- initialize AMG8833 (setting mode, interrupts disabled, frames per second...) (done)
-- internal Pin-up resistors aktivieren (PC4 und PC5) (done)
-- rename readThermistor so dass man Device und register addresse verwenden kann (nach erfolgreichem test)
 - schreibe Logger
 */
 
@@ -45,6 +35,9 @@ int main(void)
     LCD_init(); // includes clear display
     USART_init(); // includes writing of a newLine
     AMG8833_init(AMG8833_PCTL_NORMAL_MODE, AMG8833_RST_INITIAL_RESET, AMG8833_FPSC_10FPS, AMG8833_INTC_INTEN_REACTIVE);
+    
+    // activate moving average
+    AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
 
     // start LCD Cursor at Home
     LCD_setCursorHome();

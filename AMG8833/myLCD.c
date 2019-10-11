@@ -2,6 +2,7 @@
  * myLCD.c
  *
  * library to sending data to a 1602 LCD in 4-bit mode
+ * Check SPLC780D Controller/Driver
  *
  * Created: 26.09.2019 20:58:42
  * Author : Michael
