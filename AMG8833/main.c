@@ -23,67 +23,63 @@ ToDo:
 - initialize AMG8833 (setting mode, interrupts disabled, frames per second...) (done)
 - internal Pin-up resistors aktivieren (PC4 und PC5) (done)
 - rename readThermistor so dass man Device und register addresse verwenden kann (nach erfolgreichem test)
-- schreibe alle USART Befehler nur mit #ifdef "DEBUG"
 - schreibe Logger
 */
 
-#define F_CPU                   16000000L
+#include "globalDefines.h"
 
 #include <avr/io.h>
 #include <stdio.h>
 #include <util/delay.h>
 #include "myLCD.h"
 #include "myUSART.h"
-#include "myTWI.h"
 #include "myAMG8833.h"
 
 
 int main(void)
 {
-    float thermFloatValue;
-    uint16_t results[AMG8833_GRID_PIXELS];
-    uint16_t resultsM[8][8];
-
+    float amgTherm;
+    float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
+    
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
     USART_init(); // includes writing of a newLine
-    AMG8833_init();
+    AMG8833_init(AMG8833_PCTL_NORMAL_MODE, AMG8833_RST_INITIAL_RESET, AMG8833_FPSC_10FPS, AMG8833_INTC_INTEN_REACTIVE);
 
     // start LCD Cursor at Home
     LCD_setCursorHome();
     LCD_sendDataString("Temp:");
-
+    
     while (1) 
     {
         LCD_setCursorTo(5, 1);
         
         // read out Thermistor value and print it on display
-        thermFloatValue = TWI_readBytesFromAddressRaw(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES) * AMG8833_THERMISTOR_CONVERSION;
-        LCD_sendDataFloat(thermFloatValue);
+        amgTherm = AMG8833_readThermistor();
+        LCD_sendDataFloat(amgTherm);
         LCD_sendDataString(" C");
         
         // Write to beginning of second line in LCD
         LCD_setCursorTo(0, 2);
         
-        TWI_readPairBytesFromAddressRaw(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, AMG8833_GRID_PIXELS, &results[0]);        float gridValue = TWI_int12ToFloat(results[63]) * AMG8833_PIXEL_CONVERSION;
-        LCD_sendDataFloat(gridValue);
+        // Read out Grid values and display one value on LCD
+        AMG8833_readGrid(&amgGrid[0][0]);
+        LCD_sendDataString("Pixel_88");
+        LCD_sendDataFloat(amgGrid[7][7]);
         
-        TWI_readPairBytesFromAddressRaw(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, AMG8833_GRID_PIXELS, &resultsM[0][0]);        float gridValueM = TWI_int12ToFloat(resultsM[7][7]) * AMG8833_PIXEL_CONVERSION;
-        LCD_sendDataFloat(gridValueM);
-                
-        for(int ii = 0; ii < 8; ii++) 
+        // Send entire 8x8 matrix to USART
+        for(int ii = 0; ii < 8; ii++)
         {
             for(int jj = 0; jj < 8; jj++)
             {
-                float res = TWI_int12ToFloat(resultsM[ii][jj]) * AMG8833_PIXEL_CONVERSION;
-                USART_writeFloat(res);
+                USART_writeFloat(amgGrid[ii][jj]);
                 USART_writeString(" ");
                 if (jj == 7) USART_newLine();
             }
-        }    
-    
+        }
+ 
         // repeat measure every 10 seconds
-        _delay_ms(10000);
+        _delay_ms(1000);
     }
     
     return 0;

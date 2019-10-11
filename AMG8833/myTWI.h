@@ -39,7 +39,21 @@
 #define TWI_BIT_RATE            0x12 // Dec: 18
 
 // TWI general function
-void        TWI_init(void);
+
+
+/*
+ * Initializes the TWI (I2C) communication on Arduino by
+ * . enabling TWI register bits
+ * . setting clock frequency of SCL
+ * (. activating pull-up resistors for SDA and SCL)
+ *
+ * returns: 0
+ */
+int         TWI_init(void);
+
+/*
+ * 
+ */
 uint16_t    TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberBytes);
 void        TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray);
 int         TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
@@ -47,10 +61,9 @@ int         TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * de
 // TWI function for transmissions
 void        TWI_startTransmission(void);
 void        TWI_repeatStartTransmission(void);
-void        TWI_writeSlaW(uint8_t slaw);
+void        TWI_writeSlaRW(uint8_t slarw);
 void        TWI_writeRegisterAddress(uint8_t addr);
 void        TWI_writeByte(uint8_t addr);
-void        TWI_writeSlaR(uint8_t slar);
 void        TWI_stopTransmission(void);
 
 // helper functions

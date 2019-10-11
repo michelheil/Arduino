@@ -15,8 +15,8 @@
 #include <string.h>
 
 
-// enabled TWI, set frequency for SCL and activate internal pull-up resistors on SDA and SCL
-void TWI_init(void)
+// enabled TWI, set frequency for SCL (and activate internal pull-up resistors on SDA and SCL)
+int TWI_init(void)
 {
     // set SCL to 100kHz
     TWSR |= TWI_PRESCALER_VALUE; // using "|=" instead of only "=" because status bits are initially set to 1
@@ -31,6 +31,8 @@ void TWI_init(void)
     // activate internal pull-up resistors on SDA (PC4) and SCL (PC5)
     //DDRC = (1 << DDC5) | (1 << DDC4);
     //PORTC = (1 << PORTC5) | (1 << PORTC4);
+    
+    return 0;
 }
 
 
@@ -50,8 +52,8 @@ uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int
     // combine two bytes into uint16_t
     uint16_t data =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
     
-    // return Thermistor bytes as one 16-bit variable
-    return TWI_signedMag12ToFloat(data);
+    // return Thermistor bytes as one 16-bit value
+    return data;
 }
 
 
@@ -80,10 +82,10 @@ int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
     uint8_t slar = ((sla << 1) | TW_READ);
     
     TWI_startTransmission();
-    TWI_writeSlaW(slaw);
+    TWI_writeSlaRW(slaw);
     TWI_writeRegisterAddress(reg);
     TWI_repeatStartTransmission();
-    TWI_writeSlaR(slar);
+    TWI_writeSlaRW(slar);
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // receive Data
@@ -144,13 +146,13 @@ void TWI_startTransmission(void)
 }
 
 
-void TWI_writeSlaW(uint8_t slaw)
+void TWI_writeSlaRW(uint8_t slarw)
 {
-    USART_writeString("SLA+W");
+    USART_writeString("SLA+R/W");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Write SLA+W (means Slave Address + Write-Flag) into TWI Data Register => entering Master Transmitter Mode
-    TWDR = slaw;
+    // Write SLA+R/W (means Slave Address + Read/Write-Flag) into TWI Data Register => entering Master Transmitter/Receiver Mode
+    TWDR = slarw;
 
     // set TWINT bit to clear TWINT flag and transmit the content of TWDR
     TWCR = (1 << TWINT) | (1 << TWEN);
@@ -160,7 +162,7 @@ void TWI_writeSlaW(uint8_t slaw)
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_SLA_ACK go to ERROR
-    if ((TWSR & 0xF8) != TW_MT_SLA_ACK) LCD_sendDataString("ERR:2");
+    if ( ((TWSR & 0xF8) != TW_MT_SLA_ACK) && ((TWSR & 0xF8) != TW_MR_SLA_ACK) ) LCD_sendDataString("ERR:2");
     
     USART_writeStringLn("success!");
 }
@@ -205,26 +207,6 @@ void TWI_repeatStartTransmission(void)
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from REP_START go to ERROR
     if ((TWSR & 0xF8) != TW_REP_START) LCD_sendDataString("ERR:4");
-    USART_writeStringLn("success!");
-}
-
-
-void TWI_writeSlaR(uint8_t slar)
-{
-    USART_writeString("SLA+R");
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Write SLA+R (means Slave Address + Read-Flag) into TWI Data Register => entering Master Receiver Mode
-    TWDR = slar;
-
-    // set TWINT bit to clear TWINT flag and transmit the content of TWDR
-    TWCR = (1 << TWINT) | (1 << TWEN);
-
-    // wait as long as TWINT flag is set.
-    USART_writeString("...");
-    while ((TWCR & (1 << TWINT)) == 0);
-
-    // Check value of TWI Status Register. Mask prescaler bits. If status different from MR_SLA_ACK go to ERROR
-    if ((TWSR & 0xF8) != TW_MR_SLA_ACK) LCD_sendDataString("ERR:5");
     USART_writeStringLn("success!");
 }
 
