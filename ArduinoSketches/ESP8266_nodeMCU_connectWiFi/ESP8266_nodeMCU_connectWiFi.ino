@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
  
-const char* ssid = "xxx";
-const char* password = "yyy";
+const char* ssid = "FRITZ!Box 7412";
+const char* password = "31469059394759135757";
  
 int ledPin = LED_BUILTIN; // GPIO13
 WiFiServer server(80);
