@@ -5,7 +5,7 @@
 // Sketch mainly copied out of "Das ESP8266 Praxisbuch - Hack 19", Erik Bartmann.
 
 const char* ssid = "FRITZ!Box 7412";
-const char* stringNumber = "31469059394759135757";
+const char* stringNumber = "yyy";
 const char* mqtt_server = "192.168.178.49";
 const int mqtt_port = 1883;
 const char* topic = "/arbeitszimmer/temperatur";
