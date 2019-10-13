@@ -4,7 +4,7 @@
 // https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-the-mosquitto-mqtt-messaging-broker-on-ubuntu-16-04
 // Sketch mainly copied out of "Das ESP8266 Praxisbuch - Hack 19", Erik Bartmann.
 
-const char* ssid = "FRITZ!Box 7412";
+const char* ssid = "FRITZ!Box";
 const char* stringNumber = "yyy";
 const char* mqtt_server = "192.168.178.49";
 const int mqtt_port = 1883;
