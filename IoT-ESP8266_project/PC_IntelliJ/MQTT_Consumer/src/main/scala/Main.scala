@@ -1,12 +1,16 @@
-import org.apache.log4j.{Level, LogManager, Logger}
+import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.mqtt.MQTTUtils
 import org.apache.spark.streaming.Milliseconds
+import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
 import org.eclipse.paho.client.mqttv3._
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 object Main extends App {
+
+  var publisher: MqttClient = null
+
   val sparkConf = new SparkConf(true).setAppName("MqttWordCount").setMaster("local[*]")
   val ssc = new StreamingContext(sparkConf, Milliseconds(10000))
 
@@ -18,10 +22,13 @@ object Main extends App {
   val subTopicName = "/arbeitszimmer/temperatur"
   val pubTopicName = "/arbeitszimmer/temperatur/ergebnis"
 
-  val lines = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
+  val consumer: ReceiverInputDStream[String] = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
 
-  val words = lines.flatMap(line => line.split(" "))
-  val wordCount = words.map(word => (word, 1)).reduceByKey(_ + _)
+  val dStream: DStream[String] = consumer.flatMap(line => line.split(" "))
+  processAndTransferMessage(dStream)
+/*
+  val words: DStream[String] = consumer.flatMap(line => line.split(" "))
+  val wordCount: DStream[(String, Int)] = words.map(word => (word, 1)).reduceByKey(_ + _)
 
   wordCount.print()
 
@@ -50,7 +57,29 @@ object Main extends App {
       publisher.disconnect()
     }
   }
-
+*/
   ssc.start()
   ssc.awaitTermination()
+
+
+  def processAndTransferMessage(dStream: DStream[String]): Unit = {
+    val pub = dStream.map(word => (word, 1)).reduceByKey(_ + _)
+    pub.print()
+
+    dStream.foreachRDD(rdd => {
+      if(!rdd.isEmpty()) {
+
+        val publisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
+        publisher.connect()
+
+        val pubTopic: MqttTopic = publisher.getTopic(pubTopicName)
+        val msgContent = "ScalaToArduino"
+        val message = new MqttMessage(msgContent.getBytes("utf-8"))
+
+        pubTopic.publish(message)
+        println(s"Published data. topic: ${pubTopic.getName()}; Message: $message")
+      }
+    })
+  }
+
 }
