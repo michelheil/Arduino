@@ -9,77 +9,61 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 object Main extends App {
 
-  var publisher: MqttClient = null
+  val brokerURL = "tcp://localhost:1883"
+  val subTopicName = "/arbeitszimmer/temperatur"
+  val pubTopicName = "/arbeitszimmer/temperatur/ergebnis"
+
+  lazy val mqttPublisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
 
   val sparkConf = new SparkConf(true).setAppName("MqttWordCount").setMaster("local[*]")
-  val ssc = new StreamingContext(sparkConf, Milliseconds(10000))
+  val ssc = new StreamingContext(sparkConf, Milliseconds(1))
 
   // Set root Log Level to warning
   LogManager.getRootLogger.setLevel(Level.WARN)
   // throws Warning because Spark cannot replicate data (https://stackoverflow.com/questions/32583273/spark-streaming-get-warn-replicated-to-only-0-peers-instead-of-1-peers)
 
-  val brokerURL = "tcp://localhost:1883"
-  val subTopicName = "/arbeitszimmer/temperatur"
-  val pubTopicName = "/arbeitszimmer/temperatur/ergebnis"
+  val mqttConsumer: ReceiverInputDStream[String] = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
 
-  val consumer: ReceiverInputDStream[String] = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
+  processAndTransferMessage(mqttConsumer)
 
-  val dStream: DStream[String] = consumer.flatMap(line => line.split(" "))
-  processAndTransferMessage(dStream)
-/*
-  val words: DStream[String] = consumer.flatMap(line => line.split(" "))
-  val wordCount: DStream[(String, Int)] = words.map(word => (word, 1)).reduceByKey(_ + _)
-
-  wordCount.print()
-
-  var publisher: MqttClient = null
-
-  // Publishing back to MQTT
-  try {
-    val publisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
-    publisher.connect()
-
-    val pubTopic: MqttTopic = publisher.getTopic(pubTopicName)
-    val msgContent = "ScalaToArduino"
-    val message = new MqttMessage(msgContent.getBytes("utf-8"))
-
-    try {
-      pubTopic.publish(message)
-      println(s"Published data. topic: ${pubTopic.getName()}; Message: $message")
-    } catch {
-      case e: MqttException if e.getReasonCode == MqttException.REASON_CODE_MAX_INFLIGHT => Thread.sleep(10)
-        println("Queue is full, wait for to consume data from the message queue")
-    }
-  } catch {
-      case e: MqttException => println("Exception Caught: " + e)
-  } finally {
-    if (publisher != null) {
-      publisher.disconnect()
-    }
-  }
-*/
   ssc.start()
   ssc.awaitTermination()
 
 
-  def processAndTransferMessage(dStream: DStream[String]): Unit = {
-    val pub = dStream.map(word => (word, 1)).reduceByKey(_ + _)
-    pub.print()
+  def processAndTransferMessage(dStream: ReceiverInputDStream[String]): Unit = {
+    //val pub = dStream.map(word => (word, 1)).reduceByKey(_ + _)
+    //pub.print()
+    //val modDStream = dStream.map(line => line.split(" "))
 
-    dStream.foreachRDD(rdd => {
-      if(!rdd.isEmpty()) {
+    try {
+      dStream.foreachRDD(rdd => {
 
-        val publisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
-        publisher.connect()
+        if (!rdd.isEmpty()) {
+          rdd.foreachPartition(partition => {
+            partition.foreach(msg => {
+              mqttPublisher.connect()
+              val msgContent: String = msg.length.toString() // processing individual messages
+              val message: MqttMessage = new MqttMessage(msgContent.getBytes("utf-8"))
+              val pubTopic: MqttTopic = mqttPublisher.getTopic(pubTopicName)
 
-        val pubTopic: MqttTopic = publisher.getTopic(pubTopicName)
-        val msgContent = "ScalaToArduino"
-        val message = new MqttMessage(msgContent.getBytes("utf-8"))
-
-        pubTopic.publish(message)
-        println(s"Published data. topic: ${pubTopic.getName()}; Message: $message")
-      }
-    })
+              // sending message to MQTT including error handling
+              try {
+                pubTopic.publish(message)
+              } catch {
+                case e: MqttException if e.getReasonCode == MqttException.REASON_CODE_MAX_INFLIGHT => Thread.sleep(10)
+              } finally {
+                if (mqttPublisher.isConnected()) {
+                  mqttPublisher.disconnect()
+                }
+              }
+            }) // foreach msg
+          }) // foreach partition
+        } // if RDD not empty
+      }) // foreachRDD
+    } catch {
+      case e: MqttException => println("Exception Caught: " + e)
+    }
   }
+
 
 }
