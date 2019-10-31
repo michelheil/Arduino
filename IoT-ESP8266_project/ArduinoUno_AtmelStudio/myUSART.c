@@ -22,6 +22,9 @@ void USART_init(void)
 
 	// enable receiver and transmitter
 	UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+    
+    // enabled RX Complete Interrupt
+    sbi(UCSR0B, RXCIE0);
 
 	// set frame format: asynchronous USART, parity mode disabled, 1stop bit, 8-bit data
 	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01);
