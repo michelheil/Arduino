@@ -24,7 +24,7 @@ volatile uint8_t usartStrCompleteFlag = 0;     // 1 .. String komplett empfangen
 volatile uint8_t usartStrCount = 0;
 volatile unsigned char usartStr[USART_MAX_IN_STRLEN + 1] = "";
 
-uint8_t compareStr[USART_MAX_IN_STRLEN + 1] = "Hallo";
+uint8_t compareStr[USART_MAX_IN_STRLEN + 1] = "4";
 
 unsigned char cmpString(volatile uint8_t * string1, uint8_t * string2);
 
@@ -38,36 +38,33 @@ int main(void)
 
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register
     sbi(DDRD, PD3); // set PD3 as output LED pin
+
+    // Enabled INT0 (PD2) interrupt
+    EIMSK = (1 << INT0);
     
+    // The rising edge of INT0 (PD2) generates an interrupt request.
+    EICRA = (1 << ISC01) | (1 << ISC00);
+        
     // activate global interrupt flag
     sei();
     
     while(1)
     {
-        // when push button is pressed then write "Send" to USART
-        if (PIND & (1 << PIND2)) { 
-            USART_writeString("Send");
-            _delay_ms(100);
-        }
-        
-        // when push button is not pressed wait for RX interrupt to get uart_string
-        else {
-            if(cmpString(&usartStr[0], &compareStr[0])) {
-                sbi(PORTD, PD3);
-                _delay_ms(1000);
-                cbi(PORTD, PD3);
-                usartStr[0] = 0; // "reset" received string
-                }
-            // reset flag and counter of the usart string 
-            _delay_ms(20);
-            usartStrCompleteFlag = 0;
-            usartStrCount = 0;   
-        }
+        if(cmpString(&usartStr[0], &compareStr[0])) {
+            sbi(PORTD, PD3);
+            _delay_ms(1000);
+            cbi(PORTD, PD3);
+            usartStr[0] = 0; // "reset" received string
+            }
+        // reset flag and counter of the usart string 
+        _delay_ms(20);
+        usartStrCompleteFlag = 0;
+        usartStrCount = 0;   
     }
 }
 
 
-
+// if data is received through USART RX write all incoming bytes into the usartStr
 ISR(USART_RX_vect)
 {
     unsigned char nextChar;
@@ -89,6 +86,13 @@ ISR(USART_RX_vect)
     }
 }
 
+// when push button is pressed send word "Send" to USART TX
+ISR(INT0_vect)
+{
+    USART_writeString("Send");
+}
+
+// helper function to compare two strings.
 unsigned char cmpString(volatile uint8_t * string1, uint8_t * string2)
 {
     while (1)
