@@ -8,16 +8,18 @@
 
 // set baud rate
 #define USART_BAUDRATE	9600
-// calculate configuration parameter
-#define USART_SETTING	((F_CPU/16UL/USART_BAUDRATE)-1) // (check data sheet for calculation)
+// calculate configuration parameter; check data sheet for calculation
+#define USART_SETTING	((F_CPU/16UL/USART_BAUDRATE)-1) 
 
 void USART_init(void)
 {
+    uint8_t trash; // define variable for initial reading of Data Register (UDR0)
+    
 	// set baud rate
 	// the USART baud rate register consist of 12 bits
 	// 4 bits in "H" for high frequencies and
 	// 8 bits in "L" for low frequencies
-	UBRR0H = (uint8_t) (USART_SETTING >> 8); // move value 8 bits to right as these other 8 bits are stored in "L"
+	UBRR0H = (uint8_t) (USART_SETTING >> 8); // move value 8 bits to right as the other 8 bits are stored in "L"
 	UBRR0L = (uint8_t) (USART_SETTING);
 
 	// enable receiver and transmitter
@@ -29,6 +31,7 @@ void USART_init(void)
 	// set frame format: asynchronous USART, parity mode disabled, 1stop bit, 8-bit data
 	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01);
     
+    trash = UDR0;
     USART_newLine();
 }
 

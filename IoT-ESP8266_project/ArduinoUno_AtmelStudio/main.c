@@ -17,16 +17,28 @@
 #include <string.h>
 #include "myUSART.h"
 
-
 #define USART_MAX_IN_STRLEN 10
 
-volatile uint8_t usartStrCompleteFlag = 0;     // 1 .. String komplett empfangen
+// define string that activate particular actions
+uint8_t compareStr[USART_MAX_IN_STRLEN] = "4";
+
+// define global variables to collect input string through Interrupt Service Routine (ISR)
+volatile uint8_t usartStrCompleteFlag = 0;
 volatile uint8_t usartStrCount = 0;
 volatile unsigned char usartStr[USART_MAX_IN_STRLEN + 1] = "";
 
-uint8_t compareStr[USART_MAX_IN_STRLEN + 1] = "4";
-
+/*
+ * define function to compare two Strings
+ * 
+ * string1: pointer to unsigned char of first string
+ * string2: pointer to unsigned char of second string
+ *
+ * returns: Byte value that is written in the register
+ *
+ * Example: cmpString(&usartStr[0], &compareStr[0])
+ */
 unsigned char cmpString(volatile uint8_t * string1, uint8_t * string2);
+
 
 int main(void)
 {
@@ -36,7 +48,7 @@ int main(void)
     // initialize USART with baud rate 9600
     USART_init();
 
-    cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register
+    cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
     sbi(DDRD, PD3); // set PD3 as output LED pin
 
     // Enabled INT0 (PD2) interrupt
