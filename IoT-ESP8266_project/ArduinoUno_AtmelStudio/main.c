@@ -15,12 +15,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "myLCD.h"
 #include "myUSART.h"
+#include "myAMG8833.h"
 
 #define USART_MAX_IN_STRLEN 10
 
 // define string that activate particular actions
 uint8_t compareStr[USART_MAX_IN_STRLEN] = "4";
+uint8_t compareClearStr[USART_MAX_IN_STRLEN] = "clear";
 
 // define global variables to collect input string through Interrupt Service Routine (ISR)
 volatile uint8_t usartStrCompleteFlag = 0;
@@ -45,8 +48,16 @@ int main(void)
     // deactivate global Interrupts during initialization phase
     cli();
     
-    // initialize USART with baud rate 9600
-    USART_init();
+    float amgTherm;
+    //float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
+        
+    // Initialize LCD display, TWI ports and AMG8833 device
+    LCD_init(); // includes clear display
+    USART_init(); // init USART with baud rate of 9600; includes writing of a newLine
+    AMG8833_init(AMG8833_PCTL_NORMAL_MODE, AMG8833_RST_INITIAL_RESET, AMG8833_FPSC_10FPS, AMG8833_INTC_INTEN_REACTIVE);
+        
+    // activate moving average
+    AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
 
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
     sbi(DDRD, PD3); // set PD3 as output LED pin
@@ -64,10 +75,21 @@ int main(void)
     {
         if(cmpString(&usartStr[0], &compareStr[0])) {
             sbi(PORTD, PD3);
+                    LCD_setCursorHome();
+                    LCD_sendDataString("Temp:");
+                    // read out Thermistor value and print it on display
+                    amgTherm = AMG8833_readThermistor();
+                    LCD_sendDataFloat(amgTherm);
+                    LCD_sendDataString(" C");
             _delay_ms(1000);
             cbi(PORTD, PD3);
             usartStr[0] = 0; // "reset" received string
-            }
+        }
+            
+if(cmpString(&usartStr[0], &compareClearStr[0])) {
+     LCD_clearDisplay();
+}                
+            
         // reset flag and counter of the usart string 
         _delay_ms(20);
         usartStrCompleteFlag = 0;
