@@ -22,7 +22,7 @@
 #define USART_MAX_IN_STRLEN 10
 
 // define string that activate particular actions
-uint8_t compareStr[USART_MAX_IN_STRLEN] = "4";
+uint8_t compareStr[USART_MAX_IN_STRLEN] = "read";
 uint8_t compareClearStr[USART_MAX_IN_STRLEN] = "clear";
 
 // define global variables to collect input string through Interrupt Service Routine (ISR)
@@ -70,27 +70,27 @@ int main(void)
         
     // activate global interrupt flag
     sei();
-    
+
     while(1)
     {
         if(cmpString(&usartStr[0], &compareStr[0])) {
             sbi(PORTD, PD3);
-                    LCD_setCursorHome();
-                    LCD_sendDataString("Temp:");
-                    // read out Thermistor value and print it on display
-                    amgTherm = AMG8833_readThermistor();
-                    LCD_sendDataFloat(amgTherm);
-                    LCD_sendDataString(" C");
-            _delay_ms(1000);
+            LCD_setCursorHome();
+            LCD_sendDataString("Temp:");
+            // read out Thermistor value and print it on display
+            amgTherm = AMG8833_readThermistor();
+            LCD_sendDataFloat(amgTherm);
+            LCD_sendDataString(" C");
+            _delay_ms(500);
             cbi(PORTD, PD3);
             usartStr[0] = 0; // "reset" received string
         }
             
-if(cmpString(&usartStr[0], &compareClearStr[0])) {
-     LCD_clearDisplay();
-}                
+        if(cmpString(&usartStr[0], &compareClearStr[0])) {
+            LCD_clearDisplay();
+        }     
             
-        // reset flag and counter of the usart string 
+        // reset flag and counter of the usartString 
         _delay_ms(20);
         usartStrCompleteFlag = 0;
         usartStrCount = 0;   

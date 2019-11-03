@@ -35,8 +35,8 @@
  * => PrescalerValue: TWPS1 = 0, TWPS0 = 1 (both bits are part of byte TWSR)
 */
 
-#define TWI_PRESCALER_VALUE     0x04 // Dec: 4
-#define TWI_BIT_RATE            0x12 // Dec: 18
+#define TWI_PRESCALER_VALUE     0x04 // Decimal: 4
+#define TWI_BIT_RATE            0x12 // Decimal: 18
 
 // TWI general function
 
