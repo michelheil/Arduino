@@ -67,6 +67,22 @@ void USART_writeFloat(float val);
 unsigned char USART_receiveChar(void);
 
 
+/*
+ * Receives a string from RX
+ *
+ * stringPtr: Pointer to char for storing the received string
+ * 
+ * returns: length of received string
+ */
+unsigned char USART_getString(volatile char * stringPtr);
+
+/*
+ * Receives a string from RX and echoes it back to TX
+ *
+ * stringPtr: Pointer to char for storing the received string
+ * 
+ * returns: length of received string
+ */
 unsigned char USART_getStringWithEcho(char * stringPtr);
 
 /*

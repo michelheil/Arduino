@@ -83,6 +83,39 @@ unsigned char USART_receiveChar(void)
     return UDR0;
 }
 
+
+unsigned char USART_getString(volatile char * stringPtr)
+{
+    // create output value, counting the characters
+    unsigned char counter = 0;
+    
+    while(1)
+    {
+        // store received char
+        *stringPtr = USART_receiveChar();
+        
+        if(*stringPtr >= 0x20 && counter < USART_MAX_INPUT_STRING_LENGTH) { // exclude escape characters
+            counter++;
+            stringPtr++;
+        } // end if
+        else {
+            if (*stringPtr != '\b' || counter >= USART_MAX_INPUT_STRING_LENGTH) { // ending input (for example when 'enter' has been pressed)
+                counter = *stringPtr; // store last character that caused the function to finish
+                *stringPtr = 0; // closes the string
+                return counter; // return last character
+            } // end if
+            else if (*stringPtr == '\b' && counter != 0) {
+                stringPtr--;
+                counter--;
+            } // end if
+        } // end else
+    } // end file
+} // end function
+
+
+
+
+
 unsigned char USART_getStringWithEcho(char * stringPtr)
 {
     // create output value, counting the characters

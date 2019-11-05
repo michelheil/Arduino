@@ -3,6 +3,21 @@
  *
  * circuitdigest.com/microcontroller-projects/esp8266-nodemcu-with-atmega16-avr-microcontroller-to-send-an-email
  *
+ * PD0/RX -> TX (ESP)
+ * PD1/TX -> RX (ESP)
+ * PD2 -> push button
+ * PD3 -> LED
+ *
+ * SCL -> SCL (AMG8833)
+ * SDA -> SDA (AMG8833)
+ *
+ * PB0 -> RS (LCD)
+ * PB1 -> E (LCD)
+ * PB2 -> DB4 (LCD)
+ * PB3 -> DB5 (LCD)
+ * PB4 -> DB6 (LCD)
+ * PB5 -> DB7 (LCD)
+  *
  * Created: 28.09.2019 15:23:18
  * Author : Michael
  */ 
@@ -19,16 +34,16 @@
 #include "myUSART.h"
 #include "myAMG8833.h"
 
-#define USART_MAX_IN_STRLEN 10
+//#define USART_MAX_IN_STRLEN 10
 
 // define string that activate particular actions
-uint8_t compareStr[USART_MAX_IN_STRLEN] = "read";
-uint8_t compareClearStr[USART_MAX_IN_STRLEN] = "clear";
+char compareStr[] = "read";
+char compareClearStr[] = "clear";
 
 // define global variables to collect input string through Interrupt Service Routine (ISR)
 volatile uint8_t usartStrCompleteFlag = 0;
 volatile uint8_t usartStrCount = 0;
-volatile unsigned char usartStr[USART_MAX_IN_STRLEN + 1] = "";
+volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
 
 /*
  * define function to compare two Strings
@@ -36,11 +51,11 @@ volatile unsigned char usartStr[USART_MAX_IN_STRLEN + 1] = "";
  * string1: pointer to unsigned char of first string
  * string2: pointer to unsigned char of second string
  *
- * returns: Byte value that is written in the register
+ * returns: 1 for string matching, 0 else
  *
  * Example: cmpString(&usartStr[0], &compareStr[0])
  */
-unsigned char cmpString(volatile uint8_t * string1, uint8_t * string2);
+uint8_t cmpString(volatile char * string1, char * string2);
 
 
 int main(void)
@@ -73,27 +88,29 @@ int main(void)
 
     while(1)
     {
-        if(cmpString(&usartStr[0], &compareStr[0])) {
-            sbi(PORTD, PD3);
-            LCD_setCursorHome();
-            LCD_sendDataString("Temp:");
-            // read out Thermistor value and print it on display
-            amgTherm = AMG8833_readThermistor();
-            LCD_sendDataFloat(amgTherm);
-            LCD_sendDataString(" C");
-            _delay_ms(500);
-            cbi(PORTD, PD3);
-            usartStr[0] = 0; // "reset" received string
-        }
+        if(usartStrCompleteFlag == 1) { // only start comparison when the received string is completely transmitted
+            if(cmpString(&usartStr[0], &compareStr[0])) {
+                sbi(PORTD, PD3);
+                LCD_setCursorHome();
+                LCD_sendDataString("Temp:");
+                // read out Thermistor value and print it on display
+                amgTherm = AMG8833_readThermistor();
+                LCD_sendDataFloat(amgTherm);
+                LCD_sendDataString(" C");
+                _delay_ms(500);
+                cbi(PORTD, PD3);
+                usartStr[0] = 0; // "reset" received string
+            }
             
-        if(cmpString(&usartStr[0], &compareClearStr[0])) {
-            LCD_clearDisplay();
-        }     
+            if(cmpString(&usartStr[0], &compareClearStr[0])) {
+                LCD_clearDisplay();
+            }     
             
-        // reset flag and counter of the usartString 
-        _delay_ms(20);
-        usartStrCompleteFlag = 0;
-        usartStrCount = 0;   
+            // reset flag and counter of the usartString 
+            _delay_ms(20);
+            usartStrCompleteFlag = 0;
+            usartStrCount = 0; 
+        }  
     }
 }
 
@@ -103,12 +120,10 @@ ISR(USART_RX_vect)
 {
     unsigned char nextChar;
 
-    // Daten aus dem Puffer lesen
+    // read incoming byte out of data register 0
     nextChar = UDR0;
-    if(usartStrCompleteFlag == 0) {	// wenn uart_string gerade in Verwendung, neues Zeichen verwerfen
-
-        // Daten werden erst in uart_string geschrieben, wenn nicht String-Ende/max Zeichenlänge erreicht ist/string gerade verarbeitet wird
-        if( nextChar != '\n' && nextChar != '\r' && usartStrCount < USART_MAX_IN_STRLEN ) {
+    if(usartStrCompleteFlag == 0) {	// if the usartStr contains a complete string that the nextChar will be ignored
+        if( nextChar >= 0x20 && usartStrCount < USART_MAX_INPUT_STRING_LENGTH ) { // condition ">= 0x20" ensures that only non-escape characters are considered
             usartStr[usartStrCount] = nextChar;
             usartStrCount++;
         }
@@ -120,14 +135,16 @@ ISR(USART_RX_vect)
     }
 }
 
+
 // when push button is pressed send word "Send" to USART TX
 ISR(INT0_vect)
 {
     USART_writeString("Send");
 }
 
+
 // helper function to compare two strings.
-unsigned char cmpString(volatile uint8_t * string1, uint8_t * string2)
+unsigned char cmpString(volatile char * string1, char * string2)
 {
     while (1)
     {
