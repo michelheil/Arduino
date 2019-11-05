@@ -59,6 +59,16 @@
 #define AMG8833_AVE_SWITCH_ON           0x20 // bit5: MAMOD 1: Twice moving average Output Mode
 #define AMG8833_AVE_SWITCH_OFF          0x00
 
+// AMG8833 Interrupt Level Register 
+// Register for setting upper / lower limit Hysteresis on Interrupt Level. 1 LSB has 12 bit resolution (11 bit + sign) 
+// which is equivalent to 0.25? and it is indicated as two's complement form. 
+#define AMG8833_INTHL                   0x08 // bits 7..0; Interrupt Level upper limit setting when the value is upper than the set value, 
+#define AMG8833_INTHH                   0x09 // bits 11..8; Interrupt Output and Interrupt Pixel Table are set.
+#define AMG8833_INTLL                   0x0A // bits 7..0; Interrupt Level lower limit setting when the value is lower than the set value,  
+#define AMG8833_INTLH                   0x0B // bits 11..8; Interrupt Output and Interrupt Pixel Table are set.
+#define AMG8833_IHYSL                   0x0C // bits 7..0; Setting of Interrupt Hysteresis Level when Interrupt is generated, set Hysteresis Level applied to Interrupt Level upper / lower value. 
+#define AMG8833_IHYSH                   0x0D // bits 11..8; When the value is set over Interrupt Level, Interrupt Output cannot be correct. 
+
 
 
 // AMG8833 Thermistor Register

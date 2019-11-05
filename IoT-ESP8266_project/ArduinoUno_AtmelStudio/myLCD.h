@@ -116,6 +116,10 @@ void LCD_sendDataString(const char *data);
 void LCD_sendDataUint(unsigned char *data);
 void LCD_sendDataFloat(float val);
 void LCD_setCursorHome(void);
+
+/*
+ * Set the cursor based on the column (starting with 0) and the row (starting with 1)
+ */
 void LCD_setCursorTo(uint8_t col, uint8_t row);
 
 

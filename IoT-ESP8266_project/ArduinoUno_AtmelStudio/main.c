@@ -34,8 +34,6 @@
 #include "myUSART.h"
 #include "myAMG8833.h"
 
-//#define USART_MAX_IN_STRLEN 10
-
 // define string that activate particular actions
 char compareStr[] = "read";
 char compareClearStr[] = "clear";
@@ -64,7 +62,7 @@ int main(void)
     cli();
     
     float amgTherm;
-    //float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
+    float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
         
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
@@ -73,6 +71,9 @@ int main(void)
         
     // activate moving average
     AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
+    AMG8833_setRegisterByte(AMG8833_INTC, AMG8833_INTC_INTMOD_ABS + AMG8833_INTC_INTEN_ACTIVE);
+    AMG8833_setRegisterByte(AMG8833_INTHL, 0b01100100);
+    AMG8833_setRegisterByte(AMG8833_INTHH, 0b00000000);
 
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
     sbi(DDRD, PD3); // set PD3 as output LED pin
@@ -97,6 +98,12 @@ int main(void)
                 amgTherm = AMG8833_readThermistor();
                 LCD_sendDataFloat(amgTherm);
                 LCD_sendDataString(" C");
+  
+                AMG8833_readGrid(&amgGrid[0][0]);
+                LCD_setCursorTo(0,2);
+                LCD_sendDataString("Pixel_88");
+                LCD_sendDataFloat(amgGrid[7][7]);
+      
                 _delay_ms(500);
                 cbi(PORTD, PD3);
                 usartStr[0] = 0; // "reset" received string
