@@ -49,10 +49,15 @@ char compareClearStr[] = "clear";
 #define AMG8833_INT_UPPER_LEVEL_LOW  0b01100100 // 100 => 25 Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
+// define delimiter 
+char gridDelimiter[] = ";";
+
 // define global variables to collect input string through Interrupt Service Routine (ISR)
 volatile uint8_t usartStrCompleteFlag = 0;
 volatile uint8_t usartStrCount = 0;
 volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
+volatile uint8_t thermInterruptFlag = 0;
+volatile uint8_t pushButtonInterruptFlag = 0;
 
 /*
  * define function to compare two Strings
@@ -74,6 +79,8 @@ int main(void)
     
     float amgTherm;
     float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
+    float currentGridValue;
+    float maxGridValue;
         
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
@@ -105,7 +112,47 @@ int main(void)
 
     while(1)
     {
-        if(usartStrCompleteFlag == 1) { // only start comparison when the received string is completely transmitted
+        // when push button is pressed send word "Send" to USART TX
+        if(pushButtonInterruptFlag == 1) { 
+            USART_writeString("Send");
+            pushButtonInterruptFlag = 0; // reset interrupt flag
+        }            
+        
+        // when grid temperature exceeds upper interrupt level read grid Values and send them as a string to Tx
+        if(thermInterruptFlag == 1) { 
+            sbi(PORTD, PD4);
+            // read out Grid
+            AMG8833_readGrid(&amgGrid[0][0]);
+            LCD_setCursorTo(0,2);
+            maxGridValue = 0; // reset maxValue before each reading
+            
+            // send keyword for grid data at the beginning of the string
+            USART_writeString("gridData:");
+            
+            for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
+                for(int col = 0; col < AMG8833_GRID_PIXELS_Y; col++) {
+                    currentGridValue = amgGrid[row][col];
+                    USART_writeFloat(currentGridValue);
+                    if( !(row == (AMG8833_GRID_PIXELS_X - 1) && col == (AMG8833_GRID_PIXELS_Y - 1)) ) {
+                        USART_writeString(&gridDelimiter[0]);
+                    } else {
+                        USART_newLine();
+                    }                        
+                    if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
+                }                    
+            }
+
+            LCD_sendDataString("Max:");
+            LCD_sendDataFloat(maxGridValue);
+
+            _delay_ms(500);
+            cbi(PORTD, PD4);
+            
+            thermInterruptFlag = 0; // reset interrupt flag   
+        }
+             
+        // when a string from Rx is received start comparison of the received string with pre-defined commands 
+        if(usartStrCompleteFlag == 1) { 
             if(cmpString(&usartStr[0], &compareStr[0])) {
                 sbi(PORTD, PD4);
                 LCD_setCursorHome();
@@ -114,12 +161,6 @@ int main(void)
                 amgTherm = AMG8833_readThermistor();
                 LCD_sendDataFloat(amgTherm);
                 LCD_sendDataString(" C");
-  
-                AMG8833_readGrid(&amgGrid[0][0]);
-                LCD_setCursorTo(0,2);
-                LCD_sendDataString("Pixel_88");
-                LCD_sendDataFloat(amgGrid[7][7]);
-      
                 _delay_ms(500);
                 cbi(PORTD, PD4);
                 usartStr[0] = 0; // "reset" received string
@@ -129,14 +170,24 @@ int main(void)
                 LCD_clearDisplay();
             }     
             
-            // reset flag and counter of the usartString 
-            _delay_ms(20);
-            usartStrCompleteFlag = 0;
+            usartStrCompleteFlag = 0; // reset Rx flag and counter of the usartString 
             usartStrCount = 0; 
-        }  
+        } 
     }
 }
 
+
+// linked to push button
+ISR(INT0_vect)
+{
+    pushButtonInterruptFlag = 1;
+}
+
+// linked to AMG8833 int pin
+ISR(INT1_vect)
+{
+    thermInterruptFlag = 1;
+}
 
 // if data is received through USART RX write all incoming bytes into the usartStr
 ISR(USART_RX_vect)
@@ -159,16 +210,6 @@ ISR(USART_RX_vect)
 }
 
 
-// when push button is pressed send word "Send" to USART TX
-ISR(INT0_vect)
-{
-    USART_writeString("Send");
-}
-
-ISR(INT1_vect)
-{
-    USART_writeString("AMG interrupt");
-}
 
 
 // helper function to compare two strings.
