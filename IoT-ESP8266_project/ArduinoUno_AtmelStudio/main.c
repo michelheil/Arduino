@@ -6,7 +6,8 @@
  * PD0/RX -> TX (ESP)
  * PD1/TX -> RX (ESP)
  * PD2 -> push button
- * PD3 -> LED
+ * PD3 -> INT (AMG8833)
+ * PD4 -> LED
  *
  * SCL -> SCL (AMG8833)
  * SDA -> SDA (AMG8833)
@@ -37,6 +38,16 @@
 // define string that activate particular actions
 char compareStr[] = "read";
 char compareClearStr[] = "clear";
+
+// define Interrupt level for AMG8833
+// Interrupt flag  -This flag indicates whether Interrupt is generated  or not when INT control register is activated.
+// High (VDD) : Interrupt is not generated
+// Low (0V)   : Interrupt is generated
+//
+// Interrupt value
+// 1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25? and it is indicated as two's complement form.
+#define AMG8833_INT_UPPER_LEVEL_LOW  0b01100100 // 100 => 25 Celcius
+#define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
 // define global variables to collect input string through Interrupt Service Routine (ISR)
 volatile uint8_t usartStrCompleteFlag = 0;
@@ -71,18 +82,23 @@ int main(void)
         
     // activate moving average
     AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
+    
+    // activate Interrupt of 25 Celsius
     AMG8833_setRegisterByte(AMG8833_INTC, AMG8833_INTC_INTMOD_ABS + AMG8833_INTC_INTEN_ACTIVE);
-    AMG8833_setRegisterByte(AMG8833_INTHL, 0b01100100);
-    AMG8833_setRegisterByte(AMG8833_INTHH, 0b00000000);
+    AMG8833_setRegisterByte(AMG8833_INTHL, AMG8833_INT_UPPER_LEVEL_LOW);
+    AMG8833_setRegisterByte(AMG8833_INTHH, AMG8833_INT_UPPER_LEVEL_HIGH);
 
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
-    sbi(DDRD, PD3); // set PD3 as output LED pin
+    cbi(DDRD, PD3); // set as input pin (connected to INT from AMG8833)
+    sbi(DDRD, PD4); // set as output LED pin
+    
 
-    // Enabled INT0 (PD2) interrupt
-    EIMSK = (1 << INT0);
+    // Enabled INT0 (PD2) and INT1 (PD3) interrupts
+    EIMSK = (1 << INT1) | (1 << INT0);
     
     // The rising edge of INT0 (PD2) generates an interrupt request.
-    EICRA = (1 << ISC01) | (1 << ISC00);
+    // The falling edge of INT1 generates an interrupt 
+    EICRA = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (1 << ISC00);
         
     // activate global interrupt flag
     sei();
@@ -91,7 +107,7 @@ int main(void)
     {
         if(usartStrCompleteFlag == 1) { // only start comparison when the received string is completely transmitted
             if(cmpString(&usartStr[0], &compareStr[0])) {
-                sbi(PORTD, PD3);
+                sbi(PORTD, PD4);
                 LCD_setCursorHome();
                 LCD_sendDataString("Temp:");
                 // read out Thermistor value and print it on display
@@ -105,7 +121,7 @@ int main(void)
                 LCD_sendDataFloat(amgGrid[7][7]);
       
                 _delay_ms(500);
-                cbi(PORTD, PD3);
+                cbi(PORTD, PD4);
                 usartStr[0] = 0; // "reset" received string
             }
             
@@ -147,6 +163,11 @@ ISR(USART_RX_vect)
 ISR(INT0_vect)
 {
     USART_writeString("Send");
+}
+
+ISR(INT1_vect)
+{
+    USART_writeString("AMG interrupt");
 }
 
 
