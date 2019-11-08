@@ -34,6 +34,7 @@
 #include "myLCD.h"
 #include "myUSART.h"
 #include "myAMG8833.h"
+#include "myLOG.h"
 
 // define string that activate particular actions
 char compareStr[] = "read";
@@ -45,7 +46,7 @@ char compareClearStr[] = "clear";
 // Low (0V)   : Interrupt is generated
 //
 // Interrupt value
-// 1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25? and it is indicated as two's complement form.
+// 1 LSB has 12 bit resolution (sign + 11 bit) which is equivalent to 0.25 Celsius and it is indicated as two's complement form.
 #define AMG8833_INT_UPPER_LEVEL_LOW  0b01100100 // 100 => 25 Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
@@ -59,6 +60,8 @@ volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
 volatile uint8_t thermInterruptFlag = 0;
 volatile uint8_t pushButtonInterruptFlag = 0;
 
+#define USART_MAX_GRID_STRING_LENGTH (((5+1)*64) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
+
 /*
  * define function to compare two Strings
  * 
@@ -70,6 +73,8 @@ volatile uint8_t pushButtonInterruptFlag = 0;
  * Example: cmpString(&usartStr[0], &compareStr[0])
  */
 uint8_t cmpString(volatile char * string1, char * string2);
+
+void ausbin8(uint8_t wert);
 
 
 int main(void)
@@ -120,34 +125,36 @@ int main(void)
         
         // when grid temperature exceeds upper interrupt level read grid Values and send them as a string to Tx
         if(thermInterruptFlag == 1) { 
-            sbi(PORTD, PD4);
-            // read out Grid
+
+            sbi(PORTD, PD4); // indicate interrupt action
+
             AMG8833_readGrid(&amgGrid[0][0]);
-            LCD_setCursorTo(0,2);
-            maxGridValue = 0; // reset maxValue before each reading
+
+            maxGridValue = 0; // reset maxValue before each calculation
             
-            // send keyword for grid data at the beginning of the string
-            USART_writeString("gridData:");
-            
+            // create buffer to send all pixel values            
+            char buff[USART_MAX_GRID_STRING_LENGTH] = "";
+ 
+            // iterate through all pixels and (a) calculate maximum value and (b) concatenate values to string
             for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
                 for(int col = 0; col < AMG8833_GRID_PIXELS_Y; col++) {
                     currentGridValue = amgGrid[row][col];
-                    USART_writeFloat(currentGridValue);
-                    if( !(row == (AMG8833_GRID_PIXELS_X - 1) && col == (AMG8833_GRID_PIXELS_Y - 1)) ) {
-                        USART_writeString(&gridDelimiter[0]);
-                    } else {
-                        USART_newLine();
-                    }                        
+                    strcat(&buff[0], float2str(currentGridValue));
+                    if( !(row == (AMG8833_GRID_PIXELS_X - 1) && col == (AMG8833_GRID_PIXELS_Y - 1)) ) strcat(&buff[0], ";");
                     if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
                 }                    
             }
 
+            USART_writeStringLn(&buff[0]);
+            
+            LCD_setCursorTo(0,2);
             LCD_sendDataString("Max:");
             LCD_sendDataFloat(maxGridValue);
 
             _delay_ms(500);
             cbi(PORTD, PD4);
             
+            buff[0] = 0; // reset buffer for grid string output
             thermInterruptFlag = 0; // reset interrupt flag   
         }
              
@@ -210,8 +217,6 @@ ISR(USART_RX_vect)
 }
 
 
-
-
 // helper function to compare two strings.
 unsigned char cmpString(volatile char * string1, char * string2)
 {
@@ -220,5 +225,15 @@ unsigned char cmpString(volatile char * string1, char * string2)
         if ( (*string1 == 0) && (*string2 == 0) ) return 1;
         if (*string1 != *string2) return 0;
         string1++; string2++;
+    }
+}
+
+void ausbin8(uint8_t wert)
+{
+    LCD_sendDataString("0b");
+    for (unsigned char i = 0; i < 8; i++)
+    {
+        LCD_sendDataString(uint82str(wert >> 7)); // print highest bit
+        wert <<= 1; // shift one bit left such that highest (already printed) bit will disappear
     }
 }
