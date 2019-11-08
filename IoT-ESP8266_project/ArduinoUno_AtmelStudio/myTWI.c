@@ -5,7 +5,7 @@
  *  Author: Michael
  */ 
 #include "myTWI.h"
-#include "myUSART.h"
+#include "myLOG.h"
 #include "myLCD.h"
 
 #include <avr/io.h>
@@ -43,11 +43,11 @@ uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int
     uint8_t rawData[numberBytes];
     memset(rawData, 0, numberBytes*sizeof(uint8_t));
 
-    USART_Headline("Read Thermistor");
+    LOG_debug("Read Thermistor");
 
     // read two bytes from Thermistor
     TWI_readAMG8833Bytes(devAddress, regAddress, numberBytes, &rawData[0]);
-    USART_writeStringLn("...Thermistor reading done!");
+    LOG_debug("...Thermistor reading done!");
 
     // combine two bytes into uint16_t
     uint16_t data =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
@@ -92,11 +92,11 @@ int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
     uint8_t twcr, twst = 0;
     int bytesReceived = 0;
 
-    USART_writeString("Read Data Bytes");
+    LOG_debug("Read Data Bytes");
     // TWEA - TWI Enable Acknowledge Bit (setting this bit will send back ACK as confirmation of receiving a byte)
     for (twcr = (1 << TWINT) | (1 << TWEN) | (1 << TWEA); len > 0; len--)
     {
-        USART_writeString(".");
+        LOG_debug(".");
         // After the last byte has been received, the MR should inform the ST by sending a NACK after the last received data byte.
         if (len == 1) { // if len == 1 then this is the last byte
             twcr = (1 << TWINT) | (1 << TWEN); /* send NOT ACK this time */
@@ -116,7 +116,7 @@ int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
             case TW_MR_DATA_ACK:
             *dest++ = TWDR;
             bytesReceived++;
-            if(twst == TW_MR_DATA_NACK) {USART_newLine();TWI_stopTransmission();}
+            if(twst == TW_MR_DATA_NACK) {TWI_stopTransmission();}
             break;
             default:
             LCD_setCursorTo(0, 2);
@@ -131,24 +131,24 @@ int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
 
 void TWI_startTransmission(void)
 {
-    USART_writeString("Start");
+    LOG_debug("Start");
     
     // Start Condition
     TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
-    USART_writeString("...");
+    LOG_debug("...");
     // Wait for TWINT Flag set. This indicates that the START condition has been transmitted
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bit1 and bit0, bit2 is unused anyway. If status different from START go to ERROR
     if ((TWSR & 0xF8) != TW_START) LCD_sendDataString("ERR:1"); // do not send stop after start condition
-    USART_writeStringLn("success!");
+    LOG_debug("success!");
 }
 
 
 void TWI_writeSlaRW(uint8_t slarw)
 {
-    USART_writeString("SLA+R/W");
+    LOG_debug("SLA+R/W");
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Write SLA+R/W (means Slave Address + Read/Write-Flag) into TWI Data Register => entering Master Transmitter/Receiver Mode
@@ -158,13 +158,13 @@ void TWI_writeSlaRW(uint8_t slarw)
     TWCR = (1 << TWINT) | (1 << TWEN);
 
     // wait as long as TWINT flag is set.
-    USART_writeString("...");
+    LOG_debug("...");
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_SLA_ACK go to ERROR
     if ( ((TWSR & 0xF8) != TW_MT_SLA_ACK) && ((TWSR & 0xF8) != TW_MR_SLA_ACK) ) LCD_sendDataString("ERR:2");
     
-    USART_writeStringLn("success!");
+    LOG_debug("success!");
 }
 
 
@@ -172,19 +172,19 @@ void TWI_writeByte(uint8_t val)
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Load local Register Address (not the I2C slave address) of device into TWDR Register
-    USART_writeString("Write Byte");
+    LOG_debug("Write Byte");
     TWDR = val;
 
     // Clear TWINT bit in TWCR to start transmission of data
     TWCR = (1 << TWINT) | (1 << TWEN);
 
     // Wait for TWINT Flag set. This indicates that the DATA has been transmitted, and ACK/NACK has been received.
-    USART_writeString("...");
+    LOG_debug("...");
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_DATA_ACK go to ERROR
     if ((TWSR & 0xF8) != TW_MT_DATA_ACK) LCD_sendDataString("ERR:3");
-    USART_writeStringLn("success!");
+    LOG_debug("success!");
 }
 
 
@@ -196,28 +196,28 @@ void TWI_writeRegisterAddress(uint8_t addr)
 
 void TWI_repeatStartTransmission(void)
 {
-    USART_writeString("Repeat Start");
+    LOG_debug("Repeat Start");
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Repeated Start Condition
     TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
     // Wait for TWINT Flag set. This indicates that the repeated START condition has been transmitted
-    USART_writeString("...");
+    LOG_debug("...");
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from REP_START go to ERROR
     if ((TWSR & 0xF8) != TW_REP_START) LCD_sendDataString("ERR:4");
-    USART_writeStringLn("success!");
+    LOG_debug("success!");
 }
 
 
 void TWI_stopTransmission(void)
 {
-    USART_writeString("STOP...");
+    LOG_debug("STOP...");
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Stop Condition
     TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
-    USART_writeStringLn("successfully transmitted data!");
+    LOG_debug("successfully transmitted data!");
 }
 
 

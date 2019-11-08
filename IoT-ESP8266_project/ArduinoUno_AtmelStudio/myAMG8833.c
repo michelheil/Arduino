@@ -7,7 +7,7 @@
 #include "myAMG8833.h"
 
 #include <util/delay.h>
-#include "myUSART.h"
+#include "myLOG.h"
 #include "myTWI.h"
 
 
@@ -18,19 +18,19 @@ int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
     TWI_init();
 
     /////////////////////////////////////////////////
-    USART_Headline("Set Operating Mode:");
+    LOG_debug("Set Operating Mode:");
     AMG8833_setRegisterByte(AMG8833_PCTL, pcr);
 
     /////////////////////////////////////////////////
-    USART_Headline("Perform Software Reset:");
+    LOG_debug("Perform Software Reset:");
     AMG8833_setRegisterByte(AMG8833_RST, rr);
     
     /////////////////////////////////////////////////
-    USART_Headline("Set Frame Rate:");
+    LOG_debug("Set Frame Rate:");
     AMG8833_setRegisterByte(AMG8833_FPSC, frr);
 
     /////////////////////////////////////////////////
-    USART_Headline("Disable Interrupts:");
+    LOG_debug("Disable Interrupts:");
     AMG8833_setRegisterByte(AMG8833_INTC, icr);
 
     _delay_ms(100);

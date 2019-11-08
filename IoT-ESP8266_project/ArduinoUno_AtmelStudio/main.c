@@ -34,6 +34,7 @@
 #include "myLCD.h"
 #include "myUSART.h"
 #include "myAMG8833.h"
+#include "myLOG.h"
 
 // define string that activate particular actions
 char compareStr[] = "read";
@@ -208,8 +209,6 @@ ISR(USART_RX_vect)
         }
     }
 }
-
-
 
 
 // helper function to compare two strings.
