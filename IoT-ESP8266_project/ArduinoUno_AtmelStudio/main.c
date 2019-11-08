@@ -46,7 +46,7 @@ char compareClearStr[] = "clear";
 // Low (0V)   : Interrupt is generated
 //
 // Interrupt value
-// 1 LSB has 12 bit resolution (11 bit + sign) which is equivalent to 0.25? and it is indicated as two's complement form.
+// 1 LSB has 12 bit resolution (sign + 11 bit) which is equivalent to 0.25 Celsius and it is indicated as two's complement form.
 #define AMG8833_INT_UPPER_LEVEL_LOW  0b01100100 // 100 => 25 Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
@@ -71,6 +71,8 @@ volatile uint8_t pushButtonInterruptFlag = 0;
  * Example: cmpString(&usartStr[0], &compareStr[0])
  */
 uint8_t cmpString(volatile char * string1, char * string2);
+
+void ausbin8(uint8_t wert);
 
 
 int main(void)
@@ -219,5 +221,15 @@ unsigned char cmpString(volatile char * string1, char * string2)
         if ( (*string1 == 0) && (*string2 == 0) ) return 1;
         if (*string1 != *string2) return 0;
         string1++; string2++;
+    }
+}
+
+void ausbin8(uint8_t wert)
+{
+    LCD_sendDataString("0b");
+    for (unsigned char i = 0; i < 8; i++)
+    {
+        LCD_sendDataString(uint82str(wert >> 7)); // print highest bit
+        wert <<= 1; // shift one bit left such that highest (already printed) bit will disappear
     }
 }
