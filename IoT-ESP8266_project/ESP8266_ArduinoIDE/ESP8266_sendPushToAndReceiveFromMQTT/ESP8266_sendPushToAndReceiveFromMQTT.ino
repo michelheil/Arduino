@@ -6,8 +6,8 @@
 // https://techtutorialsx.com/2017/04/24/esp32-subscribing-to-mqtt-topic/
 // https://www.arduino.cc/reference/en/language/functions/communication/serial/write/
 
-const char* ssid = "FRITZ!Box 7412";
-const char* stringNumber = "31469059394759135757";
+const char* ssid = "FRITZ!Box";
+const char* stringNumber = "xxx";
 const char* mqtt_server = "192.168.178.49";
 const int mqtt_port = 1883;
 const char* topicToPC = "/arbeitszimmer/temperatur";
@@ -96,7 +96,7 @@ void loop() {
 
 // Begin //////////////////////////////////////////
 // Arduino to ESP via serial RX
-  const int expecArdInLen = 5;                                          // expectedArduinoInputLength
+  const int expecArdInLen = 64;                                       // expectedArduinoInputLength (maximum length is 64 bytes)
   char rxData[expecArdInLen] = "";                                    // buffer for RX data                             
   //String variable = "";
   int indexArduinoInput = 0;
