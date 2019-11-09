@@ -59,6 +59,7 @@ volatile uint8_t usartStrCount = 0;
 volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
 volatile uint8_t thermInterruptFlag = 0;
 volatile uint8_t pushButtonInterruptFlag = 0;
+// volatile uint8_t measureCounter = 1;
 
 #define USART_MAX_GRID_STRING_LENGTH (((5+1)*64) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
 
@@ -133,19 +134,20 @@ int main(void)
             maxGridValue = 0; // reset maxValue before each calculation
             
             // create buffer to send all pixel values            
-            char buff[USART_MAX_GRID_STRING_LENGTH] = "";
+            
  
             // iterate through all pixels and (a) calculate maximum value and (b) concatenate values to string
-            for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
+            for(int row = 0; row < AMG8833_GRID_PIXELS_X-4; row++) {
+                char buff[USART_MAX_GRID_STRING_LENGTH] = ""; //measureCounter:
                 for(int col = 0; col < AMG8833_GRID_PIXELS_Y; col++) {
                     currentGridValue = amgGrid[row][col];
                     strcat(&buff[0], float2str(currentGridValue));
-                    if( !(row == (AMG8833_GRID_PIXELS_X - 1) && col == (AMG8833_GRID_PIXELS_Y - 1)) ) strcat(&buff[0], ";");
+                    if( !(col == (AMG8833_GRID_PIXELS_Y - 1)) ) strcat(&buff[0], ";");
                     if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
-                }                    
+                }
+                USART_writeStringLn(&buff[0]);
+                buff[0] = 0; // reset buffer for grid string output
             }
-
-            USART_writeStringLn(&buff[0]);
             
             LCD_setCursorTo(0,2);
             LCD_sendDataString("Max:");
@@ -154,7 +156,6 @@ int main(void)
             _delay_ms(500);
             cbi(PORTD, PD4);
             
-            buff[0] = 0; // reset buffer for grid string output
             thermInterruptFlag = 0; // reset interrupt flag   
         }
              
@@ -194,6 +195,7 @@ ISR(INT0_vect)
 ISR(INT1_vect)
 {
     thermInterruptFlag = 1;
+    // measureCounter++;
 }
 
 // if data is received through USART RX write all incoming bytes into the usartStr
