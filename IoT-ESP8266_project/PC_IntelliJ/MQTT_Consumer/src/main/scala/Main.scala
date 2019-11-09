@@ -20,7 +20,7 @@ object Main extends App {
 
   // Set root Log Level to warning
   val log: Logger = LogManager.getRootLogger()
-  log.setLevel(Level.WARN)
+  log.setLevel(Level.ERROR)
   // throws Warning because Spark cannot replicate data (https://stackoverflow.com/questions/32583273/spark-streaming-get-warn-replicated-to-only-0-peers-instead-of-1-peers)
 
   val mqttConsumer: ReceiverInputDStream[String] = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
@@ -34,7 +34,9 @@ object Main extends App {
   def processAndTransferMessage(dStream: ReceiverInputDStream[String]): Unit = {
     //val pub = dStream.map(word => (word, 1)).reduceByKey(_ + _)
     //pub.print()
-    //val modDStream = dStream.map(line => line.split(" "))
+
+    //val modDStream: DStream[Array[String]] = dStream.map(line => line.split(";"))
+
 
     try {
       dStream.foreachRDD(rdd => {
@@ -49,8 +51,8 @@ object Main extends App {
               // sending message to MQTT including error handling
               try {
                 log.warn(s"Preparing message to be sent.")
-                val msgContent: String = msg.length.toString() // processing individual messages
-                val message: MqttMessage = new MqttMessage(msgContent.getBytes("utf-8"))
+                val maxValue: String = msg.split(";").reduce((x, y) => if(x.toDouble > y.toDouble) x else y)
+                val message: MqttMessage = new MqttMessage(maxValue.getBytes("utf-8"))
                 log.warn(s"Attempting to publish message ${message}.")
                 pubTopic.publish(message)
                 log.warn(s"Published message ${message}.")
