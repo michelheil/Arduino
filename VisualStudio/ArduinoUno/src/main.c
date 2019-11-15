@@ -61,7 +61,7 @@ volatile uint8_t thermInterruptFlag = 0;
 volatile uint8_t pushButtonInterruptFlag = 0;
 // volatile uint8_t measureCounter = 1;
 
-#define USART_MAX_GRID_STRING_LENGTH (((5+1)*64) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
+#define USART_MAX_GRID_STRING_LENGTH (((5+1)*8) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
 
 /*
  * define function to compare two Strings
@@ -120,7 +120,7 @@ int main(void)
     {
         // when push button is pressed send word "Send" to USART TX
         if(pushButtonInterruptFlag == 1) { 
-            USART_writeString("Send");
+            USART_writeStringLn("Send");
             pushButtonInterruptFlag = 0; // reset interrupt flag
         }            
         
@@ -137,7 +137,7 @@ int main(void)
             
  
             // iterate through all pixels and (a) calculate maximum value and (b) concatenate values to string
-            for(int row = 0; row < AMG8833_GRID_PIXELS_X-4; row++) {
+            for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
                 char buff[USART_MAX_GRID_STRING_LENGTH] = ""; //measureCounter:
                 for(int col = 0; col < AMG8833_GRID_PIXELS_Y; col++) {
                     currentGridValue = amgGrid[row][col];
@@ -146,6 +146,7 @@ int main(void)
                     if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
                 }
                 USART_writeStringLn(&buff[0]);
+                _delay_ms(200);
                 buff[0] = 0; // reset buffer for grid string output
             }
             
@@ -153,7 +154,6 @@ int main(void)
             LCD_sendDataString("Max:");
             LCD_sendDataFloat(maxGridValue);
 
-            _delay_ms(500);
             cbi(PORTD, PD4);
             
             thermInterruptFlag = 0; // reset interrupt flag   

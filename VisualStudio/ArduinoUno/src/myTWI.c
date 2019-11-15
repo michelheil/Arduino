@@ -6,12 +6,9 @@
  */ 
 #include "myTWI.h"
 #include "myLOG.h"
-#include "myLCD.h"
 
 #include <avr/io.h>
-//#include <stdio.h>
 #include <util/twi.h>
-//#include <util/delay.h>
 #include <string.h>
 
 
@@ -58,7 +55,11 @@ uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int
 
 
 // wrapper function for handing over buffer array to readAMG833Bytes
-// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp// usage: uint16_t results[n];//        TWI_readPairBytesFromAddressRaw(..., ..., ..., &results[0]);//        float gridValue = TWI_int12ToFloat(Raw) * CONVERSION;void TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray)
+// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp
+// usage: uint16_t results[n];
+//        TWI_readPairBytesFromAddressRaw(..., ..., ..., &results[0]);
+//        float gridValue = TWI_int12ToFloat(Raw) * CONVERSION;
+void TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray)
 {
     int numberBytes = numberPix * 2;
     
@@ -111,17 +112,16 @@ int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
         switch (twst = (TWSR & 0xF8)) // masked Status Register
         {
             case TW_MR_DATA_NACK:
-            len = 0; // force end of the loop
-            // FALLTHROUGH: no "break;" here means that the next case will be executed
+                len = 0; // force end of the loop
+                // FALLTHROUGH: no "break;" here means that the next case will be executed
             case TW_MR_DATA_ACK:
-            *dest++ = TWDR;
-            bytesReceived++;
-            if(twst == TW_MR_DATA_NACK) {TWI_stopTransmission();}
-            break;
+                *dest++ = TWDR;
+                bytesReceived++;
+                if(twst == TW_MR_DATA_NACK) {TWI_stopTransmission();}
+                break;
             default:
-            LCD_setCursorTo(0, 2);
-            LCD_sendDataString("ERR:6");
-            TWI_stopTransmission();
+                LOG_error("ERR:6");
+                TWI_stopTransmission();
         }
     }
 
@@ -141,7 +141,7 @@ void TWI_startTransmission(void)
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bit1 and bit0, bit2 is unused anyway. If status different from START go to ERROR
-    if ((TWSR & 0xF8) != TW_START) LCD_sendDataString("ERR:1"); // do not send stop after start condition
+    if ((TWSR & 0xF8) != TW_START) LOG_error("ERR:1"); // do not send stop after start condition
     LOG_debug("success!");
 }
 
@@ -162,7 +162,7 @@ void TWI_writeSlaRW(uint8_t slarw)
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_SLA_ACK go to ERROR
-    if ( ((TWSR & 0xF8) != TW_MT_SLA_ACK) && ((TWSR & 0xF8) != TW_MR_SLA_ACK) ) LCD_sendDataString("ERR:2");
+    if ( ((TWSR & 0xF8) != TW_MT_SLA_ACK) && ((TWSR & 0xF8) != TW_MR_SLA_ACK) ) LOG_error("ERR:2");
     
     LOG_debug("success!");
 }
@@ -183,7 +183,7 @@ void TWI_writeByte(uint8_t val)
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from MT_DATA_ACK go to ERROR
-    if ((TWSR & 0xF8) != TW_MT_DATA_ACK) LCD_sendDataString("ERR:3");
+    if ((TWSR & 0xF8) != TW_MT_DATA_ACK) LOG_error("ERR:3");
     LOG_debug("success!");
 }
 
@@ -206,7 +206,7 @@ void TWI_repeatStartTransmission(void)
     while ((TWCR & (1 << TWINT)) == 0);
 
     // Check value of TWI Status Register. Mask prescaler bits. If status different from REP_START go to ERROR
-    if ((TWSR & 0xF8) != TW_REP_START) LCD_sendDataString("ERR:4");
+    if ((TWSR & 0xF8) != TW_REP_START) LOG_error("ERR:4");
     LOG_debug("success!");
 }
 

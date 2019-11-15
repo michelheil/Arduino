@@ -15,7 +15,7 @@ const int mqtt_port = 1883;
 const char* topicToPC = "/arbeitszimmer/temperatur";
 const char* topicFromPC = "/arbeitszimmer/temperatur/ergebnis";
 const int expectedMqttInput = 20;
-const int RATE = 5000; // Sendefrequenz alle 5000 Milli-Sekunden (fuer Debugging)
+const int maxExpecArdInLen = 50;                // expectedArduinoInputLength (maximum length is (64 bytes * (5 + 1)) + 1) = 385
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -29,7 +29,6 @@ void WiFiInit() {
     delay(500);
   }
 }
-
 
 
 // callback function wenn eine Nachricht in einem Topic landet
@@ -56,11 +55,6 @@ void reconnect() {
 
 
 
-// globale Variablen verwendet fuer den Timer, um alle 5 Sekunden eine Hello World Nachricht zu versenden
-long lastMsg = 0;
-int counter = 0;
-const int maxExpecArdInLen = 50;                         // expectedArduinoInputLength (maximum length is (64 bytes * (5 + 1)) + 1) = 
-
 void setup() {
   Serial.begin(250000);
   WiFiInit();
@@ -69,34 +63,28 @@ void setup() {
 }
 
 void loop() {
-  if(!client.connected()) {reconnect();}               // Reconnect falls Verbindung abgebrochen
+  if(!client.connected()) {reconnect();}        // Reconnect falls Verbindung abgebrochen
   client.loop();
 
   // Arduino to ESP via serial RX
 
-  if (Serial.available() > 0) {                                        // read from Rx from atmega328p
 
+  if (Serial.available() > 0) {                 // read from Rx from atmega328p
     uint8_t usartStrCompleteFlag = 0;
-    char    usartStr[maxExpecArdInLen] = "";                       // buffer for RX data 
+    char    usartStr[maxExpecArdInLen] = "";      // buffer for RX data 
     uint8_t usartStrCount = 0;
 
     while (usartStrCompleteFlag == 0)
     {
-      delay(15);
+      delay(10);
       byte nextByte = Serial.read();
       
       if ( (nextByte >= 0x20) && (usartStrCount < maxExpecArdInLen) )
       {
-        usartStr[usartStrCount] = nextByte;                // start reading serially and save to variable
+        usartStr[usartStrCount] = nextByte;     // start reading serially and save to buffer
         usartStrCount++;
         
       } else {
-        usartStr[usartStrCount] = '\0';
-        usartStrCompleteFlag = 1;
-      }
-
-      if (Serial.peek() == -1)
-      {
         usartStr[usartStrCount] = '\0';
         usartStrCompleteFlag = 1;
       }
@@ -105,4 +93,7 @@ void loop() {
     // ESP to MQTT/PC via WiFi  
     client.publish(topicToPC, usartStr);
   }
+
+
+
 }
