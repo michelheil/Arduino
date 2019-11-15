@@ -3,6 +3,10 @@
 		{
 			"name": "ArduinoUno",
 			"path": "ArduinoUno"
+		},
+		{
+			"name": "ESP8266",
+			"path": "ESP8266"
 		}
 	],
 	"settings": {}
