@@ -114,6 +114,7 @@ void LCD_sendCommandByte(uint8_t data);
 void LCD_sendDataByte(uint8_t data);
 void LCD_sendDataString(const char *data);
 void LCD_sendDataUint(unsigned char *data);
+void LCD_sendDataUint16(uint16_t val);
 void LCD_sendDataFloat(float val);
 void LCD_setCursorHome(void);
 
@@ -126,7 +127,7 @@ void LCD_setCursorTo(uint8_t col, uint8_t row);
 ////////////////////////////////////////////////////////////////////////////////
 // Definition eines benutzerdefinierten Sonderzeichens.
 // data muss auf ein Array[8] mit den Zeilencodes des zu definierenden Zeichens
-// zeigen. Später können diese mit lcd_data(0-7) aufgerufen werden
+// zeigen. Spï¿½ter kï¿½nnen diese mit lcd_data(0-7) aufgerufen werden
 void lcd_generatechar(uint8_t startadresse, const uint8_t *data);
 
 

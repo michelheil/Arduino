@@ -150,6 +150,15 @@ void LCD_sendDataUint(unsigned char *data)
     }
 }
 
+// sends unsigned int (16-bit) to the current cursor position
+void LCD_sendDataUint16(uint16_t val)
+{
+    static char stringBuffer[2];
+	itoa(val, stringBuffer, 10);
+    LCD_sendDataString(&stringBuffer[0]);
+
+}
+
 // send data as float to the current cursor position
 void LCD_sendDataFloat(float val)
 {
@@ -169,7 +178,7 @@ void lcd_generatechar(uint8_t startadresse, const uint8_t *data)
     // Startposition des Zeichens einstellen
     LCD_sendCommandByte(LCD_SET_CGADR | (startadresse<<3)); //Startadressen: 0;1;2;3;4;5;6;7
     
-    // Bitmuster übertragen
+    // Bitmuster ï¿½bertragen
     for (uint8_t i=0; i<8; i++)
     {
         LCD_sendDataByte(data[i]);
