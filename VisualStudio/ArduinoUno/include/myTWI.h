@@ -49,25 +49,23 @@
  *
  * returns: 0
  */
-int         TWI_init(void);
+int     TWI_init(void);
 
 /*
  * 
  */
-uint16_t    TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberBytes);
-void        TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray);
-int         TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
+int     TWI_readBytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
 
 // TWI function for transmissions
-void        TWI_startTransmission(void);
-void        TWI_repeatStartTransmission(void);
-void        TWI_writeSlaRW(uint8_t slarw);
-void        TWI_writeRegisterAddress(uint8_t addr);
-void        TWI_writeByte(uint8_t addr);
-void        TWI_stopTransmission(void);
+void    TWI_startTransmission(void);
+void    TWI_repeatStartTransmission(void);
+void    TWI_writeSlaRW(uint8_t slarw);
+void    TWI_writeRegisterAddress(uint8_t addr);
+void    TWI_writeByte(uint8_t addr);
+void    TWI_stopTransmission(void);
 
 // helper functions
-float       TWI_signedMag12ToFloat(uint16_t val);
-float       TWI_int12ToFloat(uint16_t val);
+float   TWI_signedMag12ToFloat(uint16_t val);
+float   TWI_int12ToFloat(uint16_t val);
 
 #endif /* MYTWI_H_ */

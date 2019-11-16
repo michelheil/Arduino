@@ -4,12 +4,11 @@
  * Created: 09.10.2019 18:43:33
  *  Author: Michael
  */ 
-#include "myTWI.h"
 #include "myLOG.h"
+#include "myTWI.h"
 
 #include <avr/io.h>
 #include <util/twi.h>
-#include <string.h>
 
 
 // enabled TWI, set frequency for SCL (and activate internal pull-up resistors on SDA and SCL)
@@ -32,52 +31,8 @@ int TWI_init(void)
     return 0;
 }
 
-
-// wrapper function for handing over buffer array to readAMG833Bytes
-uint16_t TWI_readBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberBytes)
-{
-    // initialize buffer for the two bytes of Thermistor
-    uint8_t rawData[numberBytes];
-    memset(rawData, 0, numberBytes*sizeof(uint8_t));
-
-    LOG_debug("Read Thermistor");
-
-    // read two bytes from Thermistor
-    TWI_readAMG8833Bytes(devAddress, regAddress, numberBytes, &rawData[0]);
-    LOG_debug("...Thermistor reading done!");
-
-    // combine two bytes into uint16_t
-    uint16_t data =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
-    
-    // return Thermistor bytes as one 16-bit value
-    return data;
-}
-
-
-// wrapper function for handing over buffer array to readAMG833Bytes
-// github.com/jodalyst/AMG8833/blob/master/src/AMG8833.cpp
-// usage: uint16_t results[n];
-//        TWI_readPairBytesFromAddressRaw(..., ..., ..., &results[0]);
-//        float gridValue = TWI_int12ToFloat(Raw) * CONVERSION;
-void TWI_readPairBytesFromAddressRaw(uint8_t devAddress, uint8_t regAddress, int numberPix, uint16_t * resultArray)
-{
-    int numberBytes = numberPix * 2;
-    
-    uint8_t rawGridData[numberBytes]; // buffer for raw input from device
-    memset(rawGridData, 0, numberBytes*sizeof(uint8_t));
-
-    // read Grid Bytes starting with lower bit from first Pixel
-    TWI_readAMG8833Bytes(devAddress, regAddress, numberBytes, &rawGridData[0]);
-    
-    for(uint16_t ii = 0; ii < numberPix; ii++) {
-        // combine two bytes for each Pixel
-        *resultArray++ = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
-    }
-}
-
-
 // Use I2C (Two-Wire Protocol) to get data from AMG8833
-int TWI_readAMG8833Bytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
+int TWI_readBytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
 {
     uint8_t slaw = ((sla << 1) | TW_WRITE);
     uint8_t slar = ((sla << 1) | TW_READ);

@@ -17,7 +17,7 @@ uint8_t DS3231_getSeconds(void) {
 
     uint8_t res;
 
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 1, &res);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 1, &res);
 
     return res;
 }
@@ -27,7 +27,7 @@ uint8_t DS3231_getMinutes(void) {
 
     uint8_t res;
 
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_MINUTES_REG, 1, &res);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_MINUTES_REG, 1, &res);
 
     return res;
 }
@@ -37,7 +37,7 @@ uint8_t DS3231_getHours(void) {
 
     uint8_t res;
 
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_HOURS_REG, 1, &res);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_HOURS_REG, 1, &res);
 
     return res;
 }
@@ -46,18 +46,18 @@ uint8_t DS3231_getHours(void) {
 // get 3 byte values starting from register Seconds
 void DS3231_getTime(uint8_t * resPointer) {
 
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 3, resPointer);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 3, resPointer);
 
 }
 
 // get 3 byte values starting from register Date
 void DS3231_getDMY(uint8_t * resPointer) {
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_DATE_REG, 3, resPointer);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_DATE_REG, 3, resPointer);
 }
 
 // get 7 byte values starting from register Seconds
 void DS3231_getTimestamp(uint8_t * resPointer) {
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 7, resPointer);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_SECONDS_REG, 7, resPointer);
 }
 
 // transform raw byte values into string
@@ -94,7 +94,7 @@ void DS3231_getTimeStampString(char * resPointer) {
 void DS3231_getDayString(char * resPointer) {
     
     uint8_t rawDay;
-    TWI_readAMG8833Bytes(DS3231_SLAVE_ADDRESS, DS3231_DAY_REG, 1, &rawDay);
+    TWI_readBytes(DS3231_SLAVE_ADDRESS, DS3231_DAY_REG, 1, &rawDay);
 
     switch(rawDay)
     {

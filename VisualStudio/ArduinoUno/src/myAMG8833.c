@@ -7,6 +7,7 @@
 #include "myAMG8833.h"
 
 #include <util/delay.h>
+#include <string.h>
 #include "myLOG.h"
 #include "myTWI.h"
 
@@ -78,7 +79,20 @@ void AMG8833_readGrid(float * resultGridValues)
     uint16_t rawGridValues[AMG8833_GRID_PIXELS];
     
     // read out the 64 pixels from the grid. Each Pixel consist of two bytes
-    TWI_readPairBytesFromAddressRaw(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, AMG8833_GRID_PIXELS, &rawGridValues[0]);
+    int numberBytes = AMG8833_GRID_PIXELS * 2; // the value for each pixel is stored in 2 bytes
+    
+    uint8_t rawGridData[numberBytes]; // buffer for raw input from device
+    memset(rawGridData, 0, numberBytes*sizeof(uint8_t));
+
+    // read Grid Bytes starting with lower bit from first Pixel
+    LOG_debug("Read Grid");
+    TWI_readBytes(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, numberBytes, &rawGridData[0]);
+    LOG_debug("...Grid reading done!");
+    
+    // combine two bytes for each Pixel
+    for(uint16_t ii = 0; ii < AMG8833_GRID_PIXELS; ii++) {
+        rawGridValues[ii] = ((uint16_t) rawGridData[2*ii + 1] << 8) | ((uint16_t) rawGridData[2*ii]);
+    }
 
     // transform raw value into Celsius degree according to data sheet calculation
     for(int ii = 0; ii < AMG8833_GRID_PIXELS; ii++)
@@ -90,9 +104,19 @@ void AMG8833_readGrid(float * resultGridValues)
 
 float AMG8833_readThermistor(void)
 {
-    // read the thermistor value as 16-bit value
-    uint16_t thermistorValueRaw = TWI_readBytesFromAddressRaw(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES);
-    
+    // initialize buffer for the two bytes of Thermistor
+    uint8_t rawData[AMG8833_THERMISTOR_BYTES];
+    memset(rawData, 0, AMG8833_THERMISTOR_BYTES*sizeof(uint8_t));
+
+    LOG_debug("Read Thermistor");
+
+    // read two bytes from Thermistor
+    TWI_readBytes(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
+    LOG_debug("...Thermistor reading done!");
+
+    // combine two bytes into uint16_t
+    uint16_t thermistorValueRaw =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
+
     // return float value containing temperature in Celsius
     return TWI_signedMag12ToFloat(thermistorValueRaw) * AMG8833_THERMISTOR_CONVERSION;
 }

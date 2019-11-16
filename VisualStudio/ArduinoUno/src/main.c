@@ -34,7 +34,8 @@
 #include "myLCD.h"
 #include "myUSART.h"
 #include "myAMG8833.h"
-#include "myLOG.h"
+#include "myDS3231.h"
+
 
 // define string that activate particular actions
 char compareStr[] = "read";
