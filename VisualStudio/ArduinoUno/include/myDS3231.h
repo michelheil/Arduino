@@ -61,23 +61,47 @@ uint8_t DS3231_getHours(void);
 /*
  * Request current Seconds, Minutes, and Hours from Adafruit DS3231
  * 
- * resPointer: storage for raw Bits of the requested DS3231 registers
+ * resPointer: 3-byte buffer for raw Bits of the requested DS3231 registers
  * (apply combineRegisterrBits helper function for actual value)
  */
 void DS3231_getTime(uint8_t * resPointer);
 
 /*
+ * Gets time from DS3231 in format HH:mm:ss
+ * 
+ * resPointer: 9-byte buffer for time string
+ * 
+ * usage: 
+ * char time[9];
+ * DS3231_getTimeString(&time[0]);
+ * USART_writeStringLn(&time[0]);
+ */
+void DS3231_getTimeString(char * resPointer);
+
+/*
  * Request current Date, Month, and Year from Adafruit DS3231
  * 
- * resPointer: storage for raw Bits of the requested DS3231 registers
+ * resPointer: 3-byte buffer for raw Bits of the requested DS3231 registers
  * (apply combineRegisterrBits helper function for actual value)
  */
 void DS3231_getDMY(uint8_t * resPointer);
 
 /*
+ * Gets date, month, year from DS3231 in format yyyy-DD-mm
+ * 
+ * resPointer: 11-byte buffer for timestamp string
+ * 
+ * usage: 
+ * char dmy[11];
+ * DS3231_getDMYString(&dmy[0]);
+ * USART_writeStringLn(&dmy[0]);
+ */
+void DS3231_getDMYString(char * resPointer);
+
+/*
  * Request current Seconds, Minutes, Hours, Day, Date, Month, and Year from Adafruit DS3231
  * 
- * resPointer: storage for raw Bits of the requested DS3231 registers
+ * resPointer: 7-byte for raw Bits of the requested DS3231 registers
  * (apply combineRegisterrBits helper function for actual value)
  */
 void DS3231_getTimestamp(uint8_t * resPointer);
@@ -85,14 +109,14 @@ void DS3231_getTimestamp(uint8_t * resPointer);
 /*
  * Gets timestamp from DS3231 in format yyyy-MM-dd'T'HH:mm:ss
  * 
- * resPointer: storage for timestamp string
+ * resPointer: 22-byte buffer for timestamp string
  * 
  * usage: 
  * char timestamp[22];
- * DS3231_getTimeStampString(&timestamp[0]);
+ * DS3231_getTimestampString(&timestamp[0]);
  * USART_writeStringLn(&timestamp[0]);
  */
-void DS3231_getTimeStampString(char * resPointer);
+void DS3231_getTimestampString(char * resPointer);
 
 /*
  * Gets day from DS3231 as String

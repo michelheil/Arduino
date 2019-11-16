@@ -9,8 +9,8 @@
  * PD3 -> INT (AMG8833)
  * PD4 -> LED
  *
- * SCL -> SCL (AMG8833)
- * SDA -> SDA (AMG8833)
+ * SCL -> SCL (AMG8833 + DS3231)
+ * SDA -> SDA (AMG8833 + DS3231)
  *
  * PB0 -> RS (LCD)
  * PB1 -> E (LCD)
@@ -40,8 +40,9 @@
 
 
 // define string that activate particular actions
-char compareStr[] = "read";
+char compareReadStr[] = "read";
 char compareClearStr[] = "clear";
+char compareTimeStr[] = "time";
 
 // define Interrupt level for AMG8833
 // Interrupt flag  -This flag indicates whether Interrupt is generated  or not when INT control register is activated.
@@ -74,6 +75,7 @@ int main(void)
     float amgTherm;
     float amgGrid[AMG8833_GRID_PIXELS_X][AMG8833_GRID_PIXELS_Y];
     float currentGridValue;
+    float minGridValue;
     float maxGridValue;
         
     // Initialize LCD display, TWI ports and AMG8833 device
@@ -109,21 +111,15 @@ int main(void)
     {
         // when push button is pressed send word "Send" to USART TX
         if(pushButtonInterruptFlag == 1) { 
-            
             // send "Send" to ESP8266 over TX
             USART_writeStringLn("Send");
             
             // experimental zone
             // Moisture Sensor
             uint16_t moistureValue = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
-            LCD_setCursorTo(12,2);
+            LCD_clearDisplay();
+            LCD_sendDataString("Moisture: ");
             LCD_sendDataUint16(moistureValue);
-
-            // DS3231
-            char timestamp[22];
-            DS3231_getTimeStampString(&timestamp[0]);
-            LCD_setCursorHome();
-            LCD_sendDataString(&timestamp[0]);
 
             pushButtonInterruptFlag = 0; // reset interrupt flag
         }            
@@ -133,13 +129,11 @@ int main(void)
 
             sbi(PORTD, PD4); // indicate interrupt action
 
-            AMG8833_readGrid(&amgGrid[0][0]);
+            AMG8833_readGrid(&amgGrid[0][0]); // read AMG8833 grid values
 
+            minGridValue = 100; // reset maxValue before each calculation
             maxGridValue = 0; // reset maxValue before each calculation
             
-            // create buffer to send all pixel values            
-            
- 
             // iterate through all pixels and (a) calculate maximum value and (b) concatenate values to string
             for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
                 char buff[USART_MAX_GRID_STRING_LENGTH] = ""; //measureCounter:
@@ -147,42 +141,63 @@ int main(void)
                     currentGridValue = amgGrid[row][col];
                     strcat(&buff[0], float2str(currentGridValue));
                     if( !(col == (AMG8833_GRID_PIXELS_Y - 1)) ) strcat(&buff[0], ";");
+                    if(currentGridValue < minGridValue) minGridValue = currentGridValue;
                     if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
                 }
                 USART_writeStringLn(&buff[0]);
-                _delay_ms(200);
+                _delay_ms(200); // delay RX as ESP cannot read data fast enough (buffer is ~64 bytes)
                 buff[0] = 0; // reset buffer for grid string output
             }
             
+            LCD_clearDisplay();
+            LCD_setCursorHome();
+            LCD_sendDataString("Min:");
+            LCD_sendDataFloat(minGridValue);
             LCD_setCursorTo(0,2);
             LCD_sendDataString("Max:");
             LCD_sendDataFloat(maxGridValue);
 
-            cbi(PORTD, PD4);
+            cbi(PORTD, PD4); // indicate end of interrupt action
             
             thermInterruptFlag = 0; // reset interrupt flag   
         }
              
         // when a string from Rx is received start comparison of the received string with pre-defined commands 
         if(usartStrCompleteFlag == 1) { 
-            if(cmpString(&usartStr[0], &compareStr[0])) {
-                sbi(PORTD, PD4);
+            if(cmpString(&usartStr[0], &compareReadStr[0])) {
+                LCD_clearDisplay();
                 LCD_setCursorHome();
                 LCD_sendDataString("Temp:");
                 amgTherm = AMG8833_readThermistor(); // read out Thermistor value and print it on display
                 LCD_sendDataFloat(amgTherm);
                 LCD_sendDataString(" C");
-                _delay_ms(500);
-                cbi(PORTD, PD4);
-                usartStr[0] = 0; // "reset" received string
             }
             
             if(cmpString(&usartStr[0], &compareClearStr[0])) {
                 LCD_clearDisplay();
-            }     
-            
-            usartStrCompleteFlag = 0; // reset Rx flag and counter of the usartString 
-            usartStrCount = 0; 
+            }
+
+            if(cmpString(&usartStr[0], &compareTimeStr[0])) {
+                LCD_clearDisplay();
+                
+                // write Date
+                LCD_setCursorHome();
+                char dmy[11];
+                DS3231_getDMYString(&dmy[0]);
+                LCD_sendDataString("Date: ");
+                LCD_sendDataString(&dmy[0]);
+                
+                // write Time
+                LCD_setCursorTo(0,2);
+                char time[9];
+                DS3231_getTimeString(&time[0]);
+                LCD_sendDataString("Time: ");
+                LCD_sendDataString(&time[0]);
+            }
+
+            usartStr[0] = 0; // reset received string
+            usartStrCompleteFlag = 0; // reset Rx flag of the usartString 
+            usartStrCount = 0; // reset global counter of the usartString
         } 
     }
 }
