@@ -177,26 +177,3 @@ void TWI_stopTransmission(void)
 
 
 
-// helper functions
-// convert a 12-bit signed magnitude value to a floating point number
-// According to data sheet AMG8833: 12-bit Thermistor resolution is indicated as code (sign) + absolute value
-float TWI_signedMag12ToFloat(uint16_t val)
-{
-    //take first 11 bits as absolute val by applying the 11-bit mask 0x7FF
-    uint16_t absVal = (val & 0x7FF);
-
-    // if 12th bit (0x800) is 0 (= minus) then return negative absolute value, otherwise just return positive (absolute) value
-    return (val & 0x800) ? 0 - (float) absVal : (float) absVal;
-}
-
-
-// convert a 12-bit integer two's complement value to a floating point number
-// According to data sheet AMG8833: 12-bit Pixel resolution is indicated as two's complement form (Zweierkomplement)
-float TWI_int12ToFloat(uint16_t val)
-{
-    // shift to left so that sign bit of 12 bit integer number is placed on sign bit of 16 bit signed integer number
-    int16_t sVal = (val << 4);
-
-    // shift back the signed number. Call of return converts to float
-    return sVal >> 4;
-}

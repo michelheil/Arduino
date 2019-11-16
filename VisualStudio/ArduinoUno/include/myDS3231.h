@@ -9,7 +9,6 @@
 #ifndef MYDS3231_H_
 #define MYDS3231_H_
 
-#include "globalDefines.h"
 #include <util/twi.h> // required for TW_READ and TW_WRITE
 
 // DS3231 I2C Slave Address is 0x68

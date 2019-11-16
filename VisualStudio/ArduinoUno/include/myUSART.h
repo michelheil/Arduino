@@ -9,11 +9,7 @@
 # ifndef MYUSART_H_
 # define MYUSART_H_
 
-#include "globalDefines.h"
-
-#include <avr/io.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <avr/io.h> // required for uint types
 
 #define USART_MAX_INPUT_STRING_LENGTH 64
 
@@ -94,11 +90,5 @@ void USART_newLine();
  * Writes a new head line to TX
  */
 void USART_Headline(char * stringPtr);
-
-// helper functions
-char* float2str(float floatValue);
-char* uint82str(uint8_t uint8Value);
-char* uint162str(uint16_t uint16Value);
-char* uint322str(uint32_t uint32Value);
 
 # endif /* MYUSART_H_ */

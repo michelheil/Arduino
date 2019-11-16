@@ -9,7 +9,6 @@
 #ifndef MYAMG8833_H_
 #define MYAMG8833_H_
 
-#include "globalDefines.h"
 #include <util/twi.h> // required for TW_READ and TW_WRITE
 
 // AMG8833 I2C Slave Address is 0x69

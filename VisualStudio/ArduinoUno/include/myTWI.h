@@ -18,7 +18,7 @@
 #ifndef MYTWI_H_
 #define MYTWI_H_
 
-#include <avr/io.h>
+#include <avr/io.h> // required for uint types
 
 /*
  * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has
@@ -63,9 +63,5 @@ void    TWI_writeSlaRW(uint8_t slarw);
 void    TWI_writeRegisterAddress(uint8_t addr);
 void    TWI_writeByte(uint8_t addr);
 void    TWI_stopTransmission(void);
-
-// helper functions
-float   TWI_signedMag12ToFloat(uint16_t val);
-float   TWI_int12ToFloat(uint16_t val);
 
 #endif /* MYTWI_H_ */

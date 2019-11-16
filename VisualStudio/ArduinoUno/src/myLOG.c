@@ -4,9 +4,9 @@
  * Created: 08.11.2019 10:50:29
  *  Author: Michael
  */ 
-#include "globalDefines.h"
-
 #include "myLOG.h"
+
+#include "globalDefines.h"
 #include "myUSART.h"
 
 typedef enum {ALL = 1, DEBUGG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7} logLevel; // DEBUG does not work => debugG

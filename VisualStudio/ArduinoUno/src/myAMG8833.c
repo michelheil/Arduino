@@ -6,6 +6,8 @@
  */ 
 #include "myAMG8833.h"
 
+#include "myHelperFunctions.h"
+
 #include <util/delay.h>
 #include <string.h>
 #include "myLOG.h"
@@ -97,7 +99,7 @@ void AMG8833_readGrid(float * resultGridValues)
     // transform raw value into Celsius degree according to data sheet calculation
     for(int ii = 0; ii < AMG8833_GRID_PIXELS; ii++)
     {
-        *resultGridValues++ = TWI_int12ToFloat(rawGridValues[ii]) * AMG8833_PIXEL_CONVERSION;
+        *resultGridValues++ = int12ToFloat(rawGridValues[ii]) * AMG8833_PIXEL_CONVERSION;
         
     }
 }
@@ -118,7 +120,7 @@ float AMG8833_readThermistor(void)
     uint16_t thermistorValueRaw =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
 
     // return float value containing temperature in Celsius
-    return TWI_signedMag12ToFloat(thermistorValueRaw) * AMG8833_THERMISTOR_CONVERSION;
+    return signedMag12ToFloat(thermistorValueRaw) * AMG8833_THERMISTOR_CONVERSION;
 }
 
 const char * AMG8833_readStatusRegister(void)

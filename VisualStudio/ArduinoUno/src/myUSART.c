@@ -5,6 +5,8 @@
  *  Author: Michael
  */ 
 #include "myUSART.h"
+#include "globalDefines.h" // required for sbi usage
+#include "myHelperFunctions.h" // required for float2str usage
 
 // set baud rate
 #define USART_BAUDRATE	250000//125000 //9600
@@ -165,33 +167,4 @@ void USART_Headline(char * stringPtr)
     USART_newLine();
     USART_writeString(stringPtr);
     USART_newLine();
-}
-
-// www.mikrocontroller.net/articles/FAQ#Aktivieren_der_Floating_Point_Version_von_sprintf_beim_WinAVR_mit_AVR-Studio
-char* float2str(float floatValue)
-{
-	static char retnum[20];       // Enough for 20 digits
-	sprintf(retnum,"%d.%02d", (int)floatValue , (int) (100*((floatValue)-(int)floatValue)));
-	return retnum;
-}
-
-char* uint82str(uint8_t uint8Value)
-{
-	static char buffer[1];
-	itoa(uint8Value, buffer, 10);
-	return buffer;
-}
-
-char* uint162str(uint16_t uint16Value)
-{
-	static char buffer[2];
-	itoa(uint16Value, buffer, 10);
-	return buffer;
-}
-
-char* uint322str(uint32_t uint32Value)
-{
-	static char buffer[4];
-	itoa(uint32Value, buffer, 10);
-	return buffer;
 }

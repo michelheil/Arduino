@@ -7,6 +7,9 @@
 
 #include "myADC.h"
 
+#include "globalDefines.h" // required for sbi usage
+#include <util/delay.h> // required for _delay_ms() usage
+
 // (Helper Function:) Start ADC conversion and wait until the conversion is completed
 void ADC_startConversionAndWait()
 {

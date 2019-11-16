@@ -9,7 +9,7 @@
 #ifndef MYVARIABLETYPES_H_
 #define MYVARIABLETYPES_H_
 
-#include <avr/io.h>
+#include <avr/io.h> // required for uint types
 
 struct pairOfTwoUint16 {
 	uint16_t sensorLowerBound;

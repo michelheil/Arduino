@@ -8,12 +8,14 @@
  * Author : Michael
  */ 
 
-#include "globalDefines.h"
+#include "globalDefines.h" // required for sbi, cbi usage
+#include <avr/io.h> // required for uint types
 
-#include <avr/io.h>
-#include <util/delay.h>
-#include <stdlib.h> // www.nongnu.org/avr-libc//user-manual/group__avr__stdlib.html
 #include "myLCD.h"
+
+#include <util/delay.h>
+#include <stdlib.h> // required for itoa, dtostrf usage; www.nongnu.org/avr-libc//user-manual/group__avr__stdlib.html
+
 
 
 // Creates the start signal for reading or writing data

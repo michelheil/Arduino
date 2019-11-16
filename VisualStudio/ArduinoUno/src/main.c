@@ -24,6 +24,7 @@
  */ 
 
 #include "globalDefines.h"
+#include "myHelperFunctions.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -49,7 +50,7 @@ char compareClearStr[] = "clear";
 //
 // Interrupt value
 // 1 LSB has 12 bit resolution (sign + 11 bit) which is equivalent to 0.25 Celsius and it is indicated as two's complement form.
-#define AMG8833_INT_UPPER_LEVEL_LOW  0b01111000 // 120 => 30 Celcius
+#define AMG8833_INT_UPPER_LEVEL_LOW  0b01111000 // 120 => 30 degree Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
 // define delimiter 
@@ -64,21 +65,6 @@ volatile uint8_t pushButtonInterruptFlag = 0;
 // volatile uint8_t measureCounter = 1;
 
 #define USART_MAX_GRID_STRING_LENGTH (((5+1)*8) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
-
-/*
- * define function to compare two Strings
- * 
- * string1: pointer to unsigned char of first string
- * string2: pointer to unsigned char of second string
- *
- * returns: 1 for string matching, 0 else
- *
- * Example: cmpString(&usartStr[0], &compareStr[0])
- */
-uint8_t cmpString(volatile char * string1, char * string2);
-
-void ausbin8(uint8_t wert);
-
 
 int main(void)
 {
@@ -99,7 +85,7 @@ int main(void)
     // activate moving average
     AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
     
-    // activate Interrupt of 25 Celsius
+    // activate Interrupt with upper limit
     AMG8833_setRegisterByte(AMG8833_INTC, AMG8833_INTC_INTMOD_ABS + AMG8833_INTC_INTEN_ACTIVE);
     AMG8833_setRegisterByte(AMG8833_INTHL, AMG8833_INT_UPPER_LEVEL_LOW);
     AMG8833_setRegisterByte(AMG8833_INTHH, AMG8833_INT_UPPER_LEVEL_HIGH);
@@ -183,8 +169,7 @@ int main(void)
                 sbi(PORTD, PD4);
                 LCD_setCursorHome();
                 LCD_sendDataString("Temp:");
-                // read out Thermistor value and print it on display
-                amgTherm = AMG8833_readThermistor();
+                amgTherm = AMG8833_readThermistor(); // read out Thermistor value and print it on display
                 LCD_sendDataFloat(amgTherm);
                 LCD_sendDataString(" C");
                 _delay_ms(500);
@@ -236,24 +221,3 @@ ISR(USART_RX_vect)
     }
 }
 
-
-// helper function to compare two strings.
-unsigned char cmpString(volatile char * string1, char * string2)
-{
-    while (1)
-    {
-        if ( (*string1 == 0) && (*string2 == 0) ) return 1;
-        if (*string1 != *string2) return 0;
-        string1++; string2++;
-    }
-}
-
-void ausbin8(uint8_t wert)
-{
-    LCD_sendDataString("0b");
-    for (unsigned char i = 0; i < 8; i++)
-    {
-        LCD_sendDataString(uint82str(wert >> 7)); // print highest bit
-        wert <<= 1; // shift one bit left such that highest (already printed) bit will disappear
-    }
-}

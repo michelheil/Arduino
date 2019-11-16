@@ -9,11 +9,8 @@
 #ifndef MYADC_H_
 #define MYADC_H_
 
-#include "globalDefines.h"
-#include "myVariableTypes.h"
-
-#include <avr/io.h>
-#include <util/delay.h>
+#include "myVariableTypes.h" // required for struct pairOfTwoUint16
+#include <avr/io.h> // required for uint types
 
 /*
  * Initialise Analog-to-Digital Converter (ADC) with 10-bit resolution
