@@ -32,6 +32,7 @@ void USART_init(void)
 	UCSR0C = (1 << UCSZ00) | (1 << UCSZ01);
     
     trash = UDR0;
+    (void) trash;
     USART_newLine();
 }
 

@@ -13,11 +13,6 @@ typedef enum {ALL = 1, DEBUGG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF
     
 void LOG_format(char * tag, char * message)
 {
-    char swTimestamp[32];
-    sprintf(swTimestamp, "Dated: %s", __TIMESTAMP__); // Compilation timestamp
-    
-    USART_writeString(&swTimestamp[0]);
-    USART_writeString(" ");
     USART_writeString(&tag[0]);
     USART_writeString(": ");
     USART_writeStringLn(&message[0]);

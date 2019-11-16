@@ -49,7 +49,7 @@ char compareClearStr[] = "clear";
 //
 // Interrupt value
 // 1 LSB has 12 bit resolution (sign + 11 bit) which is equivalent to 0.25 Celsius and it is indicated as two's complement form.
-#define AMG8833_INT_UPPER_LEVEL_LOW  0b01100100 // 100 => 25 Celcius
+#define AMG8833_INT_UPPER_LEVEL_LOW  0b01111000 // 120 => 30 Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
 // define delimiter 
@@ -93,6 +93,7 @@ int main(void)
     // Initialize LCD display, TWI ports and AMG8833 device
     LCD_init(); // includes clear display
     USART_init(); // init USART with baud rate of 9600; includes writing of a newLine
+    ADC_init();
     AMG8833_init(AMG8833_PCTL_NORMAL_MODE, AMG8833_RST_INITIAL_RESET, AMG8833_FPSC_10FPS, AMG8833_INTC_INTEN_REACTIVE);
         
     // activate moving average
@@ -122,7 +123,22 @@ int main(void)
     {
         // when push button is pressed send word "Send" to USART TX
         if(pushButtonInterruptFlag == 1) { 
+            
+            // send "Send" to ESP8266 over TX
             USART_writeStringLn("Send");
+            
+            // experimental zone
+            // Moisture Sensor
+            uint16_t moistureValue = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+            LCD_setCursorTo(12,2);
+            LCD_sendDataUint16(moistureValue);
+
+            // DS3231
+            char timestamp[22];
+            DS3231_getTimeStampString(&timestamp[0]);
+            LCD_setCursorHome();
+            LCD_sendDataString(&timestamp[0]);
+
             pushButtonInterruptFlag = 0; // reset interrupt flag
         }            
         
