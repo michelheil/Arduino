@@ -35,6 +35,7 @@
 #include "myUSART.h"
 #include "myAMG8833.h"
 #include "myDS3231.h"
+#include "myADC.h"
 
 
 // define string that activate particular actions
