@@ -1,9 +1,8 @@
 import org.apache.log4j.{Level, LogManager, Logger}
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.mqtt.MQTTUtils
-import org.apache.spark.streaming.Milliseconds
 import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
+import org.apache.spark.streaming.mqtt.MQTTUtils
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.eclipse.paho.client.mqttv3._
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
@@ -13,14 +12,12 @@ object Main extends App {
   val subTopicName = "/arbeitszimmer/temperatur"
   val pubTopicName = "/arbeitszimmer/temperatur/ergebnis"
 
-  lazy val mqttPublisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
-
   val sparkConf = new SparkConf(true).setAppName("MqttWordCount").setMaster("local[*]")
-  val ssc = new StreamingContext(sparkConf, Milliseconds(1))
+  val ssc = new StreamingContext(sparkConf, Seconds(10))
 
   // Set root Log Level to warning
   val log: Logger = LogManager.getRootLogger()
-  log.setLevel(Level.ERROR)
+  log.setLevel(Level.WARN)
   // throws Warning because Spark cannot replicate data (https://stackoverflow.com/questions/32583273/spark-streaming-get-warn-replicated-to-only-0-peers-instead-of-1-peers)
 
   val mqttConsumer: ReceiverInputDStream[String] = MQTTUtils.createStream(ssc, brokerURL, subTopicName)
@@ -32,17 +29,19 @@ object Main extends App {
 
 
   def processAndTransferMessage(dStream: ReceiverInputDStream[String]): Unit = {
-    //val pub = dStream.map(word => (word, 1)).reduceByKey(_ + _)
-    //pub.print()
 
-    //val modDStream: DStream[Array[String]] = dStream.map(line => line.split(";"))
-
+    val pub: DStream[String] = dStream
+      .window(Seconds(10),Seconds(10))
+      .flatMap(_.split(";"))
+      .filter(word => word.contains("."))
+      .reduceByWindow((x, y) => if(x.toDouble > y.toDouble) x else y, Seconds(10), Seconds(10))
 
     try {
-      dStream.foreachRDD(rdd => {
+      pub.foreachRDD(rdd => {
         if (!rdd.isEmpty()) {
           rdd.foreachPartition(partition => {
             partition.foreach(msg => {
+              val mqttPublisher: MqttClient = new MqttClient(brokerURL, MqttClient.generateClientId(), new MemoryPersistence())
               log.warn(s"Attempting to connect to broker ${brokerURL} and topic ${pubTopicName}.")
               mqttPublisher.connect()
               val pubTopic: MqttTopic = mqttPublisher.getTopic(pubTopicName)
@@ -51,7 +50,10 @@ object Main extends App {
               // sending message to MQTT including error handling
               try {
                 log.warn(s"Preparing message to be sent.")
-                val maxValue: String = msg.split(";").reduce((x, y) => if(x.toDouble > y.toDouble) x else y)
+                val maxValue: String = msg//.split(";")
+                  //.filterNot(word => word.contains("Send"))
+                  //.filterNot(word => word.contains(","))
+                  //.reduce((x, y) => if(x.toDouble > y.toDouble) x else y)
                 val message: MqttMessage = new MqttMessage(maxValue.getBytes("utf-8"))
                 log.warn(s"Attempting to publish message ${message}.")
                 pubTopic.publish(message)
