@@ -17,12 +17,11 @@
  */
 void ADC_init(void);
 
-/*
- * ADC measurement for a single channel
+/**
+ * @brief ADC measurement for a single channel
  * 
- * channel: input pin (0 for A0 etc.)
- * 
- * returns: 10-bit result of the conversion stored in a uint16_t
+ * @param channel input pin (0 for A0 etc.)
+ * @return uint16_t 10-bit result of the conversion stored in a uint16_t
  */
 uint16_t ADC_readAnalogPin(uint8_t channel);
 

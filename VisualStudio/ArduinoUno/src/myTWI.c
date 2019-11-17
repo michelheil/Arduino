@@ -31,6 +31,47 @@ int TWI_init(void)
     return 0;
 }
 
+
+// write byte to register
+void TWI_setRegisterByte(uint8_t sla, uint8_t reg, uint8_t val)
+{
+    uint8_t slaw = (sla << 1) | TW_WRITE;
+
+    TWI_startTransmission();
+    TWI_writeSlaRW(slaw);
+    TWI_writeRegisterAddress(reg);
+    TWI_writeByte(val);
+    TWI_stopTransmission();
+}
+
+// read byte from register
+uint8_t TWI_getRegisterByte(uint8_t sla, uint8_t reg)
+{
+    uint8_t slaw = (sla << 1) | TW_WRITE;
+    uint8_t slar = (sla << 1) | TW_READ;
+    uint8_t regValue;
+    
+    TWI_startTransmission();
+    TWI_writeSlaRW(slaw);
+    TWI_writeRegisterAddress(reg);
+    TWI_repeatStartTransmission();
+    TWI_writeSlaRW(slar);
+
+    // clear int to start transmission of either ACK or NACK after the last byte    
+    TWCR = (1 << TWINT) | (1 << TWEN); // send NOT ACK as only one byte is expected
+
+    // wait for transmission
+    while ((TWCR & (1 << TWINT)) == 0);
+    
+    // read data register
+    regValue = TWDR;
+    
+    TWI_stopTransmission();
+    
+    return regValue;
+}
+
+
 // Use I2C (Two-Wire Protocol) to get data from AMG8833
 int TWI_readBytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest)
 {
