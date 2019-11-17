@@ -81,13 +81,21 @@
 #define BME680_GAS_WAIT_MULT_FACTOR_16X     0b10
 #define BME680_GAS_WAIT_MULT_FACTOR_64X     0b11
 
-// Target Heater Resistance
+// Heater Resistance
 // Set the corresponding heater set-point by writing the target heater resistance to res_heat_0<7:0>
+#define BME680_RES_HEAT_0_REG               0x5A
+
+#define BME680_PAR_G1_REG                   0xED
+#define BME680_PAR_G2_REG_LSB               0xEB
+#define BME680_PAR_G2_REG_MSB               0xEC
+#define BME680_PAR_G3_REG                   0xEE
+#define BME680_RES_HEAT_RANGE_REG           0x02 // bits <5:4>
+#define BME680_RES_HEAT_VAL_REG             0x00
 
 
 // Set nb_conv<3:0> to 0x0 to select the previously defined heater settings
 #define BME680_CTRL_GAS_1_REG               0x71
-#define BME680_HEATER_PROFILE_0             0b0000
+#define BME680_HEATER_PROFILE_0             0b0000 // I am using profile 0
 #define BME680_HEATER_PROFILE_1             0b0001
 // ...
 #define BME680_HEATER_PROFILE_9             0b1001
@@ -96,6 +104,20 @@
 #define BME680_GAS_MEASUREMENT_OFFSET       4
 #define BME680_GAS_MEASUREMENT_ENABLE       1
 #define BME680_GAS_MEASUREMENT_DISABLE      0
+
+
+// Measure Registers
+#define BME680_PRESS_MSB_REG                0x1F
+#define BME680_PRESS_LSB_REG                0x20
+#define BME680_PRESS_XLSB_REG               0x21
+#define BME680_TEMP_MSB_REG                 0x22
+#define BME680_TEMP_LSB_REG                 0x23
+#define BME680_TEMP_XLSB_REG                0x24
+#define BME680_HUM_MSB_REG                  0x25
+#define BME680_HUM_LSB_REG                  0x26
+#define BME680_GAS_R_MSB                    0x2A
+#define BME680_GAS_R_LSB                    0x2B
+
 
 
 void BME680_init(uint8_t hum_over_sampling, uint8_t temp_over_sampling, uint8_t pres_over_sampling);
