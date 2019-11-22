@@ -42,7 +42,7 @@ void callback(char* topicFromPC, byte* payload, unsigned int length){
 
 
 // reconnect to MQTT-Broker
-void reconnect() {
+void connect() {
   while (!client.connected()) {
     if (client.connect("ESP8266Client")) {
       client.publish(topicToPC, "Ich lebe!");
@@ -56,27 +56,25 @@ void reconnect() {
 
 
 void setup() {
-  Serial.begin(250000);
+  Serial.begin(1000000);
   WiFiInit();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  connect();
 }
 
 void loop() {
-  if(!client.connected()) {reconnect();}        // Reconnect falls Verbindung abgebrochen
-  client.loop();
-
-  // Arduino to ESP via serial RX
-
-
+  
+  // Arduino to ESP via UART
   if (Serial.available() > 0) {                 // read from Rx from atmega328p
     uint8_t usartStrCompleteFlag = 0;
     char    usartStr[maxExpecArdInLen] = "";      // buffer for RX data 
     uint8_t usartStrCount = 0;
 
+    delayMicroseconds(400); // required to wait until all data (8 temperature values) have been transferred
+
     while (usartStrCompleteFlag == 0)
     {
-      delay(10);
       byte nextByte = Serial.read();
       
       if ( (nextByte >= 0x20) && (usartStrCount < maxExpecArdInLen) )
@@ -89,11 +87,11 @@ void loop() {
         usartStrCompleteFlag = 1;
       }
     }
-
     // ESP to MQTT/PC via WiFi  
     client.publish(topicToPC, usartStr);
   }
 
-
-
+  // This should be called regularly to allow the client to process
+  // incoming messages and maintain its connection to the server.
+  if(!client.loop()) {connect();}
 }

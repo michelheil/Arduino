@@ -145,7 +145,7 @@ int main(void)
                     if(currentGridValue > maxGridValue) maxGridValue = currentGridValue;
                 }
                 USART_writeStringLn(&buff[0]);
-                _delay_ms(200); // delay RX as ESP cannot read data fast enough (buffer is ~64 bytes)
+                _delay_us(200); // delay RX such that 8 temperature values can be sent to and processed by ESP
                 buff[0] = 0; // reset buffer for grid string output
             }
             

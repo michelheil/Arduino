@@ -9,7 +9,7 @@
 #include "myHelperFunctions.h" // required for float2str usage
 
 // set baud rate
-#define USART_BAUDRATE	250000//125000 //9600
+#define USART_BAUDRATE	1000000//250000//125000 //9600
 // calculate configuration parameter; check data sheet for calculation
 #define USART_SETTING	((F_CPU/16UL/USART_BAUDRATE)-1) 
 
@@ -156,7 +156,7 @@ unsigned char USART_getStringWithEcho(char * stringPtr)
 // start new line
 void USART_newLine()
 {
-    USART_writeString("\r\n");
+    USART_writeString("\n");
 }
 
 // create a headline that stands out compared to regular Strings

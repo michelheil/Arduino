@@ -66,34 +66,34 @@ void BME680::getCalibration()
   const uint8_t BME680_BIT_H1_DATA_MSK          =  0x0F;
   const uint8_t BME680_T2_LSB_REG               =     1;
   const uint8_t BME680_T2_MSB_REG               =     2;
-  const uint8_t BME680_T3_REG		            =     3;
-  const uint8_t BME680_P1_LSB_REG   	        =     5;
-  const uint8_t BME680_P1_MSB_REG	            =     6;
-  const uint8_t BME680_P2_LSB_REG	            =     7;
-  const uint8_t BME680_P2_MSB_REG	            =     8;
-  const uint8_t BME680_P3_REG		            =     9;
+  const uint8_t BME680_T3_REG		                =     3;
+  const uint8_t BME680_P1_LSB_REG   	          =     5;
+  const uint8_t BME680_P1_MSB_REG	              =     6;
+  const uint8_t BME680_P2_LSB_REG	              =     7;
+  const uint8_t BME680_P2_MSB_REG	              =     8;
+  const uint8_t BME680_P3_REG		                =     9;
   const uint8_t BME680_P4_LSB_REG         	    =    11;
-  const uint8_t BME680_P4_MSB_REG        	    =    12;
-  const uint8_t BME680_P5_LSB_REG           	=    13;
+  const uint8_t BME680_P4_MSB_REG        	      =    12;
+  const uint8_t BME680_P5_LSB_REG           	  =    13;
   const uint8_t BME680_P5_MSB_REG         	    =    14;
   const uint8_t BME680_P7_REG  	                =    15;
-  const uint8_t BME680_P6_REG	                =    16;
-  const uint8_t BME680_P8_LSB_REG    	        =    19;
-  const uint8_t BME680_P8_MSB_REG	            =    20;
-  const uint8_t BME680_P9_LSB_REG    	        =    21;
-  const uint8_t BME680_P9_MSB_REG	            =    22;
-  const uint8_t BME680_P10_REG		            =    23;
-  const uint8_t BME680_H2_MSB_REG	            =     0;
-  const uint8_t BME680_H2_LSB_REG	            =     1;
-  const uint8_t BME680_H1_LSB_REG    	        =     1;
-  const uint8_t BME680_H1_MSB_REG	            =     2;
-  const uint8_t BME680_H3_REG	                =     3;
-  const uint8_t BME680_H4_REG    	            =     4;
-  const uint8_t BME680_H5_REG	                =     5;
+  const uint8_t BME680_P6_REG	                  =    16;
+  const uint8_t BME680_P8_LSB_REG    	          =    19;
+  const uint8_t BME680_P8_MSB_REG	              =    20;
+  const uint8_t BME680_P9_LSB_REG    	          =    21;
+  const uint8_t BME680_P9_MSB_REG	              =    22;
+  const uint8_t BME680_P10_REG		              =    23;
+  const uint8_t BME680_H2_MSB_REG	              =     0;
+  const uint8_t BME680_H2_LSB_REG	              =     1;
+  const uint8_t BME680_H1_LSB_REG    	          =     1;
+  const uint8_t BME680_H1_MSB_REG	              =     2;
+  const uint8_t BME680_H3_REG	                  =     3;
+  const uint8_t BME680_H4_REG    	              =     4;
+  const uint8_t BME680_H5_REG	                  =     5;
   const uint8_t BME680_H6_REG                   =     6;
   const uint8_t BME680_H7_REG                   =     7;
-  const uint8_t BME680_T1_LSB_REG	            =     8;
-  const uint8_t BME680_T1_MSB_REG    	        =     9;
+  const uint8_t BME680_T1_LSB_REG	              =     8;
+  const uint8_t BME680_T1_MSB_REG    	          =     9;
   const uint8_t BME680_GH2_LSB_REG              =    10;
   const uint8_t BME680_GH2_MSB_REG              =    11;
   const uint8_t BME680_GH1_REG	                =    12;
@@ -145,17 +145,14 @@ void BME680::getCalibration()
   _G1  = (int8_t)   coeff_array2[BME680_GH1_REG];
   _G2  = (int16_t)  (CONCAT_BYTES(coeff_array2[BME680_GH2_MSB_REG], coeff_array2[BME680_GH2_LSB_REG]));
   _G3  = (int8_t)   coeff_array2[BME680_GH3_REG];
-  //uint8_t temp_var = 0;
+
   uint8_t temp_var1 = TWI_getRegisterByte(BME680_SLAVE_ADDRESS, BME680_ADDR_RES_HEAT_RANGE_ADDR);
-  //getData(BME680_ADDR_RES_HEAT_RANGE_ADDR,temp_var);
   _res_heat_range = ((temp_var1 & BME680_RHRANGE_MSK) / 16);
   
   uint8_t temp_var2 = TWI_getRegisterByte(BME680_SLAVE_ADDRESS, BME680_ADDR_RES_HEAT_VAL_ADDR);
-  //getData(BME680_ADDR_RES_HEAT_VAL_ADDR,temp_var);
   _res_heat_val = (int8_t) temp_var2;
   
   uint8_t temp_var3 = TWI_getRegisterByte(BME680_SLAVE_ADDRESS, BME680_ADDR_RANGE_SW_ERR_ADDR);
-  //getData(BME680_ADDR_RANGE_SW_ERR_ADDR,temp_var);
   _range_sw_error = ((int8_t) temp_var3 & (int8_t) BME680_RSERROR_MSK) / 16;
 } // of method getCalibration()
 
