@@ -17,55 +17,16 @@ BME680::BME680() {}
 */
 BME680::~BME680() {}
 
-/*!
-* @brief   starts communications with device (overloaded)
-* @details When called with no parameters the I2C protocol with I2C_STANDARD_MODE speed is selected. The I2C network
-           is searched for the first BME680 device.
-* return "true" if successful otherwise false
-*/
-bool BME680::begin() 
-{
-    return commonInitialization();
-  // Brieftaubenzuchtvereinreturn begin(I2C_STANDARD_MODE); // Initialize I2C with standard speed
-} // of method begin()
 
 /*!
-* @brief   starts communications with device (overloaded)
-* @details When called with a 32-bit parameter it is assumed that the I2C protocol is to be used and the speed
-*          setting is determined by the parameter.
-* @param[in] i2cSpeed I2C Speed value
-* return "true" if successful otherwise false
-*/
-/* // Brieftaubenzuchtvereinbool BME680::begin(const uint32_t i2cSpeed)
-{
-  Wire.begin();                                          // Start I2C as master device
-  Wire.setClock(i2cSpeed);                               // Set I2C bus speed
-  for (_I2CAddress=0x76;_I2CAddress<=0x77;_I2CAddress++) // loop all possible addresses
-  {
-    Wire.beginTransmission(_I2CAddress);                 // Check current address for BME680
-    if (Wire.endTransmission()==0)                       // If no error we have a device
-    {
-       return commonInitialization();                    // Perform common initialization
-    } // of if-then we have found a device
-  } // of for-next each I2C address loop
-  _I2CAddress = 0; // Set to 0 to denote no I2C found
-  return false;    // return failure if we get here 
-} // of method begin()
-*/
-/*!
-* @brief   Common BME680 initialization function
+* @brief   BME680 initialization function
 * @details Called from all of the overloaded "begin()" functions once protocol has been selected
 * return "true" if successful otherwise false
 */
-bool BME680::commonInitialization() 
+void BME680::init() 
 {
-  if (TWI_getRegisterByte(BME680_SLAVE_ADDRESS, BME680_CHIPID_REGISTER)==BME680_CHIPID) // check for correct chip id
-  {
-    getCalibration();                                       // get the calibration values
-    return true;
-  } // of if-then device is really a BME680
-  else return false;
-} // of method commonInitialization
+    getCalibration(); // get the calibration values only once at initialisation
+} // of method init
 
 /*!
 * @brief   Read a single byte from the give address
@@ -73,10 +34,10 @@ bool BME680::commonInitialization()
 * param[in] addr Address of device
 * return    single byte read
 */
-uint8_t BME680::readByte(const uint8_t addr) 
+uint8_t BME680::readBME680Byte(const uint8_t addr) 
 {
   return TWI_getRegisterByte(BME680_SLAVE_ADDRESS, addr);
-} // of method readByte()
+} // of method readBME680Byte()
 
 /*!
 * @brief   Performs a device reset
@@ -84,7 +45,7 @@ uint8_t BME680::readByte(const uint8_t addr)
 void BME680::reset()
 {
   TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_RESET_REG, BME680_RESET_SOFT); // write reset code to device
-  begin();                    // Start device again if I2C
+  init();                    // Start device again if I2C
 } // of method reset()
 
   /*!
@@ -215,21 +176,21 @@ bool BME680::setOversampling(const uint8_t sensor, const uint8_t sampling)
   {
     case HumiditySensor :
     {
-      tempRegister = readByte(BME680_CONTROL_HUMIDITY_REG) & B11111000;  // Get contents, mask bits 7-3
+      tempRegister = readBME680Byte(BME680_CONTROL_HUMIDITY_REG) & B11111000;  // Get contents, mask bits 7-3
       uint8_t valH = (uint8_t)(tempRegister|sampling);
       TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_CONTROL_HUMIDITY_REG, valH);// Update humidity bits 2:0
       break;
     } // of HumiditySensor
     case PressureSensor : 
     {
-      tempRegister = readByte(BME680_CONTROL_MEASURE_REG) & B11100011; // Get contents, mask unused bits
+      tempRegister = readBME680Byte(BME680_CONTROL_MEASURE_REG) & B11100011; // Get contents, mask unused bits
       uint8_t valP = (uint8_t)(tempRegister|(sampling << BME680_PRES_OVER_SAMPLING_OFFSET));
       TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_CONTROL_MEASURE_REG, valP); // Update pressure bits
       break;
     } // of PressureSensor
     case TemperatureSensor : 
     {
-      tempRegister = readByte(BME680_CONTROL_MEASURE_REG) & B00011111; // Get contents, mask bits 4-0
+      tempRegister = readBME680Byte(BME680_CONTROL_MEASURE_REG) & B00011111; // Get contents, mask bits 4-0
       uint8_t valT = (uint8_t)(tempRegister|(sampling << BME680_TEMP_OVER_SAMPLING_OFFSET));
       TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_CONTROL_MEASURE_REG, valT);// Update humidity bits 7:5
       break;
@@ -248,7 +209,7 @@ bool BME680::setOversampling(const uint8_t sensor, const uint8_t sampling)
 */
 uint8_t BME680::setIIRFilter(const uint8_t iirFilterSetting ) 
 {
-  uint8_t returnValue = readByte(BME680_CONFIG_REGISTER);              // Get control register byte
+  uint8_t returnValue = readBME680Byte(BME680_CONFIG_REGISTER);              // Get control register byte
   if (iirFilterSetting==UINT8_MAX) return((returnValue>>2)&B00000111); // return the current setting
   returnValue = returnValue&B11100011;                                 // Get control reg, mask IIR bits
   returnValue |= (iirFilterSetting&B00000111)<<2;                      // use 3 bits of iirFilterSetting
@@ -369,7 +330,7 @@ const uint32_t lookupTable2[16]  = {
 	uvar2 = (((int64_t)((int64_t)adc_gas_res<<15)-(int64_t)(16777216))+var1);
 	var3 = (((int64_t) lookupTable2[gas_range] * (int64_t) var1) >> 9);
 	_Gas = (uint32_t) ((var3 + ((int64_t) uvar2 >> 1)) / (int64_t) uvar2);
-  uint8_t workRegister = readByte(BME680_CONTROL_MEASURE_REG);   // Read the control measure
+  uint8_t workRegister = readBME680Byte(BME680_CONTROL_MEASURE_REG);   // Read the control measure
   uint8_t valToSet = (uint8_t)(workRegister|1);
   TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_CONTROL_MEASURE_REG, valToSet); // Trigger start of next measurement
 } // of method readSensors()
@@ -379,7 +340,7 @@ const uint32_t lookupTable2[16]  = {
 */
 void BME680::waitForReadings() 
 {
-  while ((readByte(BME680_STATUS_REGISTER)&B00100000)!=0); // Loop until readings bit is cleared by BME680
+  while ((readBME680Byte(BME680_STATUS_REGISTER)&B00100000)!=0); // Loop until readings bit is cleared by BME680
 } // of method waitForReadings
 
 /*!
@@ -390,7 +351,7 @@ void BME680::waitForReadings()
 */
 bool BME680::setGas(uint16_t GasTemp,  uint16_t GasMillis) 
 {
-  uint8_t gasRegister = readByte(BME680_CONTROL_GAS_REGISTER2); // Read current register values
+  uint8_t gasRegister = readBME680Byte(BME680_CONTROL_GAS_REGISTER2); // Read current register values
   if ( GasTemp==0 || GasMillis==0 ) 
   {
     // If either input variable is zero //

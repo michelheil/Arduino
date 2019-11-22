@@ -1,14 +1,18 @@
 /*! @file myBME680.h
  * @mainpage Library to read sensor data from Bosch BME680 through I2C from Arduino UNO
  * @section myBME680 Description
+ * @brief Sensor for:
+ *        Temperature: -40 - +85 Celcius
+ *        Humidity: 0 - 100% r.H. (relative Humidity)
+ *        Pressure: 300 - 1100 hPa (hecto Pascal)
 Data Sheet: https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BME680-DS001.pdf
+Bosch BME680_Driver: https://github.com/BoschSensortec/BME680_driver
 */
 
 #ifndef MYBME680_H_
 #define MYBME680_H_
 
 #include "Arduino.h" // Arduino data type definitions
-#include <Wire.h>    // Standard I2C "Wire" library
 #include <util/twi.h> // required for TW_READ and TW_WRITE
 
 // BME680 I2C Slave Address
@@ -123,7 +127,7 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
 
  /*!
 * @class BME680
-* @brief Main BME680 class for the temperature / humidity / pressure sensor
+* @brief Main BME680 class for the temperature, humidity, pressure, gas sensor
 */
   class BME680 
   {
@@ -131,7 +135,7 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
       BME680(); // constructor
       ~BME680(); // de-constructor
       
-      bool     begin();                                                                 // Start using I2C Communications
+      void     init();                                                                  // initialization code
       bool     setOversampling(const uint8_t sensor, const uint8_t sampling);           // Set enum sensorType Oversampling
       bool     setGas(uint16_t GasTemp, uint16_t GasMillis);                            // Gas heating temperature and time
       uint8_t  setIIRFilter(const uint8_t iirFilterSetting=UINT8_MAX);                  // Set IIR Filter and return value
@@ -141,8 +145,7 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
       void     reset();                                                                 // Reset the BME680
 
     private:
-      bool     commonInitialization();                                                  // Common initialization code
-      uint8_t  readByte(const uint8_t addr);                                            // Read byte from register address
+      uint8_t  readBME680Byte(const uint8_t addr);                                      // Read byte from register address
       void     readSensors(const bool waitSwitch);                                      // read the registers in one burst
       void     waitForReadings();                                                       // Wait for readings to finish
       void     getCalibration();                                                        // Load calibration from registers

@@ -13,7 +13,9 @@
  * TWAR - TWI (Slave) Address Register; Includes TWGCE (TWI General Call Recognition Enable Bit) as bit 0.
  * TWAMR - TWI (Slave) Address Mask Register
 */
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef MYTWI_H_
 #define MYTWI_H_
@@ -84,3 +86,7 @@ void    TWI_writeByte(uint8_t addr);
 void    TWI_stopTransmission(void);
 
 #endif /* MYTWI_H_ */
+
+#ifdef __cplusplus
+}
+#endif

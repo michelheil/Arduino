@@ -4,7 +4,9 @@
  * Created: 03.09.2019 22:50:56
  *  Author: Michael
  */ 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 # ifndef MYUSART_H_
 # define MYUSART_H_
@@ -92,3 +94,7 @@ void USART_newLine();
 void USART_Headline(char * stringPtr);
 
 # endif /* MYUSART_H_ */
+
+#ifdef __cplusplus
+}
+#endif
