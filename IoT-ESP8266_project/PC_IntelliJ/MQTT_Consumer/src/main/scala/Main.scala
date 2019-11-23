@@ -2,7 +2,7 @@ import org.apache.log4j.{Level, LogManager, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
 import org.apache.spark.streaming.mqtt.MQTTUtils
-import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.streaming.{Milliseconds, StreamingContext}
 import org.eclipse.paho.client.mqttv3._
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
@@ -11,9 +11,11 @@ object Main extends App {
   val brokerURL = "tcp://localhost:1883"
   val subTopicName = "/arbeitszimmer/temperatur"
   val pubTopicName = "/arbeitszimmer/temperatur/ergebnis"
+  val windowDuration = Milliseconds(500);
+  val slideDuration = Milliseconds(500);
 
   val sparkConf = new SparkConf(true).setAppName("MqttWordCount").setMaster("local[*]")
-  val ssc = new StreamingContext(sparkConf, Seconds(10))
+  val ssc = new StreamingContext(sparkConf, Milliseconds(1))
 
   // Set root Log Level to warning
   val log: Logger = LogManager.getRootLogger()
@@ -31,10 +33,10 @@ object Main extends App {
   def processAndTransferMessage(dStream: ReceiverInputDStream[String]): Unit = {
 
     val pub: DStream[String] = dStream
-      .window(Seconds(10),Seconds(10))
-      .flatMap(_.split(";"))
+      //.window(windowDuration, slideDuration)
+      //.flatMap(_.split(";"))
       .filter(word => word.contains("."))
-      .reduceByWindow((x, y) => if(x.toDouble > y.toDouble) x else y, Seconds(10), Seconds(10))
+      //.reduceByWindow((x, y) => if(x.toDouble > y.toDouble) x else y, windowDuration, slideDuration)
 
     try {
       pub.foreachRDD(rdd => {
