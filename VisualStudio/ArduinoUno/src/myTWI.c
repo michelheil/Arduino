@@ -14,7 +14,7 @@
 // enabled TWI, set frequency for SCL (and activate internal pull-up resistors on SDA and SCL)
 int TWI_init(void)
 {
-    // set SCL to 100kHz
+    // set SCL frequency
     TWSR |= TWI_PRESCALER_VALUE; // using "|=" instead of only "=" because status bits are initially set to 1
     TWBR = TWI_BIT_RATE;
     

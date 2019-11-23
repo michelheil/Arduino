@@ -35,10 +35,23 @@ extern "C" {
  * => TWBR * PrescalerValue = 72
  * => TWBR = 18 = 0b00010010
  * => PrescalerValue: TWPS1 = 0, TWPS0 = 1 (both bits are part of byte TWSR)
+ * #define TWI_PRESCALER_VALUE     0x01 // PrescalerValue: 4
+ * #define TWI_BIT_RATE            0x12 // Decimal: 18
+ * 
+ * 
+ * In General f_SCL = x (known)
+ * TWBR * PrescalerValue =: y (unknown)
+ * x = CPU_ClockFrequency / (16 + 2y)
+ * <=> 16x + 2xy = CPU_ClockFrequency
+ * <=> 2xy = CPU_ClockFrequency - 16x
+ * <=> y = (CPU_ClockFrequency - 16x) / 2x
+ * 
+ * x = 400kHz
+ * => y = 12 (= TWBR * PrescalerValue)
 */
 
-#define TWI_PRESCALER_VALUE     0x04 // Decimal: 4
-#define TWI_BIT_RATE            0x12 // Decimal: 18
+#define TWI_PRESCALER_VALUE     0x00 // TWPS1 = 0 and TWPS0 = 0 means PrescalerValue of 1
+#define TWI_BIT_RATE            0x0C // Decimal: 12
 
 // TWI general function
 
