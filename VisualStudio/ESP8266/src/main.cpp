@@ -14,8 +14,10 @@ const char* mqtt_server = "192.168.178.49";
 const int mqtt_port = 1883;
 const char* topicToPC = "/arbeitszimmer/temperatur";
 const char* topicFromPC = "/arbeitszimmer/temperatur/ergebnis";
-const int expectedMqttInput = 20;
-const int maxExpecArdInLen = 50;                // expectedArduinoInputLength (maximum length is (64 bytes * (5 + 1)) + 1) = 385
+const int expectedMqttInput = 400;
+const char* topicSteerArduino = "/steerArduino";
+const int expectedSteerArduinoInput = 10;
+const int maxExpecArdInLen = 50;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -32,12 +34,22 @@ void WiFiInit() {
 
 
 // callback function wenn eine Nachricht in einem Topic landet
-void callback(char* topicFromPC, byte* payload, unsigned int length){
-  char txData[expectedMqttInput] = "";
-  for(int i = 0; i < (int) length; i++) {
-    txData[i] = (char) payload[i];
+ICACHE_RAM_ATTR void callback(char* topic, byte* payload, unsigned int length){
+  if(strcmp(topic, topicFromPC) == 0) {
+    char txData[expectedMqttInput] = "";
+    for(int i = 0; i < (int) length; i++) {
+      txData[i] = (char) payload[i];
+    }
+    Serial.write(txData); Serial.println();
   }
-  Serial.write(txData); Serial.println();
+
+  if(strcmp(topic, topicSteerArduino) == 0) {
+    char txData[expectedSteerArduinoInput] = "";
+    for(int i = 0; i < (int) length; i++) {
+      txData[i] = (char) payload[i];
+    }
+    Serial.write(txData); Serial.println();
+  }
 }
 
 
@@ -47,6 +59,7 @@ void connect() {
     if (client.connect("ESP8266Client")) {
       client.publish(topicToPC, "Ich lebe!");
       client.subscribe(topicFromPC);
+      client.subscribe(topicSteerArduino);
     } else {
       delay(5000);
     }
