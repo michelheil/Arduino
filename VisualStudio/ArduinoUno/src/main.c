@@ -40,9 +40,10 @@
 
 
 // define string that activate particular actions
-char compareReadStr[] = "read";
-char compareClearStr[] = "clear";
+char compareTempStr[] = "temp";
 char compareTimeStr[] = "time";
+char comparePlantsStr[] = "plants";
+char compareClearStr[] = "clear";
 
 // define Interrupt level for AMG8833
 // Interrupt flag  -This flag indicates whether Interrupt is generated  or not when INT control register is activated.
@@ -54,7 +55,7 @@ char compareTimeStr[] = "time";
 #define AMG8833_INT_UPPER_LEVEL_LOW  0b01111000 // 120 => 30 degree Celcius
 #define AMG8833_INT_UPPER_LEVEL_HIGH 0b00000000 // positive sign
 
-// define delimiter 
+// define delimiter
 char gridDelimiter[] = ";";
 
 // define global variables to collect input string through Interrupt Service Routine (ISR)
@@ -63,7 +64,6 @@ volatile uint8_t usartStrCount = 0;
 volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
 volatile uint8_t thermInterruptFlag = 0;
 volatile uint8_t pushButtonInterruptFlag = 0;
-// volatile uint8_t measureCounter = 1;
 
 #define USART_MAX_GRID_STRING_LENGTH (((5+1)*8) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
 
@@ -109,7 +109,8 @@ int main(void)
 
     while(1)
     {
-        // when push button is pressed send word "Send" to USART TX
+        //////////////////////////////////////////////////////////////////////////
+        // Bush Button
         if(pushButtonInterruptFlag == 1) { 
             // send "Send" to ESP8266 over TX
             USART_writeStringLn("Send");
@@ -124,7 +125,8 @@ int main(void)
             pushButtonInterruptFlag = 0; // reset interrupt flag
         }            
         
-        // when grid temperature exceeds upper interrupt level read grid Values and send them as a string to Tx
+        //////////////////////////////////////////////////////////////////////////
+        // AMG Interrupt (Temperature)
         if(thermInterruptFlag == 1) { 
 
             sbi(PORTD, PD4); // indicate interrupt action
@@ -136,7 +138,7 @@ int main(void)
             
             // iterate through all pixels and (a) calculate maximum value and (b) concatenate values to string
             for(int row = 0; row < AMG8833_GRID_PIXELS_X; row++) {
-                char buff[USART_MAX_GRID_STRING_LENGTH] = ""; //measureCounter:
+                char buff[USART_MAX_GRID_STRING_LENGTH] = "";
                 for(int col = 0; col < AMG8833_GRID_PIXELS_Y; col++) {
                     currentGridValue = amgGrid[row][col];
                     strcat(&buff[0], float2str(currentGridValue));
@@ -148,7 +150,8 @@ int main(void)
                 _delay_us(200); // delay RX such that 8 temperature values can be sent to and processed by ESP
                 buff[0] = 0; // reset buffer for grid string output
             }
-            
+
+            // Display Min and Max values
             LCD_clearDisplay();
             LCD_setCursorHome();
             LCD_sendDataString("Min:");
@@ -162,39 +165,90 @@ int main(void)
             thermInterruptFlag = 0; // reset interrupt flag   
         }
              
-        // when a string from Rx is received start comparison of the received string with pre-defined commands 
+        //////////////////////////////////////////////////////////////////////////
+        // RX Commands 
         if(usartStrCompleteFlag == 1) { 
-            if(cmpString(&usartStr[0], &compareReadStr[0])) {
+
+            // Read Thermistor
+            if(cmpString(&usartStr[0], &compareTempStr[0])) {
                 LCD_clearDisplay();
                 LCD_setCursorHome();
                 LCD_sendDataString("Temp:");
                 amgTherm = AMG8833_readThermistor(); // read out Thermistor value and print it on display
                 LCD_sendDataFloat(amgTherm);
                 LCD_sendDataString(" C");
+
+                // add key word to value to send to MQTT
+                char keyTemperature[8] = "TP";
+                strcat(&keyTemperature[0], float2str(amgTherm)); // combine key word for moisture values and the value
+                USART_writeStringLn(&keyTemperature[0]);
             }
             
-            if(cmpString(&usartStr[0], &compareClearStr[0])) {
-                LCD_clearDisplay();
-            }
-
+            // Display date and time
             if(cmpString(&usartStr[0], &compareTimeStr[0])) {
                 LCD_clearDisplay();
                 
-                // write Date
+                // display Date
                 LCD_setCursorHome();
                 char dmy[11];
                 DS3231_getDMYString(&dmy[0]);
                 LCD_sendDataString("Date: ");
                 LCD_sendDataString(&dmy[0]);
                 
-                // write Time
+                // display Time
                 LCD_setCursorTo(0,2);
                 char time[9];
                 DS3231_getTimeString(&time[0]);
                 LCD_sendDataString("Time: ");
                 LCD_sendDataString(&time[0]);
+
+                // add key word to value to send to MQTT
+                char keyDateTime[22] = "DT";
+                strcat(&keyDateTime[0], &dmy[0]);
+                strcat(&keyDateTime[0], ";");
+                strcat(&keyDateTime[0], &time[0]);
+                USART_writeStringLn(&keyDateTime[0]);
             }
 
+            // Moisture of plants
+            if(cmpString(&usartStr[0], &comparePlantsStr[0])){
+
+                // 1
+                char keyPlant1[6] = "P1";
+                uint16_t moistureValue1 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                strcat(&keyPlant1[0], uint162str(moistureValue1)); // combine key word for moisture values and the value
+                USART_writeStringLn(&keyPlant1[0]);
+
+                LCD_clearDisplay();
+                LCD_sendDataString("Moisture: ");
+                LCD_sendDataUint16(moistureValue1);
+
+                // 2
+                char keyPlant2[6] = "P2";
+                uint16_t moistureValue2 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                strcat(&keyPlant2[0], uint162str(moistureValue2)); // combine key word for moisture values and the value
+                USART_writeStringLn(&keyPlant2[0]);
+
+                // 3
+                char keyPlant3[6] = "P3";
+                uint16_t moistureValue3 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                strcat(&keyPlant3[0], uint162str(moistureValue3)); // combine key word for moisture values and the value
+                USART_writeStringLn(&keyPlant3[0]);
+
+
+                // 4
+                char keyPlant4[6] = "P4";
+                uint16_t moistureValue4 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                strcat(&keyPlant4[0], uint162str(moistureValue4)); // combine key word for moisture values and the value
+                USART_writeStringLn(&keyPlant4[0]);
+            }
+
+            // Clear LCD
+            if(cmpString(&usartStr[0], &compareClearStr[0])) {
+                LCD_clearDisplay();
+            }
+
+            // reset all RX strings and flags
             usartStr[0] = 0; // reset received string
             usartStrCompleteFlag = 0; // reset Rx flag of the usartString 
             usartStrCount = 0; // reset global counter of the usartString
@@ -203,25 +257,24 @@ int main(void)
 }
 
 
-// linked to push button
+// Push button
 ISR(INT0_vect)
 {
     pushButtonInterruptFlag = 1;
 }
 
-// linked to AMG8833 int pin
+// AMG Interrupt (Temperature)
 ISR(INT1_vect)
 {
     thermInterruptFlag = 1;
-    // measureCounter++;
 }
 
-// if data is received through USART RX write all incoming bytes into the usartStr
+// RX
 ISR(USART_RX_vect)
 {
     unsigned char nextChar;
 
-    // read incoming byte out of data register 0
+    // read incoming byte out of UART data register 0
     nextChar = UDR0;
     if(usartStrCompleteFlag == 0) {	// if the usartStr contains a complete string that the nextChar will be ignored
         if( nextChar >= 0x20 && usartStrCount < USART_MAX_INPUT_STRING_LENGTH ) { // condition ">= 0x20" ensures that only non-escape characters are considered
