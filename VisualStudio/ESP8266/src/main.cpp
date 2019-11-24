@@ -55,7 +55,8 @@ void WiFiInit() {
 }
 
 
-// callback function wenn eine Nachricht in einem Topic landet
+// Callback functions handles incoming data from subscribed mqtt topics
+// ESP to Arduino via UART
 ICACHE_RAM_ATTR void callback(char* topic, byte* payload, unsigned int length){
 
   // Output from Spark Streaming
@@ -196,7 +197,7 @@ void loop() {
       client.publish(pubDateTime, currentValue);
     }
     
-    // grid Values
+    // grid Values (and everything else)
     else {
       client.publish(pubTopicToPC, usartStr);
     }
