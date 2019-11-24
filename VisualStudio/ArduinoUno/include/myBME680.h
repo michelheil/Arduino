@@ -125,7 +125,7 @@ enum oversamplingTypes {SensorOff,Oversample1,Oversample2,Oversample4,Oversample
 /*! @brief  Enumerate the iir filter types */
 enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownIIR };
 
- /*!
+/*!
 * @class BME680
 * @brief Main BME680 class for the temperature, humidity, pressure, gas sensor
 */

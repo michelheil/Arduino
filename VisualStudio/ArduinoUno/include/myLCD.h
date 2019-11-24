@@ -27,12 +27,12 @@
 #define LCD_E         PB1 // (1=impulse for data)
 
 // define float precision on display
-#define LCD_DISPLAY_PRECISION       2       // amount of decimal digits
+#define LCD_DISPLAY_PRECISION       2 // amount of decimal digits
 #define LCD_DISPLAY_VALUE_LENGTH    (LCD_DISPLAY_PRECISION + 4) // + '.' + 2 digits before decimal point + sign
 
 // if dtostre is used (and not dtostrf)
-#define LCD_DTOSTR_ALWAYS_SIGN   0x01
-#define LCD_DTOSTR_PLUS_SIGN   0x02 /* put '+' rather than ' ' */
+#define LCD_DTOSTR_ALWAYS_SIGN  0x01
+#define LCD_DTOSTR_PLUS_SIGN    0x02 /* put '+' rather than ' ' */
 // Usage: dtostre(thermFloatValue, stringBuffer, LCD_DISPLAY_PRECISION, (LCD_DTOSTR_PLUS_SIGN | LCD_DTOSTR_ALWAYS_SIGN));
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,19 +107,66 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // functions
-
+/**
+ * @brief Initializes the LCD display
+ * 
+ * - set the four data, the RS and the E pins as output
+ * - set all values of output port to 0
+ * - wait for booting up
+ * - according to data sheet a reset has to be done 3 times
+ * - Function Set: e.g. activate 4-bit mode
+ * - Function Set: e.g. activate 4-bit mode, activate two lines in display, activate 5x8 dots character fonts
+ * - Display Control: e.g. display on, cursor off, blinking off
+ * - Entry Mode Set: e.g. Cursor increment, no shifting
+ * - clear display
+  */
 void LCD_init(void);
+
+/**
+ * @brief clear display (which implicitly sets cursor to home)
+ * 
+ */
 void LCD_clearDisplay(void);
-void LCD_sendCommandByte(uint8_t data);
-void LCD_sendDataByte(uint8_t data);
+
+/**
+ * @brief Display a const string to current cursor position 
+ * 
+ * @param data pointer to char of string that is displayed
+ */
 void LCD_sendDataString(const char *data);
+
+/**
+ * @brief Display an unsigned char as string to current cursor position 
+ * 
+ * @param data pointer to unsinged char of string that is displayed
+ */
 void LCD_sendDataUint(unsigned char *data);
+
+/**
+ * @brief Display unsigned int to the current cursor position
+ * 
+ * @param val unsingned int (16-bit) value that is displayed
+ */
 void LCD_sendDataUint16(uint16_t val);
+
+/**
+ * @brief Display a floating value with two decimals to current cursor position 
+ * 
+ * @param val float value that is displayed
+ */
 void LCD_sendDataFloat(float val);
+
+/**
+ * @brief Set cursore of the LCD to first position ("home")
+ * 
+ */
 void LCD_setCursorHome(void);
 
-/*
- * Set the cursor based on the column (starting with 0) and the row (starting with 1)
+/**
+ * @brief Set the cursor based on the column and the row
+ * 
+ * @param col column of display starting with 0
+ * @param row row of display starting with 1
  */
 void LCD_setCursorTo(uint8_t col, uint8_t row);
 
@@ -127,7 +174,7 @@ void LCD_setCursorTo(uint8_t col, uint8_t row);
 ////////////////////////////////////////////////////////////////////////////////
 // Definition eines benutzerdefinierten Sonderzeichens.
 // data muss auf ein Array[8] mit den Zeilencodes des zu definierenden Zeichens
-// zeigen. Sp�ter k�nnen diese mit lcd_data(0-7) aufgerufen werden
+// zeigen. Spaeter koennen diese mit lcd_data(0-7) aufgerufen werden
 void lcd_generatechar(uint8_t startadresse, const uint8_t *data);
 
 

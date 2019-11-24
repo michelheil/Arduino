@@ -36,6 +36,28 @@ static void LCD_sendHighNibble(uint8_t data)
     LCD_startReadWriteSignal();
 }
 
+// send a data byte to LCD
+void LCD_sendDataByte(uint8_t data)
+{
+    LCD_PORT |= (1<<LCD_RS);      // set RS to 1 as this activates data register
+    
+    LCD_sendHighNibble(data);     // send hi-nibble
+    LCD_sendHighNibble(data<<4);  // send lo-nibble
+    
+    _delay_ms(LCD_COMMAND_MS);
+}
+
+// send a command byte to LCD
+void LCD_sendCommandByte(uint8_t data)
+{
+    LCD_PORT &= ~(1<<LCD_RS);     // set RS to 0 as this activates command register
+    
+    LCD_sendHighNibble(data);     // send hi-nibble
+    LCD_sendHighNibble(data<<4);  // send lo-nibble
+    
+    _delay_ms(LCD_COMMAND_MS);
+}
+
 // Initializing the LCD following the instruction in data sheet
 void LCD_init(void)
 {
@@ -73,28 +95,6 @@ void LCD_init(void)
     LCD_sendCommandByte(LCD_SET_ENTRY | LCD_ENTRY_INCREASE | LCD_ENTRY_NOSHIFT);
     
     LCD_clearDisplay();
-}
-
-// send a data byte to LCD
-void LCD_sendDataByte(uint8_t data)
-{
-    LCD_PORT |= (1<<LCD_RS);      // set RS to 1 as this activates data register
-    
-    LCD_sendHighNibble(data);     // send hi-nibble
-    LCD_sendHighNibble(data<<4);  // send lo-nibble
-    
-    _delay_ms(LCD_COMMAND_MS);
-}
-
-// send a command byte to LCD
-void LCD_sendCommandByte(uint8_t data)
-{
-    LCD_PORT &= ~(1<<LCD_RS);     // set RS to 0 as this activates command register
-    
-    LCD_sendHighNibble(data);     // send hi-nibble
-    LCD_sendHighNibble(data<<4);  // send lo-nibble
-    
-    _delay_ms(LCD_COMMAND_MS);
 }
 
 // send command to clear display
