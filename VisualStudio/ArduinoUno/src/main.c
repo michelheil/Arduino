@@ -92,8 +92,9 @@ int main(void)
     AMG8833_setRegisterByte(AMG8833_INTHL, AMG8833_INT_UPPER_LEVEL_LOW);
     AMG8833_setRegisterByte(AMG8833_INTHH, AMG8833_INT_UPPER_LEVEL_HIGH);
 
+    // define Input and Output pins
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
-    cbi(DDRD, PD3); // set as input pin (connected to INT from AMG8833)
+    cbi(DDRD, PD3); // set as input pin connected to INT from AMG8833 (actually not required as INT1 is activated)
     sbi(DDRD, PD4); // set as output LED pin
     
 
@@ -220,14 +221,18 @@ int main(void)
                 USART_writeStringLn(&keyPlant1[0]);
 
                 LCD_clearDisplay();
-                LCD_sendDataString("Moisture: ");
+                LCD_sendDataString("Moisture1: ");
                 LCD_sendDataUint16(moistureValue1);
 
                 // 2
                 char keyPlant2[6] = "P2";
-                uint16_t moistureValue2 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                uint16_t moistureValue2 = ADC_readAnalogPin(1); // read analog input pin A0 on Arduino
                 strcat(&keyPlant2[0], uint162str(moistureValue2)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant2[0]);
+
+                LCD_setCursorTo(0, 2);
+                LCD_sendDataString("Moisture2: ");
+                LCD_sendDataUint16(moistureValue2);
 
                 // 3
                 char keyPlant3[6] = "P3";
