@@ -18,4 +18,6 @@
 #define cbi(PORT, bit) (PORT &= ~(1 << bit)) // clear bit in PORT
 #define tgl(PORT, bit) (PORT ^= (1 << bit))  // switch bit in PORT
 
+#define CONCATENATE_BYTES(msb, lsb) (((uint16_t)msb << 8) | (uint16_t)lsb) // combine msb and lsb
+
 #endif /* GLOBALDEFINES_H_ */
