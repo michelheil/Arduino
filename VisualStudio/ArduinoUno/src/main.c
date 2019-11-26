@@ -44,6 +44,10 @@ char compareTempStr[] = "temp";
 char compareTimeStr[] = "time";
 char comparePlantsStr[] = "plants";
 char compareClearStr[] = "clear";
+char compareWaterPlant1Str[] = "P1";
+char compareWaterPlant2Str[] = "P2";
+char compareWaterPlant3Str[] = "P3";
+char compareWaterPlant4Str[] = "P4";
 
 // define Interrupt level for AMG8833
 // Interrupt flag  -This flag indicates whether Interrupt is generated  or not when INT control register is activated.
@@ -96,6 +100,9 @@ int main(void)
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
     cbi(DDRD, PD3); // set as input pin connected to INT from AMG8833 (actually not required as INT1 is activated)
     sbi(DDRD, PD4); // set as output LED pin
+    sbi(DDRD, PD5); // set as output LED pin
+    sbi(DDRD, PD6); // set as output LED pin
+    sbi(DDRD, PD7); // set as output LED pin
     
 
     // Enabled INT0 (PD2) and INT1 (PD3) interrupts
@@ -246,6 +253,34 @@ int main(void)
                 uint16_t moistureValue4 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
                 strcat(&keyPlant4[0], uint162str(moistureValue4)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant4[0]);
+            }
+
+            // Water plant 1
+            if(cmpString(&usartStr[0], &compareWaterPlant1Str[0])){
+                sbi(PORTD, PD4);
+                _delay_ms(2000);
+                cbi(PORTD,PD4);
+            }
+
+            // Water plant 2
+            if(cmpString(&usartStr[0], &compareWaterPlant2Str[0])){
+                sbi(PORTD, PD5);
+                _delay_ms(2000);
+                cbi(PORTD,PD5);
+            }
+
+            // Water plant 3
+            if(cmpString(&usartStr[0], &compareWaterPlant3Str[0])){
+                sbi(PORTD, PD6);
+                _delay_ms(2000);
+                cbi(PORTD,PD6);
+            }
+
+            // Water plant 4
+            if(cmpString(&usartStr[0], &compareWaterPlant4Str[0])){
+                sbi(PORTD, PD7);
+                _delay_ms(2000);
+                cbi(PORTD,PD7);
             }
 
             // Clear LCD

@@ -23,7 +23,7 @@ const int expectedMqttInput = 400;
 const char* subTopicSteerArduino = "/steerArduino";
 const int expectedSteerArduinoInput = 7;
 const char* subTopicWaterPlant = "/waterPlant";
-const int expectedWaterPlantInput = 2;
+const int expectedWaterPlantInput = 3;
 
 const int keyWordLength = 3;
 const char* pubPlant1 = "/plant/1";
@@ -78,9 +78,18 @@ ICACHE_RAM_ATTR void callback(char* topic, byte* payload, unsigned int length){
       txData[i] = (char) payload[i];
     }
     Serial.write(txData); Serial.println();
+  }
 
-    // ToDo:
-    // subscribe to topic /waterPlant
+  // Command to water plants
+  if(strcmp(topic, subTopicWaterPlant) == 0) {
+
+    // string is transported to Arduino with no modifications
+    // (just adding a carriage return and line feed at the end)
+    char txData[expectedWaterPlantInput] = "";
+    for(int i = 0; i < (int) length; i++) {
+      txData[i] = (char) payload[i];
+    }
+    Serial.write(txData); Serial.println();
   }
 }
 
