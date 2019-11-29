@@ -7,10 +7,13 @@
  * PD1/TX -> RX (ESP)
  * PD2 -> push button
  * PD3 -> INT (AMG8833)
- * PD4 -> LED
+ * PD4 -> LED1
+ * PD5 -> LED2
+ * PD6 -> LED3
+ * PD7 -> LED4
  *
- * SCL -> SCL (AMG8833 + DS3231)
- * SDA -> SDA (AMG8833 + DS3231)
+ * SCL -> SCL (I2C Hub)
+ * SDA -> SDA (I2C Hub)
  *
  * PB0 -> RS (LCD)
  * PB1 -> E (LCD)
@@ -18,7 +21,10 @@
  * PB3 -> DB5 (LCD)
  * PB4 -> DB6 (LCD)
  * PB5 -> DB7 (LCD)
-  *
+ * 
+ * A0 -> Moisture Sensor 1
+ * A1 -> Moisture Sensor 2
+ *
  * Created: 28.09.2019 15:23:18
  * Author : Michael
  */ 
@@ -49,6 +55,17 @@ char compareWaterPlant2Str[] = "P2";
 char compareWaterPlant3Str[] = "P3";
 char compareWaterPlant4Str[] = "P4";
 
+#define MOISTURE_MIN_VALUE 700 // a plant is watered until it reaches this level
+#define MOISUTRE_P1_ANALOG_PIN 0
+#define MOISUTRE_P2_ANALOG_PIN 1
+#define MOISUTRE_P3_ANALOG_PIN 2
+#define MOISUTRE_P4_ANALOG_PIN 3
+#define WATER_PUMP1_PIN PD4
+#define WATER_PUMP2_PIN PD5
+#define WATER_PUMP3_PIN PD6
+#define WATER_PUMP4_PIN PD7
+
+
 // define Interrupt level for AMG8833
 // Interrupt flag  -This flag indicates whether Interrupt is generated  or not when INT control register is activated.
 // High (VDD) : Interrupt is not generated
@@ -70,6 +87,8 @@ volatile uint8_t thermInterruptFlag = 0;
 volatile uint8_t pushButtonInterruptFlag = 0;
 
 #define USART_MAX_GRID_STRING_LENGTH (((5+1)*8) + 1) // 5 digits + 1 delimiter per pixel for all 64 pixels including a trailing '\0'
+
+void waterUntilMinMoistureReached(int moisturePin, int pumpPin);
 
 int main(void)
 {
@@ -99,12 +118,11 @@ int main(void)
     // define Input and Output pins
     cbi(DDRD, PD2); // push button at Pin PD2 as input in Data Direction Register (actually not required as INT0 is activated)
     cbi(DDRD, PD3); // set as input pin connected to INT from AMG8833 (actually not required as INT1 is activated)
-    sbi(DDRD, PD4); // set as output LED pin
-    sbi(DDRD, PD5); // set as output LED pin
-    sbi(DDRD, PD6); // set as output LED pin
-    sbi(DDRD, PD7); // set as output LED pin
+    sbi(DDRD, WATER_PUMP1_PIN); // set as output LED pin
+    sbi(DDRD, WATER_PUMP2_PIN); // set as output LED pin
+    sbi(DDRD, WATER_PUMP3_PIN); // set as output LED pin
+    sbi(DDRD, WATER_PUMP4_PIN); // set as output LED pin
     
-
     // Enabled INT0 (PD2) and INT1 (PD3) interrupts
     EIMSK = (1 << INT1) | (1 << INT0);
     
@@ -135,8 +153,8 @@ int main(void)
         
         //////////////////////////////////////////////////////////////////////////
         // AMG Interrupt (Temperature)
-        if(thermInterruptFlag == 1) { 
-
+        if(thermInterruptFlag == 1) 
+        { 
             sbi(PORTD, PD4); // indicate interrupt action
 
             AMG8833_readGrid(&amgGrid[0][0]); // read AMG8833 grid values
@@ -175,10 +193,11 @@ int main(void)
              
         //////////////////////////////////////////////////////////////////////////
         // RX Commands 
-        if(usartStrCompleteFlag == 1) { 
-
+        if(usartStrCompleteFlag == 1)
+        { 
             // Read Thermistor
-            if(cmpString(&usartStr[0], &compareTempStr[0])) {
+            if(cmpString(&usartStr[0], &compareTempStr[0]))
+            {
                 LCD_clearDisplay();
                 LCD_setCursorHome();
                 LCD_sendDataString("Temp:");
@@ -193,7 +212,8 @@ int main(void)
             }
             
             // Display date and time
-            if(cmpString(&usartStr[0], &compareTimeStr[0])) {
+            if(cmpString(&usartStr[0], &compareTimeStr[0]))
+            {
                 LCD_clearDisplay();
                 
                 // display Date
@@ -219,11 +239,11 @@ int main(void)
             }
 
             // Moisture of plants
-            if(cmpString(&usartStr[0], &comparePlantsStr[0])){
-
+            if(cmpString(&usartStr[0], &comparePlantsStr[0]))
+            {
                 // 1
                 char keyPlant1[6] = "P1";
-                uint16_t moistureValue1 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                uint16_t moistureValue1 = ADC_readAnalogPin(MOISUTRE_P1_ANALOG_PIN); // read analog input pin A0 on Arduino
                 strcat(&keyPlant1[0], uint162str(moistureValue1)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant1[0]);
 
@@ -233,7 +253,7 @@ int main(void)
 
                 // 2
                 char keyPlant2[6] = "P2";
-                uint16_t moistureValue2 = ADC_readAnalogPin(1); // read analog input pin A0 on Arduino
+                uint16_t moistureValue2 = ADC_readAnalogPin(MOISUTRE_P2_ANALOG_PIN); // read analog input pin A1 on Arduino
                 strcat(&keyPlant2[0], uint162str(moistureValue2)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant2[0]);
 
@@ -243,48 +263,45 @@ int main(void)
 
                 // 3
                 char keyPlant3[6] = "P3";
-                uint16_t moistureValue3 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                uint16_t moistureValue3 = ADC_readAnalogPin(MOISUTRE_P1_ANALOG_PIN); // read analog input pin A0 on Arduino
                 strcat(&keyPlant3[0], uint162str(moistureValue3)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant3[0]);
 
 
                 // 4
                 char keyPlant4[6] = "P4";
-                uint16_t moistureValue4 = ADC_readAnalogPin(0); // read analog input pin A0 on Arduino
+                uint16_t moistureValue4 = ADC_readAnalogPin(MOISUTRE_P1_ANALOG_PIN); // read analog input pin A0 on Arduino
                 strcat(&keyPlant4[0], uint162str(moistureValue4)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant4[0]);
             }
 
             // Water plant 1
-            if(cmpString(&usartStr[0], &compareWaterPlant1Str[0])){
-                sbi(PORTD, PD4);
-                _delay_ms(2000);
-                cbi(PORTD,PD4);
+            if(cmpString(&usartStr[0], &compareWaterPlant1Str[0]))
+            {
+                waterUntilMinMoistureReached(MOISUTRE_P1_ANALOG_PIN, WATER_PUMP1_PIN);
             }
 
             // Water plant 2
-            if(cmpString(&usartStr[0], &compareWaterPlant2Str[0])){
-                sbi(PORTD, PD5);
-                _delay_ms(2000);
-                cbi(PORTD,PD5);
+            if(cmpString(&usartStr[0], &compareWaterPlant2Str[0]))
+            {
+                waterUntilMinMoistureReached(MOISUTRE_P2_ANALOG_PIN, WATER_PUMP2_PIN);
             }
 
             // Water plant 3
-            if(cmpString(&usartStr[0], &compareWaterPlant3Str[0])){
-                sbi(PORTD, PD6);
-                _delay_ms(2000);
-                cbi(PORTD,PD6);
+            if(cmpString(&usartStr[0], &compareWaterPlant3Str[0]))
+            {
+                waterUntilMinMoistureReached(MOISUTRE_P3_ANALOG_PIN, WATER_PUMP3_PIN);
             }
 
             // Water plant 4
-            if(cmpString(&usartStr[0], &compareWaterPlant4Str[0])){
-                sbi(PORTD, PD7);
-                _delay_ms(2000);
-                cbi(PORTD,PD7);
+            if(cmpString(&usartStr[0], &compareWaterPlant4Str[0]))
+            {
+                waterUntilMinMoistureReached(MOISUTRE_P4_ANALOG_PIN, WATER_PUMP4_PIN);
             }
 
             // Clear LCD
-            if(cmpString(&usartStr[0], &compareClearStr[0])) {
+            if(cmpString(&usartStr[0], &compareClearStr[0]))
+            {
                 LCD_clearDisplay();
             }
 
@@ -328,4 +345,17 @@ ISR(USART_RX_vect)
         }
     }
 }
+
+void waterUntilMinMoistureReached(int moisturePin, int pumpPin)
+{
+    // activated pump
+    sbi(PORTD, pumpPin); 
+    
+    // wait until minimum moisture value is reached
+    while(ADC_readAnalogPin(moisturePin) < MOISTURE_MIN_VALUE){}; 
+    
+    // deactivates pump
+    cbi(PORTD, pumpPin); 
+}
+
 
