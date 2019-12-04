@@ -8,8 +8,8 @@
 // https://techtutorialsx.com/2017/04/24/esp32-subscribing-to-mqtt-topic/
 // https://www.arduino.cc/reference/en/language/functions/communication/serial/write/
 
-const char* ssid = "FRITZ!Box 7412";
-const char* stringNumber = "31469059394759135757";
+const char* ssid = "xxx";
+const char* stringNumber = "yyy";
 const char* mqtt_server = "192.168.178.49";
 const int mqtt_port = 1883;
 

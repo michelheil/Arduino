@@ -257,10 +257,6 @@ int main(void)
                 strcat(&keyPlant2[0], uint162str(moistureValue2)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant2[0]);
 
-                LCD_setCursorTo(0, 2);
-                LCD_sendDataString("Moisture2: ");
-                LCD_sendDataUint16(moistureValue2);
-
                 // 3
                 char keyPlant3[6] = "P3";
                 uint16_t moistureValue3 = ADC_readAnalogPin(MOISUTRE_P1_ANALOG_PIN); // read analog input pin A0 on Arduino
@@ -270,9 +266,13 @@ int main(void)
 
                 // 4
                 char keyPlant4[6] = "P4";
-                uint16_t moistureValue4 = ADC_readAnalogPin(MOISUTRE_P1_ANALOG_PIN); // read analog input pin A0 on Arduino
+                uint16_t moistureValue4 = ADC_readAnalogPin(MOISUTRE_P4_ANALOG_PIN); // read analog input pin A0 on Arduino
                 strcat(&keyPlant4[0], uint162str(moistureValue4)); // combine key word for moisture values and the value
                 USART_writeStringLn(&keyPlant4[0]);
+
+                //LCD_setCursorTo(0, 2);
+                //LCD_sendDataString("Moisture4: ");
+                //LCD_sendDataUint16(moistureValue4);
             }
 
             // Water plant 1
