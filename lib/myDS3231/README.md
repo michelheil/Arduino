@@ -22,8 +22,8 @@ Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/
 ### Link to data sheet
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myDS3231/datasheet)
 
-### Picture of sensor
-<x.jpeg>
+### Pictures of sensor
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Back.jpg" width="250">
 
 ### Other Links and References
 [Adafruit Shop DS3231](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/overview)
