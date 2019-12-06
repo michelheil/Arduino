@@ -23,11 +23,8 @@ Source: [Newark Shop](https://www.newark.com/panasonic/amg8833/temperature-senso
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myAMG8833/datasheet)
 
 ### Picture of sensor
-![AMG8833_Front][front] 
-[front]: https://github.com/michelheil/Arduino/blob/master/lib/myAMG8833/pictures/AMG8833_Front.jpg "AMG8833_Front"
-[back]: https://github.com/michelheil/Arduino/blob/master/lib/myAMG8833/pictures/AMG8833_Back.jpg "AMG8833_Back"
-
-<img src="https://github.com/michelheil/Arduino/blob/master/lib/myAMG8833/pictures/AMG8833_Back.jpg" width="48">
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myAMG8833/pictures/AMG8833_Front.jpg" width="250">
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myAMG8833/pictures/AMG8833_Back.jpg" width="250">
 
 ### Other Links and References
 [Adafruit Shop AMG8833](https://www.adafruit.com/product/3538)
