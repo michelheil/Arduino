@@ -45,6 +45,10 @@ to set up DS3231 for first time
 
 
 ### APIs
+Initializes DS3231 through the initialisation of TWI
+
+```void DS3231_init(void);```
+
 Request current seconds
 
 ```uint8_t DS3231_getSeconds(void);```
