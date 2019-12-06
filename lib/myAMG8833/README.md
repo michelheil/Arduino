@@ -8,7 +8,7 @@ signage and automatic doors/elevators.
 - Temperature detection of two-dimensional area is 8 x 8 (64 pixels)
 - Operating voltage is 3.3VDC
 - High performance type high gain amplification
-- Temperature accuracy is ±2.5°C or ±4.5°F (typical )
+- Temperature accuracy is ±2.5°C or ±4.5°F (typical)
 - Human detection distance is 7m or less (reference value) 22.966ft
 - Noise equivalent temperature difference is 0.05°C or 32.900°F at 1Hz
 - Viewing angle is 60° and optical axis gap is within ±5.6°(typical)
@@ -29,14 +29,6 @@ Source: [Newark Shop](https://www.newark.com/panasonic/amg8833/temperature-senso
 [Adafruit Shop AMG8833](https://www.adafruit.com/product/3538)
 
 [Panasonic Infrared Array SensorGrid-EYE](http://industrial.panasonic.com/cdbs/www-data/pdf/ADI8000/ADI8000C66.pdf)
-
-
-## Example
-Motivation and what to do
-### Picture of wiring
-Fritzing
-### Dependencies
-Which other utils are required
 
 
 ## Library Documentation
@@ -109,3 +101,10 @@ Von dem IoT Project verallgemeinern
 #### Helper Functions
 ToDo: setRegisterByte und getRegisterByte als helper functions 
 
+
+## Example
+Motivation and what to do
+### Picture of wiring
+Fritzing
+### Dependencies
+Which other utils are required

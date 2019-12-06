@@ -137,7 +137,7 @@
 void LCD_init(void);
 
 /**
- * @brief clear display (which implicitly sets cursor to home)
+ * @brief Clear display (which implicitly sets cursor to home)
  * 
  */
 void LCD_clearDisplay(void);
@@ -171,7 +171,7 @@ void LCD_sendDataUint16(uint16_t val);
 void LCD_sendDataFloat(float val);
 
 /**
- * @brief Set cursore of the LCD to first position ("home")
+ * @brief Set cursor of the LCD to first position ("home")
  * 
  */
 void LCD_setCursorHome(void);

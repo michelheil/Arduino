@@ -29,15 +29,6 @@ Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/
 [Adafruit Shop DS3231](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/overview)
 
 
-
-## Example
-Motivation and what to do
-### Picture of wiring
-Fritzing
-### Dependencies
-Which other utils are required
-
-
 ## Library Documentation
 
 ### Dependencies
@@ -101,4 +92,12 @@ Combine the bits of the DS3231 register bytes into decimal numbers
 
 #### Helper Functions
 ToDo: DS3231_combineRegisterBits als helper functions 
+
+
+## Example
+Motivation and what to do
+### Picture of wiring
+Fritzing
+### Dependencies
+Which other utils are required
 

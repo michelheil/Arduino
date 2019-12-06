@@ -26,7 +26,7 @@ static void LCD_startReadWriteSignal(void)
     cbi(LCD_PORT, LCD_E);       // set pin to 0 to stop reading/writing
 }
 
-// send the four high bits of a byte through 4-bit LCD_PORT without affecting other LCD_PORT pins
+// Send the four high bits of a byte through 4-bit LCD_PORT without affecting other LCD_PORT pins
 static void LCD_sendHighNibble(uint8_t data)
 {
     data &= 0xF0;                       // mask higher bits as only they should be send
@@ -36,7 +36,7 @@ static void LCD_sendHighNibble(uint8_t data)
     LCD_startReadWriteSignal();
 }
 
-// send a data byte to LCD
+// Send data byte to LCD
 void LCD_sendDataByte(uint8_t data)
 {
     LCD_PORT |= (1<<LCD_RS);      // set RS to 1 as this activates data register
@@ -47,7 +47,7 @@ void LCD_sendDataByte(uint8_t data)
     _delay_ms(LCD_COMMAND_MS);
 }
 
-// send a command byte to LCD
+// Send command byte to LCD
 void LCD_sendCommandByte(uint8_t data)
 {
     LCD_PORT &= ~(1<<LCD_RS);     // set RS to 0 as this activates command register
