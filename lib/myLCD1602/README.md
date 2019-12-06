@@ -22,8 +22,8 @@ The transferring speed of 8-bit is twice faster than 4-bit.
 
 Source: [Data Sheets](https://github.com/michelheil/Arduino/lib/myLCD1602/datasheet)
 
-### Picture of LCD
-<x.jpeg>
+### Pictures of LCD
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myLCD1602/pictures/LCD1602_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myLCD1602/pictures/LCD1602_Back.jpg" width="250">
 
 
 ## Library Documentation
