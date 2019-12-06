@@ -119,26 +119,22 @@
  *
  * returns: 0
  */
-int  AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr);
+int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr);
 
-/*
- * Set a register of the AMG8833 device through TWI (I2C)
+/**
+ * Switch moving average on or off
  * 
- * reg: Register Address of AMG8833 that should be set
- * val: Byte value that is written into the register
- *
- * returns: no return value
+ * flag: 1=ON, 0=OFF
  */
-void AMG8833_setRegisterByte(uint8_t reg, uint8_t val);
+void AMG8833_setMovingAverage(uint8_t flag);
 
-/*
- * Read register of the AMG8833 device through TWI (I2C)
+/**
+ * @brief Activate Grid Interrupt and set Upper Limit
  * 
- * reg: Register Address of AMG8833 that should be read
- *
- * returns: Byte value that is written in the register
+ * msbLimit: most significant byte of the limit
+ * lsbLimit: least significant byte of the limit 
  */
-uint8_t AMG8833_getRegisterByte(uint8_t reg);
+void AMG8833_setInterruptUpperLimit(uint8_t msbLimit, uint8_t lsbLimit);
 
 /*
  * Read the Temperature Register of all 8x8 Pixels from AMG8833 through TWI (I2C)

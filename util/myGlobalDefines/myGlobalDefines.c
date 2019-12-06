@@ -1,11 +1,11 @@
 /*
- * myHelperFunctions.c
+ * myGlobalDefines.c
  *
- * Created: 16.11.2019 18:36:00
+ * Created: 06.12.2019 18:36:00
  *  Author: Michael
  */ 
 
-#include "myHelperFunctions.h"
+#include "myGlobalDefines.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,18 +21,6 @@ unsigned char cmpString(volatile char * string1, char * string2)
         string1++; string2++;
     }
 }
-
-/*
-void ausbin8(uint8_t wert)
-{
-    LCD_sendDataString("0b");
-    for (unsigned char i = 0; i < 8; i++)
-    {
-        LCD_sendDataString(uint82str(wert >> 7)); // print highest bit
-        wert <<= 1; // shift one bit left such that highest (already printed) bit will disappear
-    }
-}
-*/
 
 // www.mikrocontroller.net/articles/FAQ#Aktivieren_der_Floating_Point_Version_von_sprintf_beim_WinAVR_mit_AVR-Studio
 char* float2str(float floatValue)

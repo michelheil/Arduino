@@ -5,11 +5,10 @@
  *  Author: Michael
  */ 
 #include "myUSART.h"
-#include "globalDefines.h" // required for sbi usage
-#include "myHelperFunctions.h" // required for float2str usage
+#include "myGlobalDefines.h" // required for sbi usage, required for float2str usage
 
 // set baud rate
-#define USART_BAUDRATE	1000000//250000//125000 //9600
+#define USART_BAUDRATE	9600 //1000000//250000//125000 //9600
 // calculate configuration parameter; check data sheet for calculation
 #define USART_SETTING	((F_CPU/16UL/USART_BAUDRATE)-1) 
 

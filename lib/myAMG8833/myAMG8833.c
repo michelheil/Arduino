@@ -6,36 +6,11 @@
  */ 
 #include "myAMG8833.h"
 
-#include "myHelperFunctions.h"
+#include "myGlobalDefines.h"
 
 #include <util/delay.h>
 #include <string.h>
-#include "myLOG.h"
 #include "myTWI.h"
-
-
-// entering normal mode for AMG8833, restarting and setting general registers
-int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
-{
-    // initialize I2C for communication with AMG8833
-    TWI_init();
-
-    LOG_debug("Set Operating Mode:");
-    AMG8833_setRegisterByte(AMG8833_PCTL, pcr);
-
-    LOG_debug("Perform Software Reset:");
-    AMG8833_setRegisterByte(AMG8833_RST, rr);
-    
-    LOG_debug("Set Frame Rate:");
-    AMG8833_setRegisterByte(AMG8833_FPSC, frr);
-
-    LOG_debug("Disable Interrupts:");
-    AMG8833_setRegisterByte(AMG8833_INTC, icr);
-
-    _delay_ms(100);
-
-    return 0;
-}
 
 
 void AMG8833_setRegisterByte(uint8_t reg, uint8_t val)
@@ -71,6 +46,38 @@ uint8_t AMG8833_getRegisterByte(uint8_t reg)
     return regValue;
 }
 
+// entering normal mode for AMG8833, restarting and setting general registers
+int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
+{
+    // initialize I2C for communication with AMG8833
+    TWI_init();
+
+#ifdef MYLOG_H_
+    LOG_debug("Set Operating Mode:");
+#endif
+    AMG8833_setRegisterByte(AMG8833_PCTL, pcr);
+
+#ifdef MYLOG_H_
+    LOG_debug("Perform Software Reset:");
+#endif    
+    AMG8833_setRegisterByte(AMG8833_RST, rr);
+    
+#ifdef MYLOG_H_    
+    LOG_debug("Set Frame Rate:");
+#endif    
+    AMG8833_setRegisterByte(AMG8833_FPSC, frr);
+
+#ifdef MYLOG_H_
+    LOG_debug("Disable Interrupts:");
+#endif    
+    AMG8833_setRegisterByte(AMG8833_INTC, icr);
+
+    _delay_ms(100);
+
+    return 0;
+}
+
+
 void AMG8833_readGrid(float * resultGridValues)
 {
     // define an array to store the raw grid Values from AMG8833 device
@@ -83,9 +90,13 @@ void AMG8833_readGrid(float * resultGridValues)
     memset(rawGridData, 0, numberBytes*sizeof(uint8_t));
 
     // read Grid Bytes starting with lower bit from first Pixel
+#ifdef MYLOG_H_    
     LOG_debug("Read Grid");
-    TWI_readBytes(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, numberBytes, &rawGridData[0]);
+#endif
+    TWI_getRegisterBytes(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, numberBytes, &rawGridData[0]);
+#ifdef MYLOG_H_
     LOG_debug("...Grid reading done!");
+#endif
     
     // combine two bytes for each Pixel
     for(uint16_t ii = 0; ii < AMG8833_GRID_PIXELS; ii++) {
@@ -106,18 +117,45 @@ float AMG8833_readThermistor(void)
     uint8_t rawData[AMG8833_THERMISTOR_BYTES];
     memset(rawData, 0, AMG8833_THERMISTOR_BYTES*sizeof(uint8_t));
 
+#ifdef MYLOG_H_
     LOG_debug("Read Thermistor");
+#endif
 
     // read two bytes from Thermistor
-    TWI_readBytes(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
+    TWI_getRegisterBytes(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
+#ifdef MYLOG_H_
     LOG_debug("...Thermistor reading done!");
-
+#endif
     // combine two bytes into uint16_t
     uint16_t thermistorValueRaw =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
 
     // return float value containing temperature in Celsius
     return signedMag12ToFloat(thermistorValueRaw) * AMG8833_THERMISTOR_CONVERSION;
 }
+
+// Switch moving average on or off
+void AMG8833_setMovingAverage(uint8_t flag)
+{
+    switch(flag)
+    {
+        case 1:
+            AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
+        case 0:
+            AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_OFF);
+        default:
+            AMG8833_setRegisterByte(AMG8833_AVE, AMG8833_AVE_SWITCH_ON);
+    }
+
+}
+
+// Activate Grid Interrupt and set Upper Limit
+void AMG8833_setInterruptUpperLimit(uint8_t msbLimit, uint8_t lsbLimit)
+{
+  AMG8833_setRegisterByte(AMG8833_INTC, AMG8833_INTC_INTMOD_ABS + AMG8833_INTC_INTEN_ACTIVE);
+  AMG8833_setRegisterByte(AMG8833_INTHH, msbLimit);
+  AMG8833_setRegisterByte(AMG8833_INTHL, lsbLimit);
+}
+
 
 const char * AMG8833_readStatusRegister(void)
 {
