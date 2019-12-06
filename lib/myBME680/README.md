@@ -53,8 +53,8 @@ Source: [Bosch Data Sheet](https://cdn-shop.adafruit.com/product-files/3660/BME6
 ### Link to data sheet
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myBME680/datasheet)
 
-### Picture of sensor
-<x.jpeg>
+### Pictures of sensor
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myBME680/pictures/BME680_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myBME680/pictures/BME680_Back.jpg" width="250">
 
 ### Other Links and References
 [Bosch BME680 driver on GitHub](https://github.com/BoschSensortec/BME680_driver)
