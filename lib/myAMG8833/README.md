@@ -70,13 +70,13 @@ int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
 
 
 ### APIs
-Set a register of the AMG8833 device through TWI (I2C)
+Switch moving average on or off
 
-```void AMG8833_setRegisterByte(uint8_t reg, uint8_t val);```
+```void AMG8833_setMovingAverage(uint8_t flag);```
 
-Read register of the AMG8833 device through TWI (I2C)
+Activate Grid Interrupt and set Upper Limit
 
-```uint8_t AMG8833_getRegisterByte(uint8_t reg);```
+```void AMG8833_setInterruptUpperLimit(uint8_t msbLimit, uint8_t lsbLimit);```
 
 Read the Temperature Register of all 8x8 Pixels from AMG8833 through TWI (I2C)
 
@@ -90,21 +90,50 @@ Read the Status Register from AMG8833 through TWI (I2C)
 
 ```const char * AMG8833_readStatusRegister(void);```
 
-
-**TODO**
-
-Von dem IoT Project verallgemeinern
-// activate moving average
-// activate Interrupt with upper limit
-
-
 #### Helper Functions
-ToDo: setRegisterByte und getRegisterByte als helper functions 
+Set a register of the AMG8833 device through TWI (I2C)
+
+```void AMG8833_setRegisterByte(uint8_t reg, uint8_t val)```
+
+Read register of the AMG8833 device through TWI (I2C)
+
+```uint8_t AMG8833_getRegisterByte(uint8_t reg)```
 
 
-## Example
-Motivation and what to do
-### Picture of wiring
+## Examples
+To get started using the myAMG8833 library I have created examples.
+
+### Basic
+The [basic](https://github.com/michelheil/Arduino/tree/master/lib/myAMG8833/example/basic) example has
+minimal dependencies and shows how to initialise and read both Thermistor and Grid Values.
+
+#### Picture of wiring (Basic)
 Fritzing
-### Dependencies
-Which other utils are required
+
+#### Dependencies (Basic)
+- <avr/io.h>
+- <util/delay.h>
+- "myGlobalDefines.h"
+- "myTWI.h"
+- "myUSART.h"
+
+### Interrupt
+The [interrupt](https://github.com/michelheil/Arduino/tree/master/lib/myAMG8833/example/interrupt) example makes
+use of the interrupt capabilities of the AMG8833 device. An Interrupt is actived when one of the grid values
+exceeds a given upper limit.
+
+#### Picture of wiring (Interrupt)
+Fritzing
+
+#### Dependencies (Interrupt)
+- <avr/io.h>
+- <avr/interrupt.h>
+- <stdlib.h>
+- <stdio.h>
+- <string.h>
+- <util/delay.h>
+- "myGlobalDefines.h"
+- "myTWI.h"
+- "myUSART.h"
+
+
