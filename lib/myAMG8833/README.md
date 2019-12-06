@@ -37,8 +37,7 @@ Source: [Newark Shop](https://www.newark.com/panasonic/amg8833/temperature-senso
 * <util/twi.h>
 * <util/delay.h>
 * <string.h>
-* "myGlobalDefines"
-* "myLOG.h"
+* "myGlobalDefines.h"
 * "myTWI.h"
 
 ### Init function
@@ -50,16 +49,24 @@ int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
     // initialize I2C for communication with AMG8833
     TWI_init();
 
+#ifdef MYLOG_H_
     LOG_debug("Set Operating Mode:");
+#endif
     AMG8833_setRegisterByte(AMG8833_PCTL, pcr);
 
+#ifdef MYLOG_H_
     LOG_debug("Perform Software Reset:");
+#endif    
     AMG8833_setRegisterByte(AMG8833_RST, rr);
     
+#ifdef MYLOG_H_    
     LOG_debug("Set Frame Rate:");
+#endif    
     AMG8833_setRegisterByte(AMG8833_FPSC, frr);
 
+#ifdef MYLOG_H_
     LOG_debug("Disable Interrupts:");
+#endif    
     AMG8833_setRegisterByte(AMG8833_INTC, icr);
 
     _delay_ms(100);
