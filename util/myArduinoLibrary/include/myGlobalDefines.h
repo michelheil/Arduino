@@ -27,7 +27,7 @@
 
 #define F_CPU 16000000L
 
-#define GLOBAL_LOG_LEVEL 2 // {ALL = 1, DEBUG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7};
+#define GLOBAL_LOG_LEVEL 3 // {ALL = 1, DEBUG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7};
 
 // helper functions (macros) to support bit operations
 #define sbi(PORT, bit) (PORT |= (1 << bit))  // set bit in PORT
