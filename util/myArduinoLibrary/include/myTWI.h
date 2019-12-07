@@ -35,14 +35,7 @@ extern "C" {
 #define MYTWI_H_
 
 #include <avr/io.h> // required for uint types
-
-#ifndef MYLOG_H_
-  #define MYLOG_H_
-  inline void LOG_debug(char * msg){};
-  inline void LOG_info(char * msg){};
-  inline void LOG_error(char * msg){};
-#endif // MYLOG_H_
-
+#include "myLOG.h"
 
 /*
  * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has

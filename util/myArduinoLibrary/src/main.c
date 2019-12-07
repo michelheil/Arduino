@@ -9,10 +9,11 @@ void loop() {
 // compile this project
 // go to .pio/build/uno/src
 // open folder in terminal
+// rm libmyArduinoLib.a
 // avr-ar rcs libmyArduinoLib.a myADC.c.o myGlobalDefines.c.o myLOG.c.o myTWI.c.o myUSART.c.o --plugin=$(gcc --print-file-name=liblto_plugin.so)
 // check content of library with
-// ar -cvq libmylib.a *.o
-// ar -t libmylib.a
+// ar -cvq libmyArduinoLib.a *.o
+// ar -t libmyArduinoLib.a
 //
 // To use the library, insert the following line to platformio.ini file
 // build_flags = -L/home/michael/GitHubRepositories/Arduino/util/myArduinoLibrary/.pio/build/uno/src -lmyArduinoLib -I/home/michael/GitHubRepositories/Arduino/util/myArduinoLibrary/include

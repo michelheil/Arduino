@@ -9,7 +9,11 @@
 #include "myGlobalDefines.h"
 #include "myUSART.h"
 
-typedef enum {ALL = 1, DEBUGG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7} logLevel; // DEBUG does not work => debugG
+typedef enum {ALL = 1, DEBUG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7} logLevel; // DEBUG does not work => debugG
+
+#ifndef GLOBAL_LOG_LEVEL
+#define GLOBAL_LOG_LEVEL 3 // default value if not specified differently
+#endif // GLOBAL_LOG_LEVEL
     
 void LOG_format(char * tag, char * message)
 {
@@ -36,7 +40,7 @@ void LOG_info(char * message)
 
 void LOG_debug(char * message)
 {
-    logLevel lvl = DEBUGG;
+    logLevel lvl = DEBUG;
     if(GLOBAL_LOG_LEVEL <= lvl) {
         LOG_format("DEBUG", message);
     }
