@@ -36,6 +36,14 @@ extern "C" {
 
 #include <avr/io.h> // required for uint types
 
+#ifndef MYLOG_H_
+  #define MYLOG_H_
+  inline void LOG_debug(char * msg){};
+  inline void LOG_info(char * msg){};
+  inline void LOG_error(char * msg){};
+#endif // MYLOG_H_
+
+
 /*
  * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has
  * min = 0 kHz and max = 400 kHZ
@@ -103,26 +111,6 @@ uint8_t TWI_getRegisterByte(uint8_t sla, uint8_t reg);
  * @brief           Read multiple byte register of the device through TWI (I2C)
  */
 int TWI_getRegisterBytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
-
-// TWI function for transmissions
-
-// Send Start message
-void TWI_startTransmission(void);
-
-// Send Repeated Start message
-void TWI_repeatStartTransmission(void);
-
-// Send Slave Address + Read-/Write-Flag
-void TWI_writeSlaRW(uint8_t slarw);
-
-// Send Register Address of device where data will be written into
-void TWI_writeRegisterAddress(uint8_t addr);
-
-// Send Byte that should be written into Register Address of device
-void TWI_writeByte(uint8_t addr);
-
-// Send Stop message
-void TWI_stopTransmission(void);
 
 #endif /* MYTWI_H_ */
 
