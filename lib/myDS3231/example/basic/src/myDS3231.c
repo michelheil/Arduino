@@ -145,7 +145,9 @@ void DS3231_getDayString(char * resPointer) {
             break;
         case 7:
             strcpy(resPointer, "Saturday");
-            break;                         
+            break;
+        default:
+            LOG_error("DS3231_getDayString");
     }
 }
 

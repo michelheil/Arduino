@@ -25,6 +25,14 @@
 
 #include <util/twi.h> // required for TW_READ and TW_WRITE
 
+#ifndef MYLOG_H_
+  #define MYLOG_H_
+  inline void LOG_debug(char * msg){};
+  inline void LOG_info(char * msg){};
+  inline void LOG_error(char * msg){};
+#endif // MYLOG_H_
+
+
 // DS3231 I2C Slave Address is 0x68
 #define DS3231_SLAVE_ADDRESS            0x68
 #define DS3231_SLA_W                    ((DS3231_SLAVE_ADDRESS << 1) | TW_WRITE) // shifted by one as the address is stored in the higher 7-bits

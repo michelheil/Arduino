@@ -36,6 +36,14 @@ extern "C" {
 
 #include <avr/io.h> // required for uint types
 
+#ifndef MYLOG_H_
+  #define MYLOG_H_
+  inline void LOG_debug(char * msg){};
+  inline void LOG_info(char * msg){};
+  inline void LOG_error(char * msg){};
+#endif // MYLOG_H_
+
+
 /*
  * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has
  * min = 0 kHz and max = 400 kHZ
