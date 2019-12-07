@@ -52,28 +52,19 @@ int AMG8833_init(uint8_t pcr, uint8_t rr, uint8_t frr, uint8_t icr)
     // initialize I2C for communication with AMG8833
     TWI_init();
 
-#ifdef MYLOG_H_
     LOG_debug("Set Operating Mode:");
-#endif
     AMG8833_setRegisterByte(AMG8833_PCTL, pcr);
 
-#ifdef MYLOG_H_
     LOG_debug("Perform Software Reset:");
-#endif    
     AMG8833_setRegisterByte(AMG8833_RST, rr);
     
-#ifdef MYLOG_H_    
     LOG_debug("Set Frame Rate:");
-#endif    
     AMG8833_setRegisterByte(AMG8833_FPSC, frr);
 
-#ifdef MYLOG_H_
     LOG_debug("Disable Interrupts:");
-#endif    
     AMG8833_setRegisterByte(AMG8833_INTC, icr);
 
     _delay_ms(100);
-
     return 0;
 }
 
@@ -90,13 +81,9 @@ void AMG8833_readGrid(float * resultGridValues)
     memset(rawGridData, 0, numberBytes*sizeof(uint8_t));
 
     // read Grid Bytes starting with lower bit from first Pixel
-#ifdef MYLOG_H_    
     LOG_debug("Read Grid");
-#endif
     TWI_getRegisterBytes(AMG8833_SLAVE_ADDRESS, AMG8833_T01L, numberBytes, &rawGridData[0]);
-#ifdef MYLOG_H_
     LOG_debug("...Grid reading done!");
-#endif
     
     // combine two bytes for each Pixel
     for(uint16_t ii = 0; ii < AMG8833_GRID_PIXELS; ii++) {
@@ -117,15 +104,10 @@ float AMG8833_readThermistor(void)
     uint8_t rawData[AMG8833_THERMISTOR_BYTES];
     memset(rawData, 0, AMG8833_THERMISTOR_BYTES*sizeof(uint8_t));
 
-#ifdef MYLOG_H_
     LOG_debug("Read Thermistor");
-#endif
-
     // read two bytes from Thermistor
     TWI_getRegisterBytes(AMG8833_SLAVE_ADDRESS, AMG8833_TTHL, AMG8833_THERMISTOR_BYTES, &rawData[0]);
-#ifdef MYLOG_H_
     LOG_debug("...Thermistor reading done!");
-#endif
     // combine two bytes into uint16_t
     uint16_t thermistorValueRaw =  ((uint16_t) rawData[1] << 8) | ((uint16_t) rawData[0]);
 

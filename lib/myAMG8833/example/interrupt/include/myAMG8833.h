@@ -25,6 +25,13 @@
 
 #include <util/twi.h> // required for TW_READ and TW_WRITE
 
+#ifndef MYLOG_H_
+  #define MYLOG_H_
+  inline void LOG_debug(char * msg){};
+  inline void LOG_info(char * msg){};
+  inline void LOG_error(char * msg){};
+#endif // MYLOG_H_
+
 // AMG8833 I2C Slave Address is 0x69
 #define AMG8833_SLAVE_ADDRESS           0x69
 #define AMG8833_SLA_W                   ((AMG8833_SLAVE_ADDRESS << 1) | TW_WRITE) // shifted by one as the address is stored in the higher 7-bits
