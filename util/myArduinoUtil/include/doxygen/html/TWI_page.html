@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>My Arudino Util: myArduinoUtil</title>
+<title>My Arudino Util: myTWI.h</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -43,7 +43,6 @@ $(function() {
 });
 </script>
 <div id="main-nav"></div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -58,32 +57,56 @@ $(function() {
 </iframe>
 </div>
 
+</div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">myArduinoUtil </div>  </div>
+<div class="title"><a class="el" href="myTWI_8h.html">myTWI.h</a> </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>This library contains all utilities used in my Arduino Uno projects</p>
-<h1><a class="anchor" id="Lisence"></a>
-Lisence</h1>
-<p>Copyright (C) 2019 Michael Heil <br />
- <br />
- This program is free software: you can redistribute it and/or modify <br />
- it under the terms of the GNU General Public License as published by <br />
- the Free Software Foundation, either version 3 of the License, or <br />
- (at your option) any later version. <br />
- <br />
- This program is distributed in the hope that it will be useful, <br />
- but WITHOUT ANY WARRANTY; without even the implied warranty of <br />
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the <br />
- GNU General Public License for more details. <br />
- <br />
- You should have received a copy of the GNU General Public License <br />
- along with this program. If not, see <a href="https://www.gnu.org/licenses/">https://www.gnu.org/licenses/</a>. <br />
-</p>
+<div class="textblock"><p>Programm to communicate with I2C devices through Two-Wire Interface (ATMega328P)</p>
+<p>Here I can add some details to this library</p>
 <dl class="section date"><dt>Date</dt><dd>09.10.2019 18:41:08 </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Michael </dd></dl>
-<dl class="section copyright"><dt>Copyright</dt><dd>GNU General Public License </dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>GNU General Public License</dd></dl>
+<h1><a class="anchor" id="TWI"></a>
+TWI Register Overview</h1>
+<p>The following list of registers are available for ATMega328P to work with the two-wire interface (TWI).</p>
+<ul>
+<li>TWSR - TWI Status Register (initial value: 0xF8) </li>
+<li>TWBR - TWI Bit Rate Register (initial value: 0x00) </li>
+<li>TWCR - TWI Control Register </li>
+<li>TWDR - TWI Data Register (initial value: 0xFF) </li>
+<li>TWAR - TWI (Slave) Address Register; Includes TWGCE (TWI General Call Recognition Enable Bit) as bit 0 </li>
+<li>TWAMR - TWI (Slave) Address Mask Register</li>
+</ul>
+<h1><a class="anchor" id="CLK"></a>
+Calculation of SCL frequency</h1>
+<p>According to the AMG88** data sheet the SCL clock frequency (f_SCL) has <br />
+min = 0 kHz and max = 400 kHZ <br />
+<br />
+According to the ATmega328p data sheet the SCL clock frequency is <br />
+f_SCL = CPU_ClockFrequency / (16 + 2 * TWBR * PrescalerValue) <br />
+where TWBR is the value of the TWI Bit Rate Register <br />
+and the PrescaleValue (in {1, 4, 16, 64}) can be set through the TWSR (TWI Status Register) <br />
+<br />
+Assuming we want to work with a f_SCL of 100kHz <br />
+=&gt; TWBR * PrescalerValue = 72 <br />
+=&gt; TWBR = 18 = 0b00010010 <br />
+=&gt; PrescalerValue: TWPS1 = 0, TWPS0 = 1 (both bits are part of byte TWSR) <br />
+#define TWI_PRESCALER_VALUE 0x01 // PrescalerValue: 4 <br />
+#define TWI_BIT_RATE 0x12 // Decimal: 18 <br />
+<br />
+<br />
+In General f_SCL = x (known) <br />
+TWBR * PrescalerValue =: y (unknown) <br />
+x = CPU_ClockFrequency / (16 + 2y) <br />
+&lt;=&gt; 16x + 2xy = CPU_ClockFrequency <br />
+&lt;=&gt; 2xy = CPU_ClockFrequency - 16x <br />
+&lt;=&gt; y = (CPU_ClockFrequency - 16x) / 2x <br />
+<br />
+x = 400kHz <br />
+=&gt; y = 12 (= TWBR * PrescalerValue) <br />
+</p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

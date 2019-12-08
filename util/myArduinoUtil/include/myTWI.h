@@ -1,32 +1,52 @@
-/*
-    Programm to communicate with I2C devices through Two-Wire Interface (ATMega328P)
-    Copyright (C) 2019  Michael Heil
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/**
+ * @page TWI_page myTWI.h
+ * @brief Programm to communicate with I2C devices through Two-Wire Interface (ATMega328P)
+ * @details Here I can add some details to this library
+ * 
+ * @date 09.10.2019 18:41:08
+ * @author Michael
+ * @copyright GNU General Public License
+ * 
+ * @section TWI TWI Register Overview
+ * 
+ * The following list of registers are available for ATMega328P to work with the two-wire interface (TWI).
+ * 
+ * @li TWSR - TWI Status Register (initial value: 0xF8)
+ * @li TWBR - TWI Bit Rate Register (initial value: 0x00)
+ * @li TWCR - TWI Control Register
+ * @li TWDR - TWI Data Register (initial value: 0xFF)
+ * @li TWAR - TWI (Slave) Address Register; Includes TWGCE (TWI General Call Recognition Enable Bit) as bit 0
+ * @li TWAMR - TWI (Slave) Address Mask Register
  *
- * Created: 09.10.2019 18:41:08
- *  Author: Michael
- */ 
-
-/*
- * TWSR - TWI Status Register (initial value: 0xF8)
- * TWBR - TWI Bit Rate Register (initial value: 0x00)
- * TWCR - TWI Control Register
- * TWDR - TWI Data Register (initial value: 0xFF)
- * TWAR - TWI (Slave) Address Register; Includes TWGCE (TWI General Call Recognition Enable Bit) as bit 0.
- * TWAMR - TWI (Slave) Address Mask Register
+ * @section CLK Calculation of SCL frequency
+ * 
+ * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has @n
+ * min = 0 kHz and max = 400 kHZ @n
+ * @n
+ * According to the ATmega328p data sheet the SCL clock frequency is @n
+ * f_SCL = CPU_ClockFrequency / (16 + 2 * TWBR * PrescalerValue) @n
+ * where TWBR is the value of the TWI Bit Rate Register @n
+ * and the PrescaleValue (in {1, 4, 16, 64}) can be set through the TWSR (TWI Status Register) @n
+ * @n
+ * Assuming we want to work with a f_SCL of 100kHz @n
+ * => TWBR * PrescalerValue = 72 @n
+ * => TWBR = 18 = 0b00010010 @n
+ * => PrescalerValue: TWPS1 = 0, TWPS0 = 1 (both bits are part of byte TWSR) @n
+ * #define TWI_PRESCALER_VALUE     0x01 // PrescalerValue: 4 @n
+ * #define TWI_BIT_RATE            0x12 // Decimal: 18 @n
+ * @n
+ * @n
+ * In General f_SCL = x (known) @n
+ * TWBR * PrescalerValue =: y (unknown) @n
+ * x = CPU_ClockFrequency / (16 + 2y) @n
+ * <=> 16x + 2xy = CPU_ClockFrequency @n
+ * <=> 2xy = CPU_ClockFrequency - 16x @n
+ * <=> y = (CPU_ClockFrequency - 16x) / 2x @n
+ * @n
+ * x = 400kHz @n
+ * => y = 12 (= TWBR * PrescalerValue) @n
 */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,47 +57,16 @@ extern "C" {
 #include <avr/io.h> // required for uint types
 #include "myLOG.h"
 
-/*
- * According to the AMG88** data sheet the SCL clock frequency (f_SCL) has
- * min = 0 kHz and max = 400 kHZ
+#define TWI_PRESCALER_VALUE     0x00 /**< TWPS1 = 0 and TWPS0 = 0 means PrescalerValue of 1 */
+#define TWI_BIT_RATE            0x0C /**< Decimal: 12 */
+
+/**
+ * @brief Initializes the TWI (I2C) communication on Arduino by
+ * @li enabling TWI register bits
+ * @li setting clock frequency of SCL
+ * @li (activating pull-up resistors for SDA and SCL)
  *
- * According to the ATmega328p data sheet the SCL clock frequency is
- * f_SCL = CPU_ClockFrequency / (16 + 2 * TWBR * PrescalerValue)
- * where TWBR is the value of the TWI Bit Rate Register
- * and the PrescaleValue (in {1, 4, 16, 64}) can be set through the TWSR (TWI Status Register)
- * 
- * Assuming we want to work with a f_SCL of 100kHz
- * => TWBR * PrescalerValue = 72
- * => TWBR = 18 = 0b00010010
- * => PrescalerValue: TWPS1 = 0, TWPS0 = 1 (both bits are part of byte TWSR)
- * #define TWI_PRESCALER_VALUE     0x01 // PrescalerValue: 4
- * #define TWI_BIT_RATE            0x12 // Decimal: 18
- * 
- * 
- * In General f_SCL = x (known)
- * TWBR * PrescalerValue =: y (unknown)
- * x = CPU_ClockFrequency / (16 + 2y)
- * <=> 16x + 2xy = CPU_ClockFrequency
- * <=> 2xy = CPU_ClockFrequency - 16x
- * <=> y = (CPU_ClockFrequency - 16x) / 2x
- * 
- * x = 400kHz
- * => y = 12 (= TWBR * PrescalerValue)
-*/
-
-#define TWI_PRESCALER_VALUE     0x00 // TWPS1 = 0 and TWPS0 = 0 means PrescalerValue of 1
-#define TWI_BIT_RATE            0x0C // Decimal: 12
-
-// TWI general function
-
-
-/*
- * Initializes the TWI (I2C) communication on Arduino by
- * . enabling TWI register bits
- * . setting clock frequency of SCL
- * (. activating pull-up resistors for SDA and SCL)
- *
- * returns: 0
+ * @return          0 if successful
  */
 int TWI_init(void);
 
@@ -95,13 +84,20 @@ void TWI_setRegisterByte(uint8_t sla, uint8_t reg, uint8_t val);
  * 
  * @param sla       slave address
  * @param reg       register address that should be read
- * @return uint8_t  byte value from the regster address
+ * @return          uint8_t byte value from the regster address
  */
 uint8_t TWI_getRegisterByte(uint8_t sla, uint8_t reg);
 
 
 /**
- * @brief           Read multiple byte register of the device through TWI (I2C)
+ * @brief           Read multiple bytes of the device through TWI (I2C)
+ * 
+ * @param sla       slave address
+ * @param reg       register address that should be read
+ * @param len       number of bytes to be read
+ * @param dest      pointer to an array containing the content of read bytes
+ * 
+ * @return          number of read bytes as int (should be equal to len)
  */
 int TWI_getRegisterBytes(uint8_t sla, uint8_t reg, int len, uint8_t * dest);
 
