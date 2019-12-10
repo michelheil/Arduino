@@ -1,30 +1,14 @@
-/*! @file myBME680.h
- * @mainpage Library to read sensor data from Bosch BME680 through I2C from Arduino UNO
+/** @file myBME680.h
+ * @page Library to read sensor data from Bosch BME680 through I2C from Arduino UNO
  * @section myBME680 Description
  * @brief Sensor for:
  *        Temperature: -40 - +85 Celcius
  *        Humidity: 0 - 100% r.H. (relative Humidity)
  *        Pressure: 300 - 1100 hPa (hecto Pascal)
  * 
-    Copyright (C) 2019  Michael Heil
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
- * 
- * 
-Data Sheet: https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BME680-DS001.pdf
-Bosch BME680_Driver: https://github.com/BoschSensortec/BME680_driver
-*/
+ * Data Sheet: https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BME680-DS001.pdf
+ * Bosch BME680_Driver: https://github.com/BoschSensortec/BME680_driver
+ */
 
 #ifndef MYBME680_H_
 #define MYBME680_H_
@@ -135,17 +119,17 @@ Bosch BME680_Driver: https://github.com/BoschSensortec/BME680_driver
 /*****************************************************************************************************************
  ** Declare enumerated types used in the class                                                                   **
 *****************************************************************************************************************/
-/*! @brief  Enumerate the sensor type */
+/** @brief  Enumerate the sensor type */
 enum sensorTypes       {TemperatureSensor,HumiditySensor,PressureSensor,GasSensor,UnknownSensor};
-/*! @brief  Enumerate the Oversampling types */
+/** @brief  Enumerate the Oversampling types */
 enum oversamplingTypes {SensorOff,Oversample1,Oversample2,Oversample4,Oversample8,Oversample16,UnknownOversample };
-/*! @brief  Enumerate the iir filter types */
+/** @brief  Enumerate the iir filter types */
 enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownIIR };
 
-/*!
-* @class BME680
-* @brief Main BME680 class for the temperature, humidity, pressure, gas sensor
-*/
+/**
+ * @class BME680
+ * @brief Main BME680 class for the temperature, humidity, pressure, gas sensor
+ */
   class BME680 
   {
     public:
@@ -162,16 +146,15 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
       void     reset();                                                                 // Reset the BME680
 
     private:
-      uint8_t  readBME680Byte(const uint8_t addr);                                      // Read byte from register address
-      void     readSensors(const bool waitSwitch);                                      // read the registers in one burst
-      void     waitForReadings();                                                       // Wait for readings to finish
-      void     getCalibration();                                                        // Load calibration from registers
-      uint8_t  _I2CAddress         = 0;                                                 // Default is no I2C address known
-      uint8_t  _H6,_P10,_res_heat_range;                                                // unsigned configuration variables
-      int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;   // signed configuration variables
-      uint16_t _H1,_H2,_T1,_P1;                                                         // unsigned 16bit configuration variables
-      int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;                                             // signed 16bit configuration variables
-      int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;                            // signed 32bit configuratio variables
-  }; // of BME680 class definition
+      uint8_t  readBME680Byte(const uint8_t addr); // Read byte from register address
+      void     readSensors(const bool waitSwitch); // read the registers in one burst
+      void     waitForReadings(); // Wait for readings to finish
+      void     getCalibration(); // Load calibration from registers
+      uint8_t  _H6,_P10,_res_heat_range;
+      int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;
+      uint16_t _H1,_H2,_T1,_P1;
+      int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;
+      int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;
+  };
 
 #endif /* MYBME680_H_ */
