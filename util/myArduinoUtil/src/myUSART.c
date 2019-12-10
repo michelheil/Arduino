@@ -51,7 +51,7 @@ void USART_sendChar(unsigned char data)
 
 
 // write an entire string (collection of characters)
-void USART_writeString(char * stringPtr)
+void USART_writeString(char const * stringPtr)
 {
 	// taking advantage that in C every string is terminated with a null character
 	// check if there is still more chars to send
@@ -62,7 +62,7 @@ void USART_writeString(char * stringPtr)
 }
 
 // write an entire String with a line feed at the end
-void USART_writeStringLn(char * stringPtr)
+void USART_writeStringLn(char const * stringPtr)
 {
     USART_writeString(stringPtr);
     USART_newLine();

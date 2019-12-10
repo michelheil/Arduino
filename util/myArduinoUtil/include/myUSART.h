@@ -45,14 +45,14 @@ void USART_sendChar(unsigned char data);
  * 
  * @param stringPtr pointer to a char that will be transmitted via USART
  */
-void USART_writeString(char* stringPtr);
+void USART_writeString(char const * stringPtr);
 
 /**
  * @brief Send a string to TX followed by a line feed
  * 
  * @param stringPtr pointer to a char that will be transmitted via USART
  */
-void USART_writeStringLn(char * stringPtr);
+void USART_writeStringLn(char const * stringPtr);
 
 /**
  * @brief Send a float variable to TX
