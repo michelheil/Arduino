@@ -75,7 +75,7 @@ void loop()
 
 
 // Calculate altidude based on pressure
-float altitude(int32_t pressure = 977.20) 
+float altitude(int32_t pressure) 
 {
   const float seaLevel = 1013.25;
 
