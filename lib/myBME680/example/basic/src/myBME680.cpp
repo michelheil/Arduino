@@ -261,7 +261,7 @@ const uint32_t lookupTable2[16]  = {
   UINT32_C(4000000),    UINT32_C(2000000),    UINT32_C(1000000),    UINT32_C(500000),    UINT32_C(250000),
   UINT32_C(125000) 
 };
-  uint8_t buff[15],gas_range,status=0;                     // declare array for registers
+  uint8_t buff[15], gas_range, status = 0;                 // declare array for registers
   int64_t var1, var2, var3, var4, var5, var6, temp_scaled; // Work variables
   uint32_t adc_temp, adc_pres;                             // Raw ADC temperature and pressure
   uint16_t adc_hum, adc_gas_res;                           // Raw ADC humidity and gas
@@ -278,21 +278,21 @@ const uint32_t lookupTable2[16]  = {
 /*************************
  ** Compute temperature **
  ************************/
-  var1         = ((int32_t)adc_temp>>3)-((int32_t)_T1<<1); // Perform calibration/adjustment
-  var2         = (var1*(int32_t)_T2)>>11;                  // of Temperature values according
-  var3         = ((var1>>1)*(var1>>1))>>12;                // to formula defined by Bosch
-  var3         = ((var3)*((int32_t)_T3<<4))>>14;
-  _tfine       = (int32_t)(var2+var3);
-  _Temperature = (int16_t)(((_tfine*5)+128)>>8);
+  var1         = ((int32_t)adc_temp >> 3) - ((int32_t)_T1 << 1); // Perform calibration/adjustment
+  var2         = (var1 * (int32_t)_T2) >> 11;                    // of Temperature values according
+  var3         = ((var1 >> 1) * (var1 >> 1)) >> 12;              // to formula defined by Bosch
+  var3         = ((var3) * ((int32_t)_T3 << 4)) >> 14;
+  _tfine       = (int32_t)(var2 + var3);
+  _Temperature = (int16_t)(((_tfine * 5) + 128) >> 8);
 
 /**********************
  ** Compute pressure **
  *********************/
 	var1      = (((int32_t)_tfine) >> 1) - 64000;
-	var2      = ((((var1 >> 2)*(var1 >> 2)) >> 11)*(int32_t)_P6) >> 2;
+	var2      = ((((var1 >> 2) * (var1 >> 2)) >> 11) * (int32_t)_P6) >> 2;
 	var2      = var2 + ((var1 * (int32_t)_P5) << 1);
 	var2      = (var2 >> 2) + ((int32_t)_P4 << 16);
-	var1      = (((((var1>>2)*(var1>>2))>>13)*((int32_t)_P3<<5))>>3)+(((int32_t)_P2*var1)>>1);
+	var1      = (((((var1 >> 2) * (var1 >> 2)) >> 13) * ((int32_t)_P3 << 5)) >> 3) + (((int32_t)_P2 * var1) >> 1);
 	var1      = var1 >> 18;
 	var1      = ((32768 + var1) * (int32_t)_P1) >> 15;
 	_Pressure = 1048576 - adc_pres;
@@ -302,10 +302,10 @@ const uint32_t lookupTable2[16]  = {
     _Pressure = ((_Pressure / (uint32_t)var1) << 1);
 	else
     _Pressure = ((_Pressure << 1) / (uint32_t)var1);
-	var1 = ((int32_t)_P9*(int32_t)(((_Pressure>>3)*(_Pressure>>3))>>13))>>12;
+	var1 = ((int32_t)_P9 * (int32_t)(((_Pressure >> 3) * (_Pressure >> 3)) >> 13)) >> 12;
 	var2 = ((int32_t)(_Pressure >> 2) * (int32_t)_P8) >> 13;
 	var3 = ((int32_t)(_Pressure >> 8) * (int32_t)(_Pressure >> 8) *	(int32_t)(_Pressure >> 8) * (int32_t)_P10) >> 17;
-	_Pressure = (int32_t)(_Pressure)+((var1+var2+var3+((int32_t)_P7<<7))>>4);
+	_Pressure = (int32_t)(_Pressure) + ((var1 + var2 + var3 + ((int32_t)_P7 << 7)) >> 4);
 
 /**********************
  ** Compute humidity **
@@ -319,7 +319,7 @@ const uint32_t lookupTable2[16]  = {
                 (int32_t) (1 << 14))) >> 10;
 	var3        = var1 * var2;
 	var4        = (int32_t) _H6 << 7;
-	var4        = ((var4)+((temp_scaled*(int32_t)_H7)/((int32_t)100)))>>4;
+	var4        = ((var4) + ((temp_scaled * (int32_t)_H7) / ((int32_t)100))) >> 4;
 	var5        = ((var3 >> 14) * (var3 >> 14)) >> 10;
 	var6        = (var4 * var5) >> 1;
 	_Humidity   = (((var3 + var6) >> 10) * ((int32_t) 1000)) >> 12;
@@ -332,9 +332,8 @@ const uint32_t lookupTable2[16]  = {
  ** Compute gas **
  ****************/
 	uint64_t uvar2;
-	var1 = (int64_t)((1340+(5*(int64_t)_range_sw_error))*
-	((int64_t) lookupTable1[gas_range])) >> 16;
-	uvar2 = (((int64_t)((int64_t)adc_gas_res<<15)-(int64_t)(16777216))+var1);
+	var1 = (int64_t)((1340 + (5 * (int64_t)_range_sw_error)) * ((int64_t) lookupTable1[gas_range])) >> 16;
+	uvar2 = (((int64_t)((int64_t)adc_gas_res << 15) - (int64_t)(16777216)) + var1);
 	var3 = (((int64_t) lookupTable2[gas_range] * (int64_t) var1) >> 9);
 	_Gas = (uint32_t) ((var3 + ((int64_t) uvar2 >> 1)) / (int64_t) uvar2);
   uint8_t workRegister = readBME680Byte(BME680_CONTROL_MEASURE_REG);   // Read the control measure
@@ -396,4 +395,32 @@ bool BME680::setGas(uint16_t GasTemp,  uint16_t GasMillis)
     TWI_setRegisterByte(BME680_SLAVE_ADDRESS, BME680_CONTROL_GAS_REGISTER2, (uint8_t)(gasRegister|B00010000));
   } // of if-then-else turn gas measurements on or off
   return true;
+}
+
+
+
+float BME680::calc_temperature()
+{
+  // Read MSB, LSB and XLSB from temperature registers
+  uint8_t buff[3]; 
+  waitForReadings();
+  TWI_getRegisterBytes(BME680_SLAVE_ADDRESS, BME680_TEMP_MSB_REG, 3, &buff[0]);
+  
+  // combine read bytes out of registers
+  uint32_t temp_adc = (uint32_t)(((uint32_t)buff[0] << 12) | ((uint32_t)buff[1] << 4) | ((uint32_t)buff[2] >> 4));
+
+  // calculate the temperature as float (check data sheet for formula)
+	float var1 = 0;
+	float var2 = 0;
+	float calc_temp = 0;
+
+	var1  = ((((float)temp_adc / 16384.0f) - ((float)_T1 / 1024.0f)) * ((float)_T2));
+
+	var2  = (((((float)temp_adc / 131072.0f) - ((float)_T1 / 8192.0f)) *
+		(((float)temp_adc / 131072.0f) - ((float)_T1 / 8192.0f))) *
+		((float)_T3 * 16.0f));
+
+	calc_temp  = ((var1 + var2) / 5120.0f);
+
+	return calc_temp;
 }

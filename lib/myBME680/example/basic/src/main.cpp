@@ -56,7 +56,11 @@ void loop()
   tempDisplay = temperature/100.0; // Temperature in deci-degrees
   USART_writeFloat(tempDisplay);
   USART_writeString("\xC2\xB0 "); // Representation of the ° symbol
-  
+
+  float tempFloatDisplay = myBME680.calc_temperature();
+  USART_writeFloat(tempFloatDisplay);
+  USART_writeString("\xC2\xB0 "); // Representation of the ° symbol
+ 
   humidDisplay = humidity/1000.0; // Humidity in milli-percent
   USART_writeFloat(humidDisplay);
   USART_writeString("%Hum ");

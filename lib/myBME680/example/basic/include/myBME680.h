@@ -144,6 +144,7 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
                              int32_t &press, int32_t &gas,
                              const bool waitSwitch = true);
       void     reset();                                                                 // Reset the BME680
+      float    calc_temperature();
 
     private:
       uint8_t  readBME680Byte(const uint8_t addr); // Read byte from register address
