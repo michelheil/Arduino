@@ -146,16 +146,15 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
       void     reset();                                                                 // Reset the BME680
 
     private:
-      uint8_t  readBME680Byte(const uint8_t addr);                                      // Read byte from register address
-      void     readSensors(const bool waitSwitch);                                      // read the registers in one burst
-      void     waitForReadings();                                                       // Wait for readings to finish
-      void     getCalibration();                                                        // Load calibration from registers
-      uint8_t  _I2CAddress         = 0;                                                 // Default is no I2C address known
-      uint8_t  _H6,_P10,_res_heat_range;                                                // unsigned configuration variables
-      int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;   // signed configuration variables
-      uint16_t _H1,_H2,_T1,_P1;                                                         // unsigned 16bit configuration variables
-      int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;                                             // signed 16bit configuration variables
-      int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;                            // signed 32bit configuratio variables
+      uint8_t  readBME680Byte(const uint8_t addr); // Read byte from register address
+      void     readSensors(const bool waitSwitch); // read the registers in one burst
+      void     waitForReadings(); // Wait for readings to finish
+      void     getCalibration(); // Load calibration from registers
+      uint8_t  _H6,_P10,_res_heat_range;
+      int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;
+      uint16_t _H1,_H2,_T1,_P1;
+      int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;
+      int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;
   };
 
 #endif /* MYBME680_H_ */

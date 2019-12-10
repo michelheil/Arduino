@@ -26,7 +26,7 @@ void setup()
 
   USART_init();
 
-  USART_writeStringLn(" Starting I2CDemo example program for BME680");
+  USART_writeStringLn("Starting I2CDemo example program for BME680");
   USART_writeStringLn("- Initializing BME680 sensor");
   USART_writeStringLn("- Setting 16x oversampling for all sensors");
   myBME680.setOversampling(TemperatureSensor,Oversample16); // Use enumerated type values
@@ -37,7 +37,7 @@ void setup()
   USART_writeStringLn("- Setting gas measurement to 320\xC2\xB0 for 150ms");
   myBME680.setGas(320,150); // 320°c for 150 milliseconds
   USART_newLine();
-} // of method setup()
+}
 
 /**
  * @brief    Arduino method for the main program loop
