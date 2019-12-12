@@ -13,7 +13,7 @@
 
 void TC16_init();
 volatile uint16_t startTC16, endTC16;
-volatile uint8_t measurementIndex = 0; // 0 = not started, 1 = started, 2 = finished
+volatile uint8_t measurementIndex = 0; // 0 = not started, 1 = finished, else/default = waiting
 
 int main(void)
 {
@@ -43,51 +43,52 @@ int main(void)
 
   while(1)
   {
-    if(measurementIndex == 0) // not started
+    switch(measurementIndex)
     {
-      // Trigger (at least 10us high level signal)
-      sbi(PORTD, HCSR04_TRIGGER_PIN);
-      _delay_us(10);
-      cbi(PORTD, HCSR04_TRIGGER_PIN);
-      
-      // reset counter value
-      TCNT1 = 0;  
-      startTC16 = TCNT1; // start counting
-      measurementIndex = 1; // indicate start of measurement
-      USART_writeStringLn("Measurement started. Waiting for echo...");
-    }
+      case 0: // measurement and trigger not started -> start trigger
+        // Trigger (at least 10us high level signal)
+        sbi(PORTD, HCSR04_TRIGGER_PIN);
+        _delay_us(10);
+        cbi(PORTD, HCSR04_TRIGGER_PIN);
+        
+        // reset counter value
+        TCNT1 = 0;  
+        startTC16 = TCNT1; // start counting
+        USART_writeString("Start Counter: ");
+        USART_writeStringLn(uint162str(startTC16));
 
-    if(measurementIndex == 1) // started 
-    {
-      USART_writeStringLn("Waiting for echo...");
-    }
+        measurementIndex = 1; // indicate start of measurement
+        USART_writeStringLn("Measurement started. Waiting for echo...");
+        break;
 
-    if(measurementIndex == 2) // echo received
-    {
-      // calculate duration
-      durationInTicks = endTC16 - startTC16;
-      USART_writeString("Duration in Ticks: ");
-      USART_writeStringLn(uint162str(durationInTicks));
+      case 1:
+        // calculate duration
+        durationInTicks = endTC16 - startTC16;
+        USART_writeString("Duration in Ticks: ");
+        USART_writeStringLn(uint162str(durationInTicks));
 
-      // convert duration in ticks into duration in seconds
-      durationInSec = (float)durationInTicks / 15625.0f;
+        // convert duration in ticks into duration in seconds
+        durationInSec = (float)durationInTicks / 15625.0f;
 
-      // convert to us
-      durationInUs = (float)durationInSec / 1000000.0f;
+        // convert to us
+        durationInUs = (float)durationInSec * 1000000.0f;
 
-      // us/58 = centimeters
-      distanceInCm = (float)durationInUs/58.0f;
+        // us/58 = centimeters
+        distanceInCm = (float)durationInUs/58.0f;
 
-      // print result to USART
-      USART_writeString("Distance in Centimeters: ");
-      USART_writeFloat(distanceInCm);
-      USART_newLine();
+        // print result to USART
+        USART_writeString("Distance in Centimeters: ");
+        USART_writeFloat(distanceInCm);
+        USART_newLine();
 
-      // Use over 60ms measurement cycle, in order to prevent trigger signal to the echo signal.
-      _delay_ms(3000); // wait before next measurement
+        // Use over 60ms measurement cycle, in order to prevent trigger signal to the echo signal.
+        _delay_ms(3000); // wait before next measurement
 
-      // reset measurement flag to enable another measurement
-      measurementIndex = 0; 
+        // reset measurement flag to enable another measurement
+        measurementIndex = 0; 
+
+      default: 
+        USART_writeStringLn("Waiting for echo...");
     }
   }
 }
@@ -111,5 +112,7 @@ void TC16_init()
 ISR(INT1_vect)
 {
   endTC16 = TCNT1;
-  measurementIndex = 2;
+  USART_writeString("End Counter: ");
+  USART_writeStringLn(uint162str(endTC16));
+  measurementIndex = 1;
 }
