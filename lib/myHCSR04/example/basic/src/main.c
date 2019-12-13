@@ -12,17 +12,19 @@
 
 
 void TC16_init();
+void HCSR04_triggerMeasurement(uint8_t triggerPort, uint8_t triggerPin);
 volatile uint16_t startTC16, endTC16;
-volatile uint8_t measurementIndex = 0; // 0 = not started, 1 = finished, else/default = waiting
+volatile uint8_t measurementIndex = 0; // 0 = not started, so start trigger, 1 = waiting, 2 = finished
 
 int main(void)
 {
   uint16_t durationInTicks;
   float durationInSec, durationInUs, distanceInCm;
 
-  /* START INTERRUPT DISABLED CODE */
-	cli(); // disable global interrupt setting
+	// disable global interrupt setting
+  cli();
 
+  // Initialize USART and the 16-bit Timer/Counter
   USART_init();
   TC16_init();
 
@@ -37,7 +39,6 @@ int main(void)
   EICRA = (1 << ISC11) | (1 << ISC10);
 
 	sei(); // enable global interrupt setting
-	/* END INTERRUPT DISABLED CODE */
 
   _delay_ms(2000);
 
@@ -45,11 +46,9 @@ int main(void)
   {
     switch(measurementIndex)
     {
-      case 0: // measurement and trigger not started -> start trigger
+      case 0: // measurement not started -> start trigger
         // Trigger (at least 10us high level signal)
-        sbi(PORTD, HCSR04_TRIGGER_PIN);
-        _delay_us(10);
-        cbi(PORTD, HCSR04_TRIGGER_PIN);
+        HCSR04_triggerMeasurement(PORTD, HCSR04_TRIGGER_PIN);
         
         // reset counter value
         TCNT1 = 0;  
@@ -57,11 +56,20 @@ int main(void)
         USART_writeString("Start Counter: ");
         USART_writeStringLn(uint162str(startTC16));
 
-        measurementIndex = 1; // indicate start of measurement
+        // indicate waiting
+        measurementIndex = 1;
         USART_writeStringLn("Measurement started. Waiting for echo...");
         break;
 
       case 1:
+        USART_writeStringLn("Waiting for echo...");
+        break;
+
+      case 2:
+        // print end of timer stopped in Interrupt Service Routine
+        USART_writeString("End Counter: ");
+        USART_writeStringLn(uint162str(endTC16));
+
         // calculate duration
         durationInTicks = endTC16 - startTC16;
         USART_writeString("Duration in Ticks: ");
@@ -86,9 +94,6 @@ int main(void)
 
         // reset measurement flag to enable another measurement
         measurementIndex = 0; 
-
-      default: 
-        USART_writeStringLn("Waiting for echo...");
     }
   }
 }
@@ -108,11 +113,23 @@ void TC16_init()
 	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
 }
 
+/**
+ * @brief Trigger a distance measurement by setting trigger Pin at least 10us to high
+ * 
+ * @param triggerPort Port of the trigger pin
+ * @param triggerPin Pin that triggers the measurement
+*/
+void HCSR04_triggerMeasurement(uint8_t triggerPort, uint8_t triggerPin)
+{
+  sbi(triggerPort, triggerPin);
+  _delay_us(10);
+  cbi(triggerPort, triggerPin);
+}
+
+
 // Interrupt if echo starts
 ISR(INT1_vect)
 {
-  endTC16 = TCNT1;
-  USART_writeString("End Counter: ");
-  USART_writeStringLn(uint162str(endTC16));
-  measurementIndex = 1;
+  endTC16 = TCNT1; // end counting
+  measurementIndex = 2; // indicate measurement has ended
 }
