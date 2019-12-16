@@ -1,6 +1,4 @@
 #include "myGlobalDefines.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
 #include <util/delay.h>
 
 #include "myHCSR04.h"
@@ -8,191 +6,77 @@
 
 #include "myUSART.h"
 
-#define HCSR04_ECHO_PIN PB0
 #define HCSR04_TRIGGER_PIN PD4
+#define HCSR04_TRIGGER_PORT PORTD
+#define HCSR04_TRIGGER_DDR DDRD
+
+#define HCSR04_ECHO_PIN PB0
+#define HCSR04_ECHO_PORT PORTB
+#define HCSR04_ECHO_DDR DDRB
+#define HCSR04_ECHO_INPUT_PIN PINB
+
+#define TC16_TICKS_PER_SECOND (15625.0f)
+
+#define HCSR04_SPEED_OF_SOUND 343.0f
 #define HCSR04_TRIGGER_DURATION_US 100
 
-#define SAMPLING 100
-
-#define M_IN_CM 100
-
-#define MY_PIND _SFR_IO8(0x09)
-
+#define METER_IN_CM 100
 
 void TC16_init();
-//void HCSR04_triggerMeasurement(uint8_t triggerPort, uint8_t triggerPin);
-volatile uint16_t startTC16, endTC16, waitTC16;
-//volatile uint8_t measurementIndex = 0; // 0 = not started, so start trigger, 1 = waiting, 2 = finished
+void HCSR04_triggerMeasurement(uint8_t triggerPort, uint8_t triggerPin);
+
 
 int main(void)
 {
-  uint16_t durationInTicks;
-  float durationInSec, durationInUs, distanceInCm;
-
-	// disable global interrupt setting
-  //cli();
+  uint16_t durationInTicks, startTC16, endTC16;
+  float durationInSec, distanceInCm;
 
   // Initialize USART and the 16-bit Timer/Counter
   USART_init();
   TC16_init();
 
-	// set echo pin as input and trigger pin as output
-	//cbi(DDRD, HCSR04_ECHO_PIN);
-  //sbi(DDRD, HCSR04_TRIGGER_PIN);
-  //PORTD = 0;
-  DDRD |= (1 << PD4);
+  // set trigger pin as output and echo pin as input
+  // void HCSR04_setDataDirectionRegister()
+  DDRD |= (1 << HCSR04_TRIGGER_PIN);
   DDRB &= ~(1 << HCSR04_ECHO_PIN);
-
-  // Enable INT1 (PD3) interrupt
-  //EIMSK = (1 << INT1);
-  
-  // The rising edge of INT1 generates an interrupt 
-  //EICRA = (0 << ISC11) | (1 << ISC10);
-
-//  _delay_ms(1000);
-
-  //sei(); // enable global interrupt setting
 
   while(1)
   {
+    // trigger HCSR04 to start measurement
+    PORTD |= (1 << HCSR04_TRIGGER_PIN);
+    _delay_us(HCSR04_TRIGGER_DURATION_US);
+    PORTD &= ~(1 << HCSR04_TRIGGER_PIN);
 
-_delay_ms(1000);
-uint8_t echoValue;
+    // wait for echo to start
+    while(!(PINB & (1 << HCSR04_ECHO_PIN))) {}
+    startTC16 = TCNT1;
 
-PORTD |= (1 << PD4);
-        _delay_us(25);
-        PORTD &= ~(1 << PD4);
+    // wait for echo to end
+    while((PINB & (1 << HCSR04_ECHO_PIN)) == 1) {}
+    endTC16 = TCNT1;
 
-while(!(PINB & (1 << PB0))) {}
-startTC16 = TCNT1;
+    // print values for start and end counter
+    USART_writeString("Start Counter: ");
+    USART_writeStringLn(uint162str(startTC16));
+    USART_writeString("End Counter: ");
+    USART_writeStringLn(uint162str(endTC16));
 
-while((PINB & (1 << PB0)) == 1) {}
-        endTC16 = TCNT1;
+    // calculate echo duration
+    durationInTicks = endTC16 - startTC16;
+    USART_writeString("Duration in Ticks: ");
+    USART_writeStringLn(uint162str(durationInTicks));
 
+    // convert duration in ticks into duration in seconds
+    durationInSec = (float)durationInTicks / TC16_TICKS_PER_SECOND;
 
-        USART_writeString("Start Counter: ");
-        USART_writeStringLn(uint162str(startTC16));
+    // calculate distance based on speed of sound
+    // division by factor 2 as sound goes back and forth
+    distanceInCm = (float)durationInSec * HCSR04_SPEED_OF_SOUND * METER_IN_CM / 2.0f;
 
-        USART_writeString("End Counter: ");
-        USART_writeStringLn(uint162str(endTC16));
-
-        durationInTicks = endTC16 - startTC16;
-        USART_writeString("Duration in Ticks: ");
-        USART_writeStringLn(uint162str(durationInTicks));
-
-
-        // convert duration in ticks into duration in seconds
-        durationInSec = (float)durationInTicks / 15625.0f;
-
-        distanceInCm = (float)durationInSec * 340.0f * M_IN_CM / 2.0f;
-
-        USART_writeString("Distance in Centimeters: ");
-        USART_writeFloat(distanceInCm);
-        USART_newLine();
-
-
-/*
-do
-{
-  uint8_t echoValue = (PIND & (1 << PD3));
-}
-
-        while((PIND & (1 << PD3)) == 0) {USART_writeStringLn("Wait 0");}
-        startTC16 = TCNT1;
-
-      while((PIND & (1 << PD3)) == 1) {USART_writeStringLn("Wait 1");}
-        endTC16 = TCNT1;
-
-
-        USART_writeString("Start Counter: ");
-        USART_writeStringLn(uint162str(startTC16));
-
-        USART_writeString("End Counter: ");
-        USART_writeStringLn(uint162str(endTC16));
-
-        durationInTicks = endTC16 - startTC16;
-        USART_writeString("Duration in Ticks: ");
-        USART_writeStringLn(uint162str(durationInTicks));
-
-        // convert duration in ticks into duration in seconds
-        durationInSec = (float)durationInTicks / 15625.0f;
-
-        distanceInCm = (float)durationInSec * 340000.0f / 2.0f;
-
-        USART_writeString("Distance in Centimeters: ");
-        USART_writeFloat(distanceInCm);
-        USART_newLine();
-
-        // Use over 60ms measurement cycle, in order to prevent trigger signal to the echo signal.
-        _delay_ms(1000); // wait before next measurement
-
-
-
-
-*/
-    
-/*
-    switch(measurementIndex)
-    {
-      case 0: // measurement not started -> start trigger
-        // reset counter value
-        TCNT1 = 0;
-
-        // Trigger (at least 10us high level signal)
-        //HCSR04_triggerMeasurement(PORTD, HCSR04_TRIGGER_PIN);
-        PORTD |= (1 << PD4);
-        _delay_us(100);
-        PORTD &= ~(1 << PD4);
-        
-        // start counting
-        startTC16 = TCNT1;
-        USART_writeString("Start Counter: ");
-        USART_writeStringLn(uint162str(startTC16));
-
-        // indicate waiting
-        measurementIndex = 1;
-        USART_writeStringLn("Measurement started. Waiting for echo...");
-        
-        break;
-
-      case 1:
-        //USART_writeStringLn("Waiting for echo...");
-        waitTC16 = TCNT1;
-        //USART_writeString("Wait Counter: ");
-        //USART_writeStringLn(uint162str(waitTC16));
-        break;
-
-      case 2:
-        // print end of timer stopped in Interrupt Service Routine
-        USART_writeString("End Counter: ");
-        USART_writeStringLn(uint162str(endTC16));
-
-        // calculate duration
-        durationInTicks = endTC16 - startTC16;
-        USART_writeString("Duration in Ticks: ");
-        USART_writeStringLn(uint162str(durationInTicks));
-
-        // convert duration in ticks into duration in seconds
-        durationInSec = (float)durationInTicks / 15625.0f;
-
-        // convert to us
-        durationInUs = (float)durationInSec * 1000000.0f;
-
-        // us/58 = centimeters
-        distanceInCm = (float)durationInUs / 58.0f;
-
-        // print result to USART
-        USART_writeString("Distance in Centimeters: ");
-        USART_writeFloat(distanceInCm);
-        USART_newLine();
-
-        // Use over 60ms measurement cycle, in order to prevent trigger signal to the echo signal.
-        _delay_ms(3000); // wait before next measurement
-
-        // reset measurement flag to enable another measurement
-        measurementIndex = 0; 
-    }
-*/
+    // print distance
+    USART_writeString("Distance in Centimeters: ");
+    USART_writeFloat(distanceInCm);
+    USART_newLine();
   }
 }
 
@@ -201,9 +85,6 @@ void TC16_init()
 {
 	// Timer/Counter Control Register 1A/1B
 	TCCR1A = 0; // normal port operation, OCA1/OCB1 disconnected
-
-  // Reset Counter
-  TCNT1 = 0;
 
 	// The Output Compare Registers (OCR1A) contain a 16-bit value that is continuously compared
 	// with the counter value (TCNT1). A match can be used to generate an Output Compare interrupt.
@@ -226,12 +107,3 @@ void HCSR04_triggerMeasurement(uint8_t triggerPort, uint8_t triggerPin)
   _delay_us(20);
   PORTD &= ~(1 << triggerPin);
 }
-
-/*
-// Interrupt if echo starts
-ISR(INT1_vect)
-{
-  endTC16 = TCNT1; // end counting
-  measurementIndex = 2; // indicate measurement has ended
-}
-*/
