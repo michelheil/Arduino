@@ -17,27 +17,20 @@ typedef unsigned char Byte;
 class HCSR04
 {
   public:
-    HCSR04(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond);
-    ~HCSR04();
-
-    float measureDistanceInCm();
+    HCSR04(uint8_t triggerP, uint8_t echoP, float ticksPerSec);   // constructor
+    ~HCSR04();                                                    // destructor
+    float       measureDistanceInCm();                            // measuring distance
 
   private:
-    uint8_t _triggerPin;
-    uint8_t _echoPin;
-    float _ticksPerSecond;
-    float _lastMeasuredDistanceInCm = 0;
-    const int _triggerDurationUs = 50;
-    const float _speedOfSound = 343.0f;
+    uint8_t     triggerPin;                                       // I/O pin of trigger
+    uint8_t     echoPin;                                          // I/O pin of echo
+    float       ticksPerSecond;                                   // conversion factor
+    float       lastMeasuredDistanceInCm = 0.0f;                  // storage for last measure
+    const int   triggerDurationUs = 50;                           // trigger duration
+    const float speedOfSound = 343.0f;                            // speed of sound in 20 degree
 
-    const Byte _triggerPortAddress = 0x0B; // PORTD
-    const Byte _triggerDDRAddress = 0x0A; // DDRD
-    const Byte _echoPortAddress = 0x05; // PORTB
-    const Byte _echoDDRAddress = 0x04; // DDRB
-    const Byte _echoInputPinAddress = 0x03; // PINB
-
-    void triggerMeasurement();
-    uint16_t measureEchoDuration();
+    void        triggerMeasurement();                             // initialize trigger
+    uint16_t    measureEchoDuration();                            // use timer for echo duration
 };
 
 #endif /* MYHCSR04_H_ */

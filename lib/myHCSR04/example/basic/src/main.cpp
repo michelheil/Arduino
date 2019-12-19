@@ -1,11 +1,12 @@
 #include "myGlobalDefines.h"
 #include <util/delay.h>
 
-#include "myHCSR04.h"
 #include "myTC16.h"
-
+#include "myHCSR04.h"
 #include "myUSART.h"
 
+// Attention:
+// DDRD, DDRB, PORTD, and PINB are hard coded in HCSR04 class
 #define HCSR04_TRIGGER_PIN PD4
 #define HCSR04_ECHO_PIN PB0
 
