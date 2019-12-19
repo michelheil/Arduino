@@ -34,12 +34,17 @@ HCSR04::~HCSR04(void) {}
 /**
  * @brief main function of HCSR04 class that returns the distance in centimeters
  * 
+ * @param percent factor for exponential moving average, set to 1
  * @return float measured distance in centimeters
  */
-float HCSR04::measureDistanceInCm()
+float HCSR04::measureDistanceInCm(int percent)
 {
-  int meterInCm = 100; // conversion factor
-  int doubleTravelDistance = 2; // sound travelling back and forth
+  // constant used to calculate distance
+  const int meterInCm = 100; // conversion factor
+  const int doubleTravelDistance = 2; // sound travelling back and forth
+
+  // convert integer into percentage
+  const float alpha = percent / 100.0f;
 
   // data sheet: we suggest to use over 60ms measurement cycle, in order to prevent 
   // trigger signal to the echo signal.
@@ -57,13 +62,15 @@ float HCSR04::measureDistanceInCm()
 
   // calculate distance based on speed of sound
   // division by factor 2 as sound goes back and forth
-  float result = durationInSec * (float)speedOfSound * (float)meterInCm / (float)doubleTravelDistance;
+  float newMeasuredDistInCm = durationInSec * (float)speedOfSound * (float)meterInCm / (float)doubleTravelDistance;
 
-  if (result < 0) {
-    return lastMeasuredDistanceInCm;
+  if ((newMeasuredDistInCm < 0) | (newMeasuredDistInCm > 400)) {
+    return lastMeasuredDistInCm; // if current measure out of range return last value
   } else {
-    lastMeasuredDistanceInCm = result;
-    return result;
+    float expMovingAvgDistInCm = (alpha * newMeasuredDistInCm) + \
+                                     (1 - alpha) * lastMeasuredDistInCm;
+    lastMeasuredDistInCm = expMovingAvgDistInCm;
+    return expMovingAvgDistInCm;
   }
 }
 

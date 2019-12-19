@@ -23,9 +23,9 @@ int main(void)
 
   while(1)
   {
-    _delay_ms(1000);
+    _delay_ms(100);
 
-    float distanceInCm = myHCSR04.measureDistanceInCm();
+    float distanceInCm = myHCSR04.measureDistanceInCm(80);
     USART_writeString("Distance in Centimeters: ");
     USART_writeFloat(distanceInCm);
     USART_newLine();

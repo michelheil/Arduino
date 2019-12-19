@@ -19,18 +19,18 @@ class HCSR04
   public:
     HCSR04(uint8_t triggerP, uint8_t echoP, float ticksPerSec);   // constructor
     ~HCSR04();                                                    // destructor
-    float       measureDistanceInCm();                            // measuring distance
+    float       measureDistanceInCm(int percent);                 // measuring distance
 
   private:
     uint8_t     triggerPin;                                       // I/O pin of trigger
     uint8_t     echoPin;                                          // I/O pin of echo
     float       ticksPerSecond;                                   // conversion factor
-    float       lastMeasuredDistanceInCm = 0.0f;                  // storage for last measure
-    const int   triggerDurationUs = 50;                           // trigger duration
-    const float speedOfSound = 343.0f;                            // speed of sound in 20 degree
+    float       lastMeasuredDistInCm = 0.0f;                      // store last measure
+    const int   triggerDurationUs = 15;                           // trigger duration [us]
+    const float speedOfSound = 343.0f;                            // speed of sound [m/s]
 
     void        triggerMeasurement();                             // initialize trigger
-    uint16_t    measureEchoDuration();                            // use timer for echo duration
+    uint16_t    measureEchoDuration();                            // count echo duration
 };
 
 #endif /* MYHCSR04_H_ */
