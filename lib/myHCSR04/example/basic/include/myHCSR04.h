@@ -20,17 +20,17 @@ typedef unsigned char Byte;
 class HCSR04
 {
   public:
-    HCSR04(); // constructor
-    ~HCSR04(); // de-constructor
+    HCSR04(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond); // constructor
+    ~HCSR04(); // destructor
 
-    void init(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond);
     float measureDistanceInCm();
 
   private:
     uint8_t _triggerPin;
     uint8_t _echoPin;
     float _ticksPerSecond;
-    const int _triggerDurationUs = 100;
+    float _lastMeasuredDistanceInCm = 0;
+    const int _triggerDurationUs = 50;
     const float _speedOfSound = 343.0f;
 
     const Byte _triggerPortAddress = 0x0B; // PORTD

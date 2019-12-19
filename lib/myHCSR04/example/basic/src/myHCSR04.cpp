@@ -11,17 +11,15 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-HCSR04::HCSR04() {}
-
-HCSR04::~HCSR04() {}
-
 /**
- * @brief initialize by setting the trigger and echo pins and define 
- *        ticksPerSecond conversion factor from the used Timer
- * @details the Data Direction Registers of wired pins are also set
-*/
-void HCSR04::init(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond)
-{
+ * @brief Construct a new HCSR04::HCSR04 object
+ * @details set wired pins and the conversion factor of the used Timer/Counter
+ * 
+ * @param triggerPin name of wired trigger pin
+ * @param echoPin name of wired echo pin
+ * @param ticksPerSecond factor to convert ticks into seconds based on the used Timer/Counter
+ */
+HCSR04::HCSR04(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond) {
   _triggerPin = triggerPin;
   _echoPin = echoPin;
   _ticksPerSecond = ticksPerSecond;
@@ -30,6 +28,16 @@ void HCSR04::init(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond)
   cbi(DDRB, _echoPin);
 }
 
+/**
+ * @brief Destroy the HCSR04::HCSR04 object
+ */
+HCSR04::~HCSR04(void) {}
+
+/**
+ * @brief main function of HCSR04 class that returns the distance in centimeters
+ * 
+ * @return float measured distance in centimeters
+ */
 float HCSR04::measureDistanceInCm()
 {
   int meterInCm = 100; // conversion factor
@@ -51,7 +59,14 @@ float HCSR04::measureDistanceInCm()
 
   // calculate distance based on speed of sound
   // division by factor 2 as sound goes back and forth
-  return (float)(durationInSec * (float)_speedOfSound * (float)meterInCm / (float)doubleTravelDistance);
+  float result = durationInSec * (float)_speedOfSound * (float)meterInCm / (float)doubleTravelDistance;
+
+  if (result < 0) {
+    return _lastMeasuredDistanceInCm;
+  } else {
+    _lastMeasuredDistanceInCm = result;
+    return result;
+  }
 }
 
 /**
