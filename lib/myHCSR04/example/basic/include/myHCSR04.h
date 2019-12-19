@@ -11,6 +11,36 @@
 #ifndef MYHCSR04_H_
 #define MYHCSR04_H_
 
+#include <avr/io.h>
+typedef unsigned char Byte;
 
+// ToDo: HCSR04 Klasse, die man fuer ein konkretes Paar an Trigger und Echo Pin definieren kann.
+// Einzelne methoden, wie ::measureDistance und helfer funktionen (private)
+// wie z.B. HCSR04_triggerMeasurement und HCSR04_measureEchoDuration
+class HCSR04
+{
+  public:
+    HCSR04(); // constructor
+    ~HCSR04(); // de-constructor
+
+    void init(uint8_t triggerPin, uint8_t echoPin, float ticksPerSecond);
+    float measureDistanceInCm();
+
+  private:
+    uint8_t _triggerPin;
+    uint8_t _echoPin;
+    float _ticksPerSecond;
+    const int _triggerDurationUs = 100;
+    const float _speedOfSound = 343.0f;
+
+    const Byte _triggerPortAddress = 0x0B; // PORTD
+    const Byte _triggerDDRAddress = 0x0A; // DDRD
+    const Byte _echoPortAddress = 0x05; // PORTB
+    const Byte _echoDDRAddress = 0x04; // DDRB
+    const Byte _echoInputPinAddress = 0x03; // PINB
+
+    void triggerMeasurement();
+    uint16_t measureEchoDuration();
+};
 
 #endif /* MYHCSR04_H_ */
