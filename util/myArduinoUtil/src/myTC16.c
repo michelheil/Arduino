@@ -22,8 +22,7 @@ float TC16_init(int factor)
 	// Setting only WGM12 on TCCR1B activates the CTC (Clear Timer on Compare Match) mode
 	TCCR1B = (1 << WGM12);
   
-  // Bits on CS12 and CS10 set the pre scale factor to 1024
-  int preScaleFactor = 1024;
+  // Setting pre-scaling factor using bit CS12, CS11, and CS10
   switch(factor)
   {
     case 1024:
@@ -48,4 +47,3 @@ float TC16_init(int factor)
   
   return F_CPU / (float)factor;
 }
-

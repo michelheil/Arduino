@@ -1,6 +1,6 @@
 /**
  * @page TC16_page myTC16.h
- * @section yyy
+ * @section 16-bit Timer/Counter
  * @brief Programm to apply 16-bit Timer/Counter of ATMega328P
  * 
  * @date 10.12.2019 18:41:08
