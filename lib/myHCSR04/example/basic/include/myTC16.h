@@ -18,9 +18,10 @@ extern "C" {
 /**
  * @brief initialize Timer 1A with interrupt and a Clear Timer on Compare Match and a pre-scaler of 1024
  * 
+ * @param factor set prescale factor 1, 8, 64, 256, 1024 for Timer/Counter
  * @return float based on the preScaleFactor return the conversion between a seconds and number of ticks
  */
-float TC16_init();
+float TC16_init(int factor);
 
 
 #endif /* MYTC16_H_ */
