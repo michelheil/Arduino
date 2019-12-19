@@ -7,6 +7,9 @@
  * @copyright GNU General Public License
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef MYLOG_H_
 #define MYLOG_H_
@@ -33,3 +36,7 @@ void LOG_info(char * message);
 void LOG_debug(char * message);
 
 #endif /* MYLOG_H_ */
+
+#ifdef __cplusplus
+}
+#endif

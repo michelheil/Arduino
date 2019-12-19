@@ -33,6 +33,10 @@
  * @copyright GNU General Public License
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef GLOBALDEFINES_H_
 #define GLOBALDEFINES_H_
 
@@ -104,3 +108,7 @@ struct pairOfTwoUint16 {
 };
 
 #endif /* GLOBALDEFINES_H_ */
+
+#ifdef __cplusplus
+}
+#endif

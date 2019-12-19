@@ -7,6 +7,10 @@
  * @copyright GNU General Public License
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MYADC_H_
 #define MYADC_H_
 
@@ -57,3 +61,7 @@ struct pairOfTwoUint16 ADC_calibrateAnalogPin(uint8_t channel, int calibrations)
 uint16_t mapSensorValueToFullRange(uint16_t sValue, uint16_t detectedMinValue, uint16_t detectedMaxValue, uint16_t minFullRangeValue, uint16_t maxFullRangeValue);
 
 #endif /* MYADC_H_ */
+
+#ifdef __cplusplus
+}
+#endif

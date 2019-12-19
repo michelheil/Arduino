@@ -130,32 +130,32 @@ enum iirFilterTypes    {IIROff,IIR2,IIR4,IIR8,IIR16,IIR32,IIR64,IIR128,UnknownII
  * @class BME680
  * @brief Main BME680 class for the temperature, humidity, pressure, gas sensor
  */
-  class BME680 
-  {
-    public:
-      BME680(); // constructor
-      ~BME680(); // de-constructor
-      
-      void     init();                                                                  // initialization code
-      bool     setOversampling(const uint8_t sensor, const uint8_t sampling);           // Set enum sensorType Oversampling
-      bool     setGas(uint16_t GasTemp, uint16_t GasMillis);                            // Gas heating temperature and time
-      uint8_t  setIIRFilter(const uint8_t iirFilterSetting=UINT8_MAX);                  // Set IIR Filter and return value
-      void     getSensorData(int32_t &temp, int32_t &hum,                               // get most recent readings
-                             int32_t &press, int32_t &gas,
-                             const bool waitSwitch = true);
-      void     reset();                                                                 // Reset the BME680
-      float    calc_temperature();
+class BME680 
+{
+  public:
+    BME680(); // constructor
+    ~BME680(); // de-constructor
+    
+    void     init();                                                                  // initialization code
+    bool     setOversampling(const uint8_t sensor, const uint8_t sampling);           // Set enum sensorType Oversampling
+    bool     setGas(uint16_t GasTemp, uint16_t GasMillis);                            // Gas heating temperature and time
+    uint8_t  setIIRFilter(const uint8_t iirFilterSetting=UINT8_MAX);                  // Set IIR Filter and return value
+    void     getSensorData(int32_t &temp, int32_t &hum,                               // get most recent readings
+                            int32_t &press, int32_t &gas,
+                            const bool waitSwitch = true);
+    void     reset();                                                                 // Reset the BME680
+    float    calc_temperature();
 
-    private:
-      uint8_t  readBME680Byte(const uint8_t addr); // Read byte from register address
-      void     readSensors(const bool waitSwitch); // read the registers in one burst
-      void     waitForReadings(); // Wait for readings to finish
-      void     getCalibration(); // Load calibration from registers
-      uint8_t  _H6,_P10,_res_heat_range;
-      int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;
-      uint16_t _H1,_H2,_T1,_P1;
-      int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;
-      int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;
-  };
+  private:
+    uint8_t  readBME680Byte(const uint8_t addr); // Read byte from register address
+    void     readSensors(const bool waitSwitch); // read the registers in one burst
+    void     waitForReadings(); // Wait for readings to finish
+    void     getCalibration(); // Load calibration from registers
+    uint8_t  _H6,_P10,_res_heat_range;
+    int8_t   _H3,_H4,_H5,_H7,_G1,_G3,_T3,_P3,_P6,_P7,_res_heat_val,_range_sw_error;
+    uint16_t _H1,_H2,_T1,_P1;
+    int16_t  _G2,_T2,_P2,_P4,_P5,_P8,_P9;
+    int32_t  _tfine,_Temperature,_Pressure,_Humidity,_Gas;
+};
 
 #endif /* MYBME680_H_ */
