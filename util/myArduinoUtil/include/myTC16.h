@@ -1,11 +1,13 @@
 /**
  * @page TC16_page myTC16.h
- * @section 16-bit Timer/Counter
  * @brief Programm to apply 16-bit Timer/Counter of ATMega328P
+ * @details Here I can add some details to this library
  * 
  * @date 10.12.2019 18:41:08
  * @author Michael
  * @copyright GNU General Public License
+ * 
+ * @section 16-bit Timer/Counter
  */
 
 #ifdef __cplusplus
@@ -16,10 +18,10 @@ extern "C" {
 #define MYTC16_H_
 
 /**
- * @brief initialize Timer 1A with interrupt and a Clear Timer on Compare Match and a pre-scaler of 1024
+ * @brief initialize Timer 1A without interrupt and a Clear Timer on Compare Match and a pre-scaler
  * 
- * @param factor set prescale factor 1, 8, 64, 256, 1024 for Timer/Counter
- * @return float based on the preScaleFactor return the conversion between a seconds and number of ticks
+ * @param factor set prescale factor to 1, 8, 64, 256, or 1024 (default) for Timer/Counter
+ * @return float conversion from seconds to number of ticks
  */
 float TC16_init(int factor);
 

@@ -1,6 +1,5 @@
 ## Short Description
-The 16-bit Timer/Counter unit allows accurate program execution timing (event management), wave generation,
-and signal timing measurement.
+The 16-bit Timer/Counter unit allows accurate program execution timing (event management), wave generation, and signal timing measurement.
 
 ### Reference to Data Sheet ATMega328P
 [Download ATMega328P data sheet](http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf)
