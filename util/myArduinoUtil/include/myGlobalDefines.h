@@ -109,11 +109,20 @@ float signedMag12ToFloat(uint16_t val);
 float int12ToFloat(uint16_t val);
 
 /**
- * @brief Struct of twi uint16_t variables 
+ * @brief Struct of two uint16_t variables 
  */
 struct pairOfTwoUint16 {
 	uint16_t sensorLowerBound;
 	uint16_t sensorUpperBound;
+};
+
+/**
+ * @brief Struct to store 3 int16_t values (such as 3-axis)
+ */
+struct xyzInt16Values {
+  int16_t x;
+  int16_t y;
+  int16_t z;
 };
 
 #endif /* GLOBALDEFINES_H_ */
