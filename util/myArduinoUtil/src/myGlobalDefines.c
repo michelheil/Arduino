@@ -44,6 +44,13 @@ char* uint162str(uint16_t uint16Value)
 	return buffer;
 }
 
+char* int162str(int16_t int16Value)
+{
+	static char buffer[6];
+	itoa(int16Value, buffer, 10);
+	return buffer;
+}
+
 char* uint322str(uint32_t uint32Value)
 {
 	static char buffer[4];

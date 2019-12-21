@@ -50,6 +50,7 @@ extern "C" {
 #define tgl(PORT, bit) (PORT ^= (1 << bit))  /**< switch bit in PORT */
 
 #define CONCATENATE_BYTES(msb, lsb) (((uint16_t)msb << 8) | (uint16_t)lsb) /**< combine msb and lsb */
+#define CONCATENATE_INT16_BYTES(msb, lsb) (((int16_t)msb << 8) | (int16_t)lsb) /**< combine msb and lsb */
 
 /**
  * @brief Define function to compare two Strings
@@ -86,6 +87,14 @@ char* uint82str(uint8_t uint8Value);
  * @return Start pointer of an char array (String)
  */
 char* uint162str(uint16_t uint16Value);
+
+/**
+ * @brief Convert a int16_t into a string
+ * 
+ * @param int16Value Value that is casted to a string
+ * @return Start pointer of an char array (String)
+ */
+char* int162str(int16_t int16Value);
 
 /**
  * @brief Convert a uint32_t into a string
