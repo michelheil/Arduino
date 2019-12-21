@@ -66,11 +66,9 @@ int main(void)
 
   // configuration (oversampling, range, rate, mode)
   TWI_setRegisterByte(GY271_SLAVE_ADDRESS, GY271_CONTROL_REGISTER_1, GY271_CR1_CONTINUOUS_MODE);
-  _delay_ms(100);
 
   // reset
   TWI_setRegisterByte(GY271_SLAVE_ADDRESS, GY271_SET_RESET_PERIOD_REGISTER, GY271_FBR_RECOMMENDATION);
-  _delay_ms(100);
 // GY271_init - end
 
   while(1)
@@ -80,36 +78,42 @@ int main(void)
 // check if new measurement is ready
     do {
       statusRegister = TWI_getRegisterByte(GY271_SLAVE_ADDRESS, GY271_STATUS_REGISTER);
-      USART_writeStringLn("Waiting for new data");
-      _delay_ms(500);
       drdy = statusRegister & 0x01; // bit masking of drdy as it is the 0 bit within Status Register
-      USART_writeString("DRDY: ");
-      USART_writeStringLn(uint82str(drdy));
+      //USART_writeString("DRDY: ");
+      //USART_writeStringLn(uint82str(drdy));
     } while (!drdy); 
 // check if new measurement is ready - end
 
 
 // read all 3 axis values
-int16_t xValue, yValue, zValue;
+struct xyzInt16Values {
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
+
+struct xyzInt16Values magneticGY271;
 
 uint8_t gy271RawOutput[6];
 TWI_getRegisterBytes(GY271_SLAVE_ADDRESS, GY271_X_LSB, 6, &gy271RawOutput[0]);
-for(int i = 0; i < 6; i++) {
-    USART_writeStringLn(uint82str(gy271RawOutput[i]));
-}
-xValue = ((int16_t)gy271RawOutput[1] << 8) | ((int16_t)gy271RawOutput[0]);
-yValue = ((int16_t)gy271RawOutput[3] << 8) | ((int16_t)gy271RawOutput[2]);
-zValue = ((int16_t)gy271RawOutput[5] << 8) | ((int16_t)gy271RawOutput[4]);
+
+magneticGY271.x = CONCATENATE_INT16_BYTES(gy271RawOutput[1], gy271RawOutput[0]);
+magneticGY271.y = CONCATENATE_INT16_BYTES(gy271RawOutput[3], gy271RawOutput[2]);
+magneticGY271.z = CONCATENATE_INT16_BYTES(gy271RawOutput[5], gy271RawOutput[4]);
+USART_writeString("(x,y,z) Values: ");
+USART_writeString(int162str(magneticGY271.x)); USART_writeString(" ");
+USART_writeString(int162str(magneticGY271.y)); USART_writeString(" ");
+USART_writeString(int162str(magneticGY271.z)); USART_writeStringLn(" ");
 // read all 3 axis values - end
 
 // check if any output data was missed reading
       statusRegister = TWI_getRegisterByte(GY271_SLAVE_ADDRESS, GY271_STATUS_REGISTER);
       dor = (statusRegister >> 2);
-      USART_writeString("DOR: ");
-      USART_writeStringLn(uint82str(dor));
+      //USART_writeString("DOR: ");
+      //USART_writeStringLn(uint82str(dor));
 // check if any output data was missed reading - end
 
-
+/*
 // Temperature reading
     uint8_t val7 = TWI_getRegisterByte(GY271_SLAVE_ADDRESS, GY271_TEMPERATURE_LSB);
     USART_writeString("Temperature LSB: ");
@@ -118,11 +122,8 @@ zValue = ((int16_t)gy271RawOutput[5] << 8) | ((int16_t)gy271RawOutput[4]);
     USART_writeString("Temperature MSB: ");
     USART_writeStringLn(uint82str(val8));    
 // Temperature reading - end
+  */  
     
-    
-    _delay_ms(10000);
-    USART_newLine();
-    USART_newLine();
-    USART_newLine();
+    _delay_ms(1000);
   }
 }
