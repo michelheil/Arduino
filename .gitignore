@@ -1,3 +1,5 @@
 VisualStudio/IoT_plus_Test
 lib/myGY271/example/basic/.travis.yml
 lib/myGY271/example/basic/.vscode/extensions.json
+lib/myTCS3200/example/basic/.travis.yml
+lib/myTCS3200/example/basic/.vscode/extensions.json
