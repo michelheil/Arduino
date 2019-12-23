@@ -7,6 +7,8 @@
 #include "myGlobalDefines.h"
 
 #include <TimerOne.h>
+#include <util/delay.h>
+
 #define TCS3200_S0  PD6 
 #define TCS3200_S1  PD5
 #define TCS3200_S2  PD4
@@ -47,10 +49,10 @@ void TSC3200_init(void)
   L   L   Power down
   L   H   2%
   H   L   20%
-  H   H   100%
+  H   H   100% // Arduino not able to process
   */
-  cbi(PORTD, TCS3200_S0);
-  sbi(PORTD, TCS3200_S1);
+  sbi(PORTD, TCS3200_S0);
+  cbi(PORTD, TCS3200_S1);
 }
 
 
@@ -76,7 +78,7 @@ void TSC3200_count()
 
 
 
-void TSC_WB(int s2, int s3)
+void TSC3200_WB(int s2, int s3)
 {
   // reset counter of interrupt INT0
   tscOutCount = 0;
@@ -101,26 +103,26 @@ void TSC_Callback()
   {
     case 0:
       Serial.println("->WB Start");
-      TSC_WB(LOW, LOW); // select red
+      TSC3200_WB(LOW, LOW); // select red
       break;
     case 1:
       Serial.print("->Frequency R=");
       Serial.println(tscOutCount);
       tscColors.red = tscOutCount;
-      TSC_WB(HIGH, HIGH); // select green
+      TSC3200_WB(HIGH, HIGH); // select green
       break;
     case 2:
       Serial.print("->Frequency G=");
       Serial.println(tscOutCount);
       tscColors.green = tscOutCount;
-      TSC_WB(LOW, HIGH); // select blue
+      TSC3200_WB(LOW, HIGH); // select blue
       break;
     case 3:
       Serial.print("->Frequency B=");
       Serial.println(tscOutCount);
       Serial.println("->WB End");
       tscColors.blue = tscOutCount;
-      TSC_WB(HIGH, LOW); // no filter
+      TSC3200_WB(HIGH, LOW); // no filter
       break;
     default:
       tscOutCount = 0;
@@ -138,7 +140,7 @@ void setup()
   Timer1.initialize();
   Timer1.attachInterrupt(TSC_Callback);
   attachInterrupt(0, TSC3200_count, RISING);
-  delay(4000);
+  _delay_ms(4000);
   Serial.println(tscColors.red);
   Serial.println(tscColors.green);
   Serial.println(tscColors.blue);
@@ -158,5 +160,5 @@ void loop()
   Serial.println(int(tscColors.red * tscColors.redCalibFact));
   Serial.println(int(tscColors.green * tscColors.greenCalibFact));
   Serial.println(int(tscColors.blue * tscColors.blueCalibFact));
-  delay(4000);
+  _delay_ms(4000);
 }
