@@ -17,11 +17,12 @@
 #define TCS3200_S3  PD3
 #define TCS3200_OUT PD2 // INT0
 
+#define MAX_COLOR_VALUE (255.0f)
+
 #define SET_BIT_LEVEL(PORT, bit, level) ( ((level) == 0) ? (cbi(PORT, bit)) : (sbi(PORT, bit)) )
 
 
 struct rgb {
-
   // stores the tscOutCount for each color (red, green, blue)
   int red;
   int green;
@@ -33,14 +34,15 @@ struct rgb {
   float blueCalibFact;
 };
 
-int tscOutCount = 0; // INT0 counter; hits on all rising edges
-struct rgb tscColors;
-int newRed, newGreen, newBlue;
+int         tscOutCount = 0; // INT0 counter; hits on all rising edges
+struct rgb  tscColors;
+int         newRed, newGreen, newBlue;
 
-void TSC3200_init(void);
-void TSC3200_colorSelection(int s2, int s3);
-void TSC3200_count();
-int TCS3200_measureColor(int color);
+void        TSC3200_init(void); // public
+struct rgb  TSC3200_calibrate(void); // public
+int         TCS3200_measureColor(int color); // public
+void        TSC3200_colorSelection(int s2, int s3); // private
+void        TSC3200_count(); // ISR(INT0_vect)
 
 
 void setup()
@@ -49,40 +51,33 @@ void setup()
   USART_init();
 
   attachInterrupt(0, TSC3200_count, RISING);
+  
   USART_writeStringLn("Start calibration on white background");
-  tscColors.red   = TCS3200_measureColor(1);
-  tscColors.green = TCS3200_measureColor(2);
-  tscColors.blue  = TCS3200_measureColor(3);
+  tscColors = TSC3200_calibrate();
   USART_writeStringLn(int162str(tscColors.red));
   USART_writeStringLn(int162str(tscColors.green));
   USART_writeStringLn(int162str(tscColors.blue));
-
-  // calibration on white background
-  tscColors.redCalibFact    = 255.0f  / tscColors.red;    // R-Wert
-  tscColors.greenCalibFact  = 255.0f  / tscColors.green;  // G-Wert
-  tscColors.blueCalibFact   = 255.0f  / tscColors.blue;   // B-Wert
-  USART_writeFloat(tscColors.redCalibFact); USART_newLine();
+  USART_writeFloat(tscColors.redCalibFact);   USART_newLine();
   USART_writeFloat(tscColors.greenCalibFact); USART_newLine();
-  USART_writeFloat(tscColors.blueCalibFact); USART_newLine();
+  USART_writeFloat(tscColors.blueCalibFact);  USART_newLine();
+ 
 }
 void loop()
   {
-    newRed = TCS3200_measureColor(1);
     USART_Headline("Red");
+    newRed = TCS3200_measureColor(1);
     USART_writeStringLn(int162str(newRed));
     USART_writeFloat(newRed * tscColors.redCalibFact);
 
-    newGreen = TCS3200_measureColor(2);
     USART_Headline("Green");
+    newGreen = TCS3200_measureColor(2);
     USART_writeStringLn(int162str(newGreen));
     USART_writeFloat(newGreen * tscColors.greenCalibFact);
 
-    newBlue = TCS3200_measureColor(3);
     USART_Headline("Blue");
+    newBlue = TCS3200_measureColor(3);
     USART_writeStringLn(int162str(newBlue));
     USART_writeFloat(newBlue * tscColors.blueCalibFact);
-
-    _delay_ms(1000);
   }
 
 
@@ -105,6 +100,21 @@ void TSC3200_init(void)
   sbi(PORTD, TCS3200_S0);
   cbi(PORTD, TCS3200_S1);
 }
+
+struct rgb TSC3200_calibrate(void)
+  {
+    struct rgb calibResult;
+    calibResult.red   = TCS3200_measureColor(1);
+    calibResult.green = TCS3200_measureColor(2);
+    calibResult.blue  = TCS3200_measureColor(3);
+
+    // calibration on white background
+    calibResult.redCalibFact    = MAX_COLOR_VALUE / calibResult.red;    // R-Wert
+    calibResult.greenCalibFact  = MAX_COLOR_VALUE / calibResult.green;  // G-Wert
+    calibResult.blueCalibFact   = MAX_COLOR_VALUE / calibResult.blue;   // B-Wert
+
+    return calibResult;
+  }
 
 
 void TSC3200_colorSelection(int s2, int s3)
@@ -130,9 +140,6 @@ void TSC3200_count()
 
 int TCS3200_measureColor(int color) // 1=Red, 2=Green, 3=Blue, default=noFilter
 {
-  // re-set count to zero, to start new measurement
-  tscOutCount = 0;
-
   // select color
   switch(color)
   {
@@ -148,11 +155,15 @@ int TCS3200_measureColor(int color) // 1=Red, 2=Green, 3=Blue, default=noFilter
     default: // no filter
       TSC3200_colorSelection(HIGH, LOW);
   }
-  
 
-  // measure for 1 second
+  // re-set global counter to zero, to allow new measurement
+  tscOutCount = 0;
+  
+  // measure for c. one second
   _delay_ms(1000);
 
-  // return amount of rising edges of OUT pin
+  // return amount of rising edges of OUT pin.
+  // the amount will be incremented in the interrupt INT0 service 
+  // routine during the above 1 sec delay.
   return tscOutCount;
 }
