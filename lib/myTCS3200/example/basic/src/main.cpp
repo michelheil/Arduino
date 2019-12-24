@@ -9,6 +9,8 @@
 #include <TimerOne.h>
 #include <util/delay.h>
 
+#include "myUSART.h"
+
 #define TCS3200_S0  PD6 
 #define TCS3200_S1  PD5
 #define TCS3200_S2  PD4
@@ -31,9 +33,58 @@ struct rgb {
   float blueCalibFact;
 };
 
-struct rgb tscColors;
 int tscOutCount = 0; // INT0 counter; hits on all rising edges
-int colorFilterSwitch = 0; // color filter switch; switches every time the Timer hits the compare value
+struct rgb tscColors;
+int newRed, newGreen, newBlue;
+
+void TSC3200_init(void);
+void TSC3200_colorSelection(int s2, int s3);
+void TSC3200_count();
+int TCS3200_measureColor(int color);
+
+
+void setup()
+{
+  TSC3200_init();
+  USART_init();
+
+  attachInterrupt(0, TSC3200_count, RISING);
+  USART_writeStringLn("Start calibration on white background");
+  tscColors.red   = TCS3200_measureColor(1);
+  tscColors.green = TCS3200_measureColor(2);
+  tscColors.blue  = TCS3200_measureColor(3);
+  USART_writeStringLn(int162str(tscColors.red));
+  USART_writeStringLn(int162str(tscColors.green));
+  USART_writeStringLn(int162str(tscColors.blue));
+
+  // calibration on white background
+  tscColors.redCalibFact    = 255.0f  / tscColors.red;    // R-Wert
+  tscColors.greenCalibFact  = 255.0f  / tscColors.green;  // G-Wert
+  tscColors.blueCalibFact   = 255.0f  / tscColors.blue;   // B-Wert
+  USART_writeFloat(tscColors.redCalibFact); USART_newLine();
+  USART_writeFloat(tscColors.greenCalibFact); USART_newLine();
+  USART_writeFloat(tscColors.blueCalibFact); USART_newLine();
+}
+void loop()
+  {
+    newRed = TCS3200_measureColor(1);
+    USART_Headline("Red");
+    USART_writeStringLn(int162str(newRed));
+    USART_writeFloat(newRed * tscColors.redCalibFact);
+
+    newGreen = TCS3200_measureColor(2);
+    USART_Headline("Green");
+    USART_writeStringLn(int162str(newGreen));
+    USART_writeFloat(newGreen * tscColors.greenCalibFact);
+
+    newBlue = TCS3200_measureColor(3);
+    USART_Headline("Blue");
+    USART_writeStringLn(int162str(newBlue));
+    USART_writeFloat(newBlue * tscColors.blueCalibFact);
+
+    _delay_ms(1000);
+  }
+
 
 void TSC3200_init(void)
 {
@@ -77,88 +128,31 @@ void TSC3200_count()
 }
 
 
-
-void TSC3200_WB(int s2, int s3)
+int TCS3200_measureColor(int color) // 1=Red, 2=Green, 3=Blue, default=noFilter
 {
-  // reset counter of interrupt INT0
+  // re-set count to zero, to start new measurement
   tscOutCount = 0;
 
-  // increment switch color selection flag
-  colorFilterSwitch++;
-
   // select color
-  TSC3200_colorSelection(s2, s3);
-
-  // set timer to 1 second
-  // during that time the INT0 interrupt will use 
-  // tscOutCount to count rising edges
-  Timer1.setPeriod(1000000);
-}
-
-
-
-void TSC_Callback()
-{
-  switch(colorFilterSwitch)
+  switch(color)
   {
-    case 0:
-      Serial.println("->WB Start");
-      TSC3200_WB(LOW, LOW); // select red
+    case 1: // red
+      TSC3200_colorSelection(LOW, LOW);
       break;
-    case 1:
-      Serial.print("->Frequency R=");
-      Serial.println(tscOutCount);
-      tscColors.red = tscOutCount;
-      TSC3200_WB(HIGH, HIGH); // select green
+    case 2: // green
+      TSC3200_colorSelection(HIGH, HIGH);
       break;
-    case 2:
-      Serial.print("->Frequency G=");
-      Serial.println(tscOutCount);
-      tscColors.green = tscOutCount;
-      TSC3200_WB(LOW, HIGH); // select blue
+    case 3: // blue
+      TSC3200_colorSelection(LOW, HIGH);
       break;
-    case 3:
-      Serial.print("->Frequency B=");
-      Serial.println(tscOutCount);
-      Serial.println("->WB End");
-      tscColors.blue = tscOutCount;
-      TSC3200_WB(HIGH, LOW); // no filter
-      break;
-    default:
-      tscOutCount = 0;
-      break;
+    default: // no filter
+      TSC3200_colorSelection(HIGH, LOW);
   }
-}
+  
 
+  // measure for 1 second
+  _delay_ms(1000);
 
-
-
-void setup()
-{
-  TSC3200_init();
-  Serial.begin(9600);
-  Timer1.initialize();
-  Timer1.attachInterrupt(TSC_Callback);
-  attachInterrupt(0, TSC3200_count, RISING);
-  _delay_ms(4000);
-  Serial.println(tscColors.red);
-  Serial.println(tscColors.green);
-  Serial.println(tscColors.blue);
-
-  // calibration on white background
-  tscColors.redCalibFact = 255.0 / tscColors.red; // R-Wert
-  tscColors.greenCalibFact = 255.0 / tscColors.green; // G-Wert
-  tscColors.blueCalibFact = 255.0 / tscColors.blue; // B-Wert
-  Serial.println(tscColors.redCalibFact);
-  Serial.println(tscColors.greenCalibFact);
-  Serial.println(tscColors.blueCalibFact);
-}
-
-void loop()
-{
-  colorFilterSwitch = 0;
-  Serial.println(int(tscColors.red * tscColors.redCalibFact));
-  Serial.println(int(tscColors.green * tscColors.greenCalibFact));
-  Serial.println(int(tscColors.blue * tscColors.blueCalibFact));
-  _delay_ms(4000);
+  // return amount of rising edges of OUT pin
+  return tscOutCount;
 }
