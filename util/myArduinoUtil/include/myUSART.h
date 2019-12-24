@@ -96,7 +96,7 @@ void USART_newLine();
  * 
  * @param stringPtr Pointer to char with content of head line
  */
-void USART_Headline(char * stringPtr);
+void USART_Headline(const char * stringPtr);
 
 # endif /* MYUSART_H_ */
 

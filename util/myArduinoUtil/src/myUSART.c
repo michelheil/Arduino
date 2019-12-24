@@ -159,7 +159,7 @@ void USART_newLine()
 }
 
 // create a headline that stands out compared to regular Strings
-void USART_Headline(char * stringPtr)
+void USART_Headline(const char * stringPtr)
 {
     USART_newLine();
     USART_writeString("--------------------------------------------------");
