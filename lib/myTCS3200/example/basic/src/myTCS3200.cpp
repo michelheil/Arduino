@@ -27,7 +27,7 @@
  * @param s3p pin S3
  * @param outp pin OUT
  */
-TCS3200::TCS3200(int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, uint8_t s3p, uint8_t outp):
+TCS3200::TCS3200(volatile int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, uint8_t s3p, uint8_t outp):
    interruptCounter(counter), s0Pin(s0p), s1Pin(s1p), s2Pin(s2p), s3Pin(s3p), outPin(outp)
 {
   // set data direction registers
@@ -141,4 +141,10 @@ void TCS3200::colorSelection(int s2Level, int s3Level)
 {
   SET_BIT_LEVEL(PORTD, s2Pin, s2Level);
   SET_BIT_LEVEL(PORTD, s3Pin, s3Level);
+}
+
+
+void TCS3200::incrementInterruptCounter(void)
+{
+  (*interruptCounter)++;
 }

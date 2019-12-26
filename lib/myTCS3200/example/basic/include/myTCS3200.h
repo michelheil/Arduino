@@ -16,14 +16,16 @@
 class TCS3200
 {
   public:
-    TCS3200(int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, uint8_t s3p, uint8_t outp);
+    TCS3200(volatile int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, uint8_t s3p, uint8_t outp);
     ~TCS3200();                           // destructor
     void calibrate(void);                 // fills calibResult
     int measureColor(int color);          // get calibrated color value
     int redValue, greenValue, blueValue;  // store last calibrated color measurement
 
+    void incrementInterruptCounter(void);
+
   private:
-    int * interruptCounter;
+    volatile int * interruptCounter;
     const uint8_t s0Pin;
     const uint8_t s1Pin;
     const uint8_t s2Pin;
