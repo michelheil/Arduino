@@ -6,7 +6,6 @@
 #include "myGlobalDefines.h"
 
 #include <avr/interrupt.h>
-#include <util/delay.h>
 
 #include "myUSART.h"
 #include "myTCS3200.h"
@@ -35,7 +34,7 @@ int main(void)
   
   // The rising edge of INT0 (PD2) generates an interrupt request.
   EICRA = (1 << ISC01) | (1 << ISC00);
-      
+
   // activate global interrupt flag
   sei();
 
@@ -43,7 +42,7 @@ int main(void)
   tcs.calibrate();
   USART_writeStringLn("... calibration done!");
 
-  while(1)//void loop()
+  while(1)
   {
     USART_Headline("Red");
     USART_writeStringLn(int162str(tcs.measureColor(1)));
@@ -56,10 +55,10 @@ int main(void)
   }
 }
 
-
+/**
+ * @brief Count that reflects frequency for a specific color
+ */
 ISR(INT0_vect)
 {
-  // count rising edges on INT0
-  // this reflects the frequency for an applied filter
   tcsOutCount++;
 }
