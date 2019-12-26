@@ -49,6 +49,8 @@ extern "C" {
 #define cbi(PORT, bit) (PORT &= ~(1 << bit)) /**< clear bit in PORT */
 #define tgl(PORT, bit) (PORT ^= (1 << bit))  /**< switch bit in PORT */
 
+#define SET_BIT_LEVEL(PORT, bit, level) ( ((level) == 0) ? (cbi(PORT, bit)) : (sbi(PORT, bit)) )
+
 #define CONCATENATE_BYTES(msb, lsb) (((uint16_t)msb << 8) | (uint16_t)lsb) /**< combine msb and lsb */
 #define CONCATENATE_INT16_BYTES(msb, lsb) (((int16_t)msb << 8) | (int16_t)lsb) /**< combine msb and lsb */
 
@@ -124,6 +126,22 @@ struct xyzInt16Values {
   int16_t y;
   int16_t z;
 };
+
+/**
+ * @brief can be used in TCS3200 for storing measured colors
+ */
+struct rgb {
+  // stores values for each color (red, green, blue)
+  int red;
+  int green;
+  int blue;
+
+  // calibration factors for each color (red, green, blue)
+  float redCalibFact;
+  float greenCalibFact;
+  float blueCalibFact;
+};
+
 
 #endif /* GLOBALDEFINES_H_ */
 
