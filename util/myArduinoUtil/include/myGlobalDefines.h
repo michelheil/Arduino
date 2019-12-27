@@ -1,7 +1,7 @@
 /** @mainpage myArduinoUtil
- * @brief This library contains all utilities used in my Arduino Uno projects
+ * @brief This library contains all utilities used in my Arduino Uno projects.
  * 
- *@section Lisence Lisence 
+ * @section Lisence Lisence 
  * 
  * Copyright (C) 2019  Michael Heil @n
  * @n
@@ -49,7 +49,7 @@ extern "C" {
 #define cbi(PORT, bit) (PORT &= ~(1 << bit)) /**< clear bit in PORT */
 #define tgl(PORT, bit) (PORT ^= (1 << bit))  /**< switch bit in PORT */
 
-#define SET_BIT_LEVEL(PORT, bit, level) ( ((level) == 0) ? (cbi(PORT, bit)) : (sbi(PORT, bit)) )
+#define SET_BIT_LEVEL(POGLOBAL_LOG_LEVELRT, bit, level) ( ((level) == 0) ? (cbi(PORT, bit)) : (sbi(PORT, bit)) ) /**< set bit in PORT to given level */
 
 #define CONCATENATE_BYTES(msb, lsb) (((uint16_t)msb << 8) | (uint16_t)lsb) /**< combine msb and lsb */
 #define CONCATENATE_INT16_BYTES(msb, lsb) (((int16_t)msb << 8) | (int16_t)lsb) /**< combine msb and lsb */
@@ -106,8 +106,22 @@ char* int162str(int16_t int16Value);
  */
 char* uint322str(uint32_t uint32Value);
 
-// helper functions
+/**
+ * @brief Convert a 12-bit signed magnitude value to a floating point number
+ * @details According to data sheet AMG8833: 12-bit Thermistor resolution is indicated as code (sign) + absolute value
+ * 
+ * @param val two concatenated raw bytes
+ * @return float 
+ */
 float signedMag12ToFloat(uint16_t val);
+
+/**
+ * @brief Convert a 12-bit integer two's complement value to a floating point number
+ * @details According to data sheet AMG8833: 12-bit Pixel resolution is indicated as two's complement form (Zweierkomplement)
+ * 
+ * @param val two concatenated raw bytes
+ * @return float 
+ */
 float int12ToFloat(uint16_t val);
 
 /**
@@ -128,7 +142,8 @@ struct xyzInt16Values {
 };
 
 /**
- * @brief can be used in TCS3200 for storing measured colors
+ * @brief Struct to store three int and three float variables.
+ * @details This struct can be used in TCS3200 for storing measured colors red, green, and blue.
  */
 struct rgb {
   // stores values for each color (red, green, blue)

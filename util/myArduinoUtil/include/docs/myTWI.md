@@ -1,9 +1,5 @@
 ## Short Description
-The 2-wire Serial Interface (TWI) is ideally suited for typical microcontroller applications. The TWI protocol 
-allows the systems designer to interconnect up to 128 different devices using only two bi-directional bus lines,
-one for clock (SCL) and one for data (SDA). The only external hardware needed to implement the bus is a single
-pull-up resistor for each of the TWI bus lines. All devices connected to the bus have individual addresses, and
-mechanisms for resolving bus contention are inherent in the TWI protocol.
+The 2-wire Serial Interface (TWI) is ideally suited for typical microcontroller applications. The TWI protocol allows the systems designer to interconnect up to 128 different devices using only two bi-directional bus lines, one for clock (SCL) and one for data (SDA). The only external hardware needed to implement the bus is a single pull-up resistor for each of the TWI bus lines. All devices connected to the bus have individual addresses, and mechanisms for resolving bus contention are inherent in the TWI protocol.
 
 ### Reference to Data Sheet ATMega328P
 [Download ATMega328P data sheet](http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf)

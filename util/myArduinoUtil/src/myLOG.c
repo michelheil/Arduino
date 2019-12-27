@@ -9,7 +9,7 @@
 #include "myGlobalDefines.h"
 #include "myUSART.h"
 
-typedef enum {ALL = 1, DEBUG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7} logLevel; // DEBUG does not work => debugG
+typedef enum {ALL = 1, DEBUG = 2, INFO = 3, WARN = 4, ERROR = 5, FATAL = 6, OFF = 7} logLevel;
 
 #ifndef GLOBAL_LOG_LEVEL
 #define GLOBAL_LOG_LEVEL 3 // default value if not specified differently
