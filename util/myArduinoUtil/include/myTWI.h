@@ -1,11 +1,8 @@
 /**
- * @page TWI_page myTWI.h
+ * @page TWI_page myTWI
+ * @tableofcontents
  * @brief Programm to communicate with I2C devices through Two-Wire Interface (ATMega328P)
  * @details Here I can add some details to this library
- * 
- * @date 09.10.2019 18:41:08
- * @author Michael
- * @copyright GNU General Public License
  * 
  * @section TWI TWI Register Overview
  * 
@@ -45,6 +42,11 @@
  * @n
  * x = 400kHz @n
  * => y = 12 (= TWBR * PrescalerValue) @n
+ * 
+ * @section Impressum Impressum
+ * @date 09.10.2019 18:41:08
+ * @author Michael Heil
+ * @copyright GNU General Public License
 */
 
 #ifdef __cplusplus

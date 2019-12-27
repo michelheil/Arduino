@@ -1,9 +1,10 @@
 /**
- * @page LOG_page myLOG.h
+ * @page LOG_page myLOG
+ * @tableofcontents
  * @brief Programm for logging
  * 
- * @details Currently, the logging programm uses the levels error, info and debug.
- * The idea is to cover all log levels such as:
+ * @section Description
+ * Currently, the logging programm is able to handle the levels error, info and debug. The idea is to cover all log levels such as: @n
  * @li ALL = 1
  * @li DEBUG = 2
  * @li INFO = 3
@@ -12,10 +13,11 @@
  * @li FATAL = 6
  * @li OFF = 7
  * 
- * The log level is defined by setting the Variable GLOBAL_LOG_LEVEL.
+ * The log level is defined by setting the Variable GLOBAL_LOG_LEVEL to the metioned integer value.
  * 
+ * @section Impressum Impressum
  * @date 09.10.2019 18:41:08
- * @author Michael
+ * @author Michael Heil
  * @copyright GNU General Public License
  */
 

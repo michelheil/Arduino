@@ -1,5 +1,8 @@
-/** @mainpage myArduinoUtil
+/** 
+ * @mainpage myArduinoUtil
  * @brief This library contains all utilities used in my Arduino Uno projects.
+ * 
+ * @tableofcontents 
  * 
  * @section Lisence Lisence 
  * 
@@ -17,19 +20,30 @@
  * @n
  * You should have received a copy of the GNU General Public License @n
  * along with this program.  If not, see <https://www.gnu.org/licenses/>. @n
+ * 
+ * @section Utilities Utilities
+ * The library currently supports the following utilities: @n
+ * @ref myGlobalDefines_page @n
+ * @ref ADC_page @n
+ * @ref LOG_page @n
+ * @ref TC16_page @n
+ * @ref TWI_page @n
+ * @ref USART_page @n
  *
- *
+ * @section Impressum Impressum
  * @date 09.10.2019 18:41:08
- * @author Michael
+ * @author Michael Heil
  * @copyright GNU General Public License
  */ 
 
 /**
- * @page myGlobalDefines_page myGlobalDefines.h
+ * @page myGlobalDefines_page myGlobalDefines
+ * @tableofcontents
  * @brief This header file contains globally used variables and functions
  * 
+ * @section Impressum Impressum
  * @date 09.10.2019 18:41:08
- * @author Michael
+ * @author Michael Heil
  * @copyright GNU General Public License
  */
 
@@ -133,7 +147,7 @@ struct pairOfTwoUint16 {
 };
 
 /**
- * @brief Struct to store 3 int16_t values (such as 3-axis)
+ * @brief Struct to store three int16_t values (such as 3-axis)
  */
 struct xyzInt16Values {
   int16_t x;

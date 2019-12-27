@@ -1,9 +1,11 @@
 /**
- * @page USART_page myUSART.h
+ * @page USART_page myUSART
+ * @tableofcontents
  * @brief Programm to apply USART functionality of ATMega328P
  * 
+ * @section Impressum Impressum
  * @date 09.10.2019 18:41:08
- * @author Michael
+ * @author Michael Heil
  * @copyright GNU General Public License
  */
 
