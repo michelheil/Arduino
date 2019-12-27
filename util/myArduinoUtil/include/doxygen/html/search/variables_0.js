@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['sensorlowerbound',['sensorLowerBound',['../structpairOfTwoUint16.html#a8250b162dd309785a2223fdc276d73fa',1,'pairOfTwoUint16']]],
-  ['sensorupperbound',['sensorUpperBound',['../structpairOfTwoUint16.html#aae1e714d1bb25e10c5b413f438505075',1,'pairOfTwoUint16']]]
+  ['blue',['blue',['../structrgb.html#ad1f14d7b6d1a6d065129b16c94481433',1,'rgb']]],
+  ['bluecalibfact',['blueCalibFact',['../structrgb.html#a9887012a35121444faa14a0eb73a12bd',1,'rgb']]]
 ];

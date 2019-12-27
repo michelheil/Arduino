@@ -1,7 +1,22 @@
 var searchData=
 [
-  ['sbi',['sbi',['../myGlobalDefines_8h.html#a6058b7583784ede62f48dad89be09c87',1,'myGlobalDefines.h']]],
-  ['sensorlowerbound',['sensorLowerBound',['../structpairOfTwoUint16.html#a8250b162dd309785a2223fdc276d73fa',1,'pairOfTwoUint16']]],
-  ['sensorupperbound',['sensorUpperBound',['../structpairOfTwoUint16.html#aae1e714d1bb25e10c5b413f438505075',1,'pairOfTwoUint16']]],
-  ['signedmag12tofloat',['signedMag12ToFloat',['../myGlobalDefines_8h.html#a543229a3c9a0dfa84ed7023a88488381',1,'myGlobalDefines.h']]]
+  ['myadc',['myADC',['../ADC_page.html',1,'']]],
+  ['myarduinoutil',['myArduinoUtil',['../index.html',1,'']]],
+  ['mylog',['myLOG',['../LOG_page.html',1,'']]],
+  ['mapsensorvaluetofullrange',['mapSensorValueToFullRange',['../myADC_8h.html#abb9ab9bb0259bf2e5990ae5cca787d6c',1,'myADC.h']]],
+  ['myadc_2eh',['myADC.h',['../myADC_8h.html',1,'']]],
+  ['myadc_5fh_5f',['MYADC_H_',['../myADC_8h.html#adf1e4251d7d4ddb31058eb02fbd7f142',1,'myADC.h']]],
+  ['myglobaldefines_2eh',['myGlobalDefines.h',['../myGlobalDefines_8h.html',1,'']]],
+  ['myglobaldefines',['myGlobalDefines',['../myGlobalDefines_page.html',1,'']]],
+  ['mylog_2eh',['myLOG.h',['../myLOG_8h.html',1,'']]],
+  ['mylog_5fh_5f',['MYLOG_H_',['../myLOG_8h.html#a7057ee0710516f3baa0f4eacd745ecae',1,'myLOG.h']]],
+  ['mytc16_2eh',['myTC16.h',['../myTC16_8h.html',1,'']]],
+  ['mytc16_5fh_5f',['MYTC16_H_',['../myTC16_8h.html#af150db57e27df46a445080fa4d2230d9',1,'myTC16.h']]],
+  ['mytwi_2eh',['myTWI.h',['../myTWI_8h.html',1,'']]],
+  ['mytwi_5fh_5f',['MYTWI_H_',['../myTWI_8h.html#a683979b829b8581c89f6104c05bb1304',1,'myTWI.h']]],
+  ['myusart_2eh',['myUSART.h',['../myUSART_8h.html',1,'']]],
+  ['myusart_5fh_5f',['MYUSART_H_',['../myUSART_8h.html#aaba798af8c6e5f76712507558c8648c6',1,'myUSART.h']]],
+  ['mytc16',['myTC16',['../TC16_page.html',1,'']]],
+  ['mytwi',['myTWI',['../TWI_page.html',1,'']]],
+  ['myusart',['myUSART',['../USART_page.html',1,'']]]
 ];

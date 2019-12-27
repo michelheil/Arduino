@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>My Arudino Util: myADC.h</title>
+<title>My Arudino Util: myADC</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -60,12 +60,43 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title"><a class="el" href="myADC_8h.html">myADC.h</a> </div>  </div>
+<div class="title">myADC </div>  </div>
 </div><!--header-->
 <div class="contents">
+<div class="toc"><h3>Table of Contents</h3>
+<ul><li class="level1"><a href="#Description">Description</a><ul><li class="level2"><a href="#Features">Features</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#Impressum">Impressum</a></li>
+</ul>
+</div>
 <div class="textblock"><p>Programm to apply Analog-to-Digital Converter (ADC) of ATMega328P</p>
+<h1><a class="anchor" id="Description"></a>
+Description</h1>
+<p>The ATmega328P features a 10-bit successive approximation ADC. The ADC is connected to an 8-channel Analog Multiplexer which allows eight single-ended voltage inputs constructed from the pins of Port A. The single-ended voltage inputs refer to 0V (GND). <br />
+ </p>
+<h2><a class="anchor" id="Features"></a>
+Features</h2>
+<p>Chapter 24. Analog-to-Digital Converter </p><ul>
+<li>10-bit Resolution </li>
+<li>0.5 LSB Integral Non-linearity </li>
+<li>± 2 LSB Absolute Accuracy </li>
+<li>13 - 260μs Conversion Time </li>
+<li>Up to 76.9kSPS (Up to 15kSPS at Maximum Resolution) </li>
+<li>6 Multiplexed Single Ended Input Channels </li>
+<li>2 Additional Multiplexed Single Ended Input Channels (TQFP and QFN/MLF Package only) </li>
+<li>Temperature Sensor Input Channel </li>
+<li>Optional Left Adjustment for ADC Result Readout </li>
+<li>0 - V CC ADC Input Voltage Range </li>
+<li>Selectable 1.1V ADC Reference Voltage </li>
+<li>Free Running or Single Conversion Mode </li>
+<li>Interrupt on ADC Conversion Complete </li>
+<li>Sleep Mode Noise Canceler</li>
+</ul>
+<h1><a class="anchor" id="Impressum"></a>
+Impressum</h1>
 <dl class="section date"><dt>Date</dt><dd>09.10.2019 18:41:08 </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Michael </dd></dl>
+<dl class="section author"><dt>Author</dt><dd>Michael Heil </dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>GNU General Public License </dd></dl>
 </div></div><!-- contents -->
 <!-- start footer part -->

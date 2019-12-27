@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['cbi',['cbi',['../myGlobalDefines_8h.html#ab047817c85d367b65efbd3d7ad447ba4',1,'myGlobalDefines.h']]],
-  ['cmpstring',['cmpString',['../myGlobalDefines_8h.html#ab5c79402160613df3db74d2e72c333fa',1,'myGlobalDefines.h']]],
-  ['concatenate_5fbytes',['CONCATENATE_BYTES',['../myGlobalDefines_8h.html#a87fd6bdf4d1fd2e1a83617c93ba0067a',1,'myGlobalDefines.h']]]
+  ['blue',['blue',['../structrgb.html#ad1f14d7b6d1a6d065129b16c94481433',1,'rgb']]],
+  ['bluecalibfact',['blueCalibFact',['../structrgb.html#a9887012a35121444faa14a0eb73a12bd',1,'rgb']]]
 ];
