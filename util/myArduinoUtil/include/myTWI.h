@@ -82,6 +82,15 @@ int TWI_init(void);
 void TWI_setRegisterByte(uint8_t sla, uint8_t reg, uint8_t val);
 
 /**
+ * @brief           Set two bytes in register of the device through TWI (I2C)
+ * 
+ * @param sla       slave address
+ * @param reg       register address that should be set
+ * @param val       two bytes that are written into the register
+ */
+void TWI_setRegisterTwoBytes(uint8_t sla, uint8_t reg, uint16_t val);
+
+/**
  * @brief           Read one byte register of the device through TWI (I2C)
  * 
  * @param sla       slave address

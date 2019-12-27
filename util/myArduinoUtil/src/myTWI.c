@@ -135,6 +135,21 @@ void TWI_setRegisterByte(uint8_t sla, uint8_t reg, uint8_t val)
     TWI_stopTransmission();
 }
 
+
+// write two bytes to register
+void TWI_setRegisterTwoBytes(uint8_t sla, uint8_t reg, uint16_t val)
+{
+    uint8_t slaw = (sla << 1) | TW_WRITE;
+
+    TWI_startTransmission();
+    TWI_writeSlaRW(slaw);
+    TWI_writeRegisterAddress(reg);
+    TWI_writeByte((val >> 8) & 0xFF); // write upper 8 bits
+    TWI_writeByte(val & 0xFF);        // write lower 8 bits
+    TWI_stopTransmission();
+}
+
+
 // read byte from register
 uint8_t TWI_getRegisterByte(uint8_t sla, uint8_t reg)
 {
