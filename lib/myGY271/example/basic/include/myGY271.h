@@ -1,5 +1,5 @@
 /** 
- * @page HCSR04_page myGY271.h
+ * @page GY271_page myGY271.h
  * @section xxx
  * @brief xxx
  * 
@@ -64,8 +64,24 @@
 #define GY271_SET_RESET_PERIOD_REGISTER   0x0B
 #define GY271_FBR_RECOMMENDATION 0x01 // it is recommended that the register 0BH is written by 0x01
 
+/**
+ * @brief Initialize GY271 device
+ * @details Soft Reset, Configuration (oversampling, range, rate, mode) and Reset
+  */
 void GY271_init(void);
+
+/**
+ * @brief Get raw x,y,z values from device
+ * 
+ * @return struct xyzInt16Values 
+ */
 struct xyzInt16Values GY271_getThreeAxisValues(void);
+
+/**
+ * @brief get relative raw temperature
+ * 
+ * @return int16_t 
+ */
 int16_t GY271_getRelativeTemperature(void);
 
 #endif /* MYGY271_H_ */
