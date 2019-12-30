@@ -21,7 +21,17 @@
 #define INA219_CURRENT_REGISTER       0x04
 #define INA219_CALIBRATION_REGISTER   0x05
 
-// configuration for calibration
+/**
+ * Calibration Register
+ * 
+ * RST - Bit 15 Setting this bit to '1' generates a system reset that is the same as power-on reset. 
+ * Resets all registers to default values; this bit self-clears.
+ * 
+ * BRNG - Bus Voltage Range
+Bit 13 0 = 16V FSR
+1 = 32V FSR (default value)
+ * 
+ */
 #define INA219_CONFIG_BVOLTAGERANGE_16V 0x0000 // BRNG (Bit 13) Bus Voltage Range
 #define INA219_CONFIG_GAIN_1_40MV 0x0000 // PG (Bit 12..11) PGA (Shunt Voltage Only)
 #define INA219_CONFIG_BADCRES_12BIT 0x0180 // BADC (Bit 10..7) Bus ADC Resolution/Averaging
@@ -30,10 +40,10 @@
 
 void INA219_init(void); // public
 void INA219_setCalibration_16V_400mA(); // private
-int16_t INA219_getBusVoltage_raw(void); // private
-int16_t INA219_getShuntVoltage_raw(void); // private
-int16_t INA219_getCurrent_raw(void); // private
-int16_t INA219_getPower_raw(void); // private
+int16_t INA219_getBusVoltageRaw(void); // private
+int16_t INA219_getShuntVoltageRaw(void); // private
+int16_t INA219_getCurrentRaw(void); // private
+int16_t INA219_getPowerRaw(void); // private
 float INA219_getShuntVoltage_mV(void); // public
 float INA219_getBusVoltage_V(void); // public
 float INA219_getCurrent_mA(void); // public
@@ -143,7 +153,7 @@ void INA219_setCalibration_16V_400mA(void)
   // Set Calibration register to calculated value (ina219_calValue) above
   TWI_setRegisterTwoBytes(INA219_SLAVE_ADDRESS, INA219_CALIBRATION_REGISTER, ina219_calValue);
 
-_delay_ms(5);
+  _delay_ms(5);
 
   // Set Config register to take into account the settings above
   uint16_t config = INA219_CONFIG_BVOLTAGERANGE_16V |
@@ -157,7 +167,7 @@ _delay_ms(5);
  * @brief  Gets the raw bus voltage (16-bit signed integer, so +-32767)
  * @return the raw bus voltage reading
  */
-int16_t INA219_getBusVoltage_raw(void)
+int16_t INA219_getBusVoltageRaw(void)
 {
   // read raw bytes
   uint8_t raw[2];
@@ -174,7 +184,7 @@ int16_t INA219_getBusVoltage_raw(void)
  * @brief  Gets the raw shunt voltage (16-bit signed integer, so +-32767)
  * @return the raw shunt voltage reading
  */
-int16_t INA219_getShuntVoltage_raw(void)
+int16_t INA219_getShuntVoltageRaw(void)
 {
   // read raw bytes
   uint8_t raw[2];
@@ -190,7 +200,7 @@ int16_t INA219_getShuntVoltage_raw(void)
  * @brief  Gets the raw current value (16-bit signed integer, so +-32767)
  * @return the raw current reading
  */
-int16_t INA219_getCurrent_raw(void)
+int16_t INA219_getCurrentRaw(void)
 {
   // Sometimes a sharp load will reset the INA219, which will
   // reset the cal register, meaning CURRENT and POWER will
@@ -212,7 +222,7 @@ int16_t INA219_getCurrent_raw(void)
  * @brief  Gets the raw power value (16-bit signed integer, so +-32767)
  * @return raw power reading
  */
-int16_t INA219_getPower_raw(void)
+int16_t INA219_getPowerRaw(void)
 {
   // Sometimes a sharp load will reset the INA219, which will
   // reset the cal register, meaning CURRENT and POWER will
@@ -235,7 +245,7 @@ int16_t INA219_getPower_raw(void)
  * @return the shunt voltage converted to millivolts
  */
 float INA219_getShuntVoltage_mV(void) {
-  int16_t value = INA219_getShuntVoltage_raw();
+  int16_t value = INA219_getShuntVoltageRaw();
   return value * 0.01;
 }
 
@@ -244,7 +254,7 @@ float INA219_getShuntVoltage_mV(void) {
  * @return the bus voltage converted to volts
  */
 float INA219_getBusVoltage_V(void) {
-  int16_t value = INA219_getBusVoltage_raw();
+  int16_t value = INA219_getBusVoltageRaw();
   return value * 0.001;
 }
 
@@ -254,7 +264,7 @@ float INA219_getBusVoltage_V(void) {
  * @return the current reading convereted to milliamps
  */
 float INA219_getCurrent_mA(void) {
-  float valueDec = INA219_getCurrent_raw();
+  float valueDec = INA219_getCurrentRaw();
   valueDec /= ina219_currentDivider_mA;
   return valueDec;
 }
@@ -265,7 +275,7 @@ float INA219_getCurrent_mA(void) {
  * @return power reading converted to milliwatts
  */
 float INA219_getPower_mW(void) {
-  float valueDec = INA219_getPower_raw();
+  float valueDec = INA219_getPowerRaw();
   valueDec *= ina219_powerMultiplier_mW;
   return valueDec;
 }

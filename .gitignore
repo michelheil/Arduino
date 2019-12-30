@@ -3,3 +3,6 @@ lib/myGY271/example/basic/.travis.yml
 lib/myGY271/example/basic/.vscode/extensions.json
 lib/myTCS3200/example/basic/.travis.yml
 lib/myTCS3200/example/basic/.vscode/extensions.json
+lib/myINA219/example/basic/.travis.yml
+lib/myINA219/example/basic/platformio.ini
+lib/myINA219/example/basic/.vscode/extensions.json
