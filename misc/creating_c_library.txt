@@ -1,0 +1,22 @@
+# creating a C library using Microosoft Visual Studio Code and PlatformIO plugin
+
+copy all files out of /example/basic/.pio/build/uno/src
+
+prefix "lib" is required
+
+avr-ar rcs libmylib.a myADC.c.o myGlobalDefines.c.o myLOG.c.o myUSART.c.o myTWI.c.o --plugin=$(gcc --print-file-name=liblto_plugin.so)
+
+check:
+ar -cvq libmylib.a *.o
+ar -t libmylib.a
+
+
+usage:
+build_flags = -L/home/michael/Documents/cLibrary/all -lmylib
+nur "-lmylib" und nicht "-libmylib.a"
+
+still use all header files as they are required for compilation
+
+
+For including the header files
+build_flags = -I/home/michael/Documents/cLibrary/
