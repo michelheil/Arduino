@@ -6,3 +6,7 @@ lib/myTCS3200/example/basic/.vscode/extensions.json
 lib/myINA219/example/basic/.travis.yml
 lib/myINA219/example/basic/platformio.ini
 lib/myINA219/example/basic/.vscode/extensions.json
+projects/WeatherStation/WeatherArduino/.travis.yml
+projects/WeatherStation/WeatherESP8266/.travis.yml
+projects/WeatherStation/WeatherArduino/.vscode/extensions.json
+projects/WeatherStation/WeatherESP8266/.vscode/extensions.json
