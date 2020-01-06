@@ -1,31 +1,53 @@
+/**
+ * @file main.cpp
+ * @author Michael Heil
+ * @brief Weather Station
+ * @version 0.2 - ESP8266
+ * @date 2020-01-05
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ * @section Features
+ * Sending information from BME680 to MQTT.
+ * 
+ * @section Open Points
+ * @li Power saving modes of ESP8266
+ * @li Battery power supply for ESP8266
+ * @li Verwende "Verteilerbox" und nicht Eier-Pappe
+ * 
+ * @section Obeservations
+ * @li .
+ * @li .
+ * @li .
+ */
+
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-// https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-the-mosquitto-mqtt-messaging-broker-on-ubuntu-16-04
-// https://techtutorialsx.com/2017/04/24/esp32-subscribing-to-mqtt-topic/
-// https://www.arduino.cc/reference/en/language/functions/communication/serial/write/
 
-const char* ssid = "FRITZ!Box 7412";
-const char* stringNumber = "31469059394759135757";
-const char* mqtt_server = "192.168.178.55";
+const char* ssid = "FRITZ!Box";
+const char* stringNumber = "xxx";
+const char* mqtt_server = "192.168.178.56";
 const int mqtt_port = 1883;
-
 const char* pubTopicLog = "/log";
 
-const char* pubTopicToPC = "/arbeitszimmer/temperatur";
-const int maxExpecArdInLen = 50;
-const char* subTopicFromPC = "/arbeitszimmer/temperatur/ergebnis";
-const int expectedMqttInput = 400;
-
+// input from MQTT
 const char* subTopicSteerArduino = "/steerArduino";
 const int expectedSteerArduinoInput = 7;
 
+// input from Arduino
+const int maxExpecArdInLen = 10;
 const int keyWordLength = 3;
+
+// output to MQTT
 const char* pubTemperature = "/temperature";
 char keyTemperature[keyWordLength] = "TP";
-
+const char* pubHumidity = "/humidity";
+char keyHumidity[keyWordLength] = "HU";
+const char* pubPressure = "/pressure";
+char keyPressure[keyWordLength] = "PR";
 
 
 WiFiClient espClient;
@@ -85,12 +107,8 @@ void substring(char str[], char subStr[], int position, int length) {
    subStr[currentIndex] = '\0';
 }
 
-
-
-
-
-// Setup
-void setup() {
+void setup() 
+{
   Serial.begin(1000000); // Initialize UART given the baud rate
   WiFiInit(); // establish WiFi connection
   client.setServer(mqtt_server, mqtt_port); // set MQTT broker address and port
@@ -98,12 +116,13 @@ void setup() {
   mqttConnect(); // connect to MQTT broker
 }
 
-void loop() {
-  
+void loop()
+{
   // Arduino to ESP via UART
-  if (Serial.available() > 0) {                 // read from Rx from atmega328p
+  if (Serial.available() > 0) // read from Rx from atmega328p
+  {
     uint8_t usartStrCompleteFlag = 0;
-    char    usartStr[maxExpecArdInLen] = "";      // buffer for RX data 
+    char    usartStr[maxExpecArdInLen] = ""; // buffer for RX data 
     uint8_t usartStrCount = 0;
 
     delayMicroseconds(400); // required to wait until all data (8 temperature values) have been transferred
@@ -127,15 +146,31 @@ void loop() {
     // extract key word
     char currentKeyWord[keyWordLength] = "";
     substring(usartStr, currentKeyWord, 1, 2);
+    
     // Temperature
     if(strcmp(currentKeyWord, keyTemperature) == 0) {
       char currentValue[6] = "";
       substring(usartStr, currentValue, 3, 5);
       client.publish(pubTemperature, currentValue);
+    } 
+    
+    // Humidity
+    else if(strcmp(currentKeyWord, keyHumidity) == 0) {
+      char currentValue[6] = "";
+      substring(usartStr, currentValue, 3, 5);
+      client.publish(pubHumidity, currentValue);
     }
+
+    // Pressure
+    else if(strcmp(currentKeyWord, keyPressure) == 0) {
+      char currentValue[8] = "";
+      substring(usartStr, currentValue, 3, 7);
+      client.publish(pubPressure, currentValue);
+    }
+
     // grid Values (and everything else)
     else {
-      client.publish(pubTopicToPC, usartStr);
+      client.publish(pubTopicLog, usartStr);
     }
   }
 
