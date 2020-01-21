@@ -2,23 +2,21 @@
  * @file main.c
  * @author Michael Heil
  * @brief Automated Watering
- * @version 1.0
+ * @version 1.1
  * @date 2020-01-21
  * 
  * @copyright Copyright (c) 2020
  * 
  * @section Features
- * Watering one plant using one Moisture Sensor v1.4 and a mini water pump.
- * Sensor has been tested beforehand and is providing values from 
- * c. 675 (digged into water) to 0 (held up in the air).
- * 
+ * Watering one plant using two Capacitive Soil Moisture Sensor v1.2
+ * and two mini water pumps.
+ * Sensor has been tested beforehand and is providing following values:
+ * Dry: 650 (4.5V) / 600 (5V)
+ * Water: 400 (4.5V) / 360 (5V)
+ * Threshold to activate pump: moistureValue > 550 (4.5V) / 500 (5V)
  * 
  * @section Open Points
- * @li Power saving modes of Arduino
- * @li Battery power supply for Arduino
  * @li New water tank
- * @li ESP8266/ESP32
- * @li using ATTiny instead of Arduino
  * @li Verwende "Verteilerbox" und nicht Eier-Pappe
  * @li safely attach pump and electornics near the water and plant
  * 
@@ -34,19 +32,23 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#define MOISTURE_ANALOG_PIN1 PA0
-#define WATER_PUMP_PIN1 PB0
-#define MOISTURE_VALUE_THRESHOLD 250
+#define MOISTURE_ANALOG_PIN0 PA0
+#define MOISTURE_ANALOG_PIN1 PA1
+#define WATER_PUMP_PIN0 PB0
+#define WATER_PUMP_PIN1 PB1
+#define MOISTURE_VALUE_THRESHOLD 550
 
 int main(void)
 {
-  // value to store the moisture of the plant
-  uint16_t moistValue = 0;
+  // value to store the moisture of the plants
+  uint16_t moistValue0, moistValue1;
   
   // set input pins for moisture sensors
+  DDRA &= ~(1 << MOISTURE_ANALOG_PIN0);
   DDRA &= ~(1 << MOISTURE_ANALOG_PIN1);
 
   // set water pump pin as output in Data Direction Register
+  DDRB |= (1 << WATER_PUMP_PIN0);
   DDRB |= (1 << WATER_PUMP_PIN1);
 
 /* ADC INIT - Start */
@@ -69,16 +71,11 @@ int main(void)
   // for single ended conversion, the result is
   // ADC = ((V_in * 1024) / V_ref)
   // where V_in is the voltage on the selected input pin and V_ref the selected voltage reference
-  
-  // Important remark on "Moisture Sensor v1.4" (from Groove):
-  // This can send as maximum analog voltage output: 3.3V
-  // Therefore, the maximum measurable ADC (with V_ref = 5V) is "3.3V * 1024 / 5.0V = 675
-  // During testing, this value is reached when the moisture sensor is held into water
 /* ADC INIT - End */  
 
   // DIDR0 - Digital Input Disable Register 0
   // When a bit is written logic one, the digital input buffer on the corresponding ADC pin is disabled.
-  DIDR0 |= (1 << ADC0D);
+  DIDR0 = 0xFF; // disable all digital inputs on analog pins
   
   // Setup Watchdog as a wakeup source from Power-down Sleep Mode.
   // Use Timed Sequence for disabling Watchdog System Reset Mode if it has been enabled unintentionally.
@@ -93,6 +90,11 @@ int main(void)
   
   // power-down mode and enable sleep
   MCUCR |= (1 << SE) | (1 << SM1);
+  
+  // reduce power
+  PRR |= (1 << PRTIM1) | // Power Reduction Timer/Counter1
+         (1 << PRTIM0) | // Power Reduction Timer/Counter0
+         (1 << PRUSI);   // Power Reduction USI
 
   // enable global interrupts  
   sei();
@@ -102,6 +104,7 @@ int main(void)
 /* Measure Input PA0 - Start */
     // Select input channel
     // if bits MUX[5:0] in register ADMUX are set to zero then PA0 is used
+    ADMUX &= ~(1 << MUX0); // clear MUX0 bit
       
     // Start Conversion
     ADCSRA |= (1 << ADSC); 
@@ -110,22 +113,52 @@ int main(void)
     while (ADCSRA & (1 << ADSC)) {} 
         
     // store ADC output
-    moistValue = ADC;
+    moistValue0 = ADC;
 /* Measure Input PA0 - End */    
 
+/* Water Plant 0 - Start */
     // if moisture is too dry, activate water pump for 2 seconds
-    if(moistValue < MOISTURE_VALUE_THRESHOLD)
+    if(moistValue0 > MOISTURE_VALUE_THRESHOLD)
     {
-       PORTB |= (1 << WATER_PUMP_PIN1);       
-       _delay_ms(1000);
-       PORTB &= ~(1 << WATER_PUMP_PIN1);
+       PORTB |= (1 << WATER_PUMP_PIN0);       
+       _delay_ms(2500);
+       PORTB &= ~(1 << WATER_PUMP_PIN0);
     }
     
     // watchdog timer reset (wdr)
     __asm__ __volatile__("wdr");
+/* Water Plant 0 - End */
+
+/* Measure Input PA1 - Start */
+    // Select input channel
+    // if bits MUX[5:0] in register ADMUX are set to zero then PA0 is used
+    ADMUX |= (1 << MUX0); // set MUX0 bit
+
+    // Start Conversion
+    ADCSRA |= (1 << ADSC);
+
+    // Wait for conversion to complete
+    while (ADCSRA & (1 << ADSC)) {}
+
+    // store ADC output
+    moistValue1 = ADC;
+/* Measure Input PA1 - End */
+
+/* Water Plant 1 - Start */
+    // if moisture is too dry, activate water pump for 2 seconds
+    if(moistValue1 > MOISTURE_VALUE_THRESHOLD)
+    {
+        PORTB |= (1 << WATER_PUMP_PIN1);
+        _delay_ms(2500);
+        PORTB &= ~(1 << WATER_PUMP_PIN1);
+    }
+
+    // watchdog timer reset (wdr)
+    __asm__ __volatile__("wdr");
+/* Water Plant 1 - End */
     
     // "sleep" for c. 1 hour and repeatedly disable BOD
-    for(int ii = 0; ii < 480; ii++)
+    for(int ii = 0; ii < 8; ii++) // 480 = 1 hour
     {
       // If Brown-Out Detector (BOD) is disabled by Software, the BOD function is turned off immediately after entering the
       // sleep mode. Upon wake-up from sleep, BOD is automatically enabled again.
