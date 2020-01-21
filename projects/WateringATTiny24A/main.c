@@ -2,13 +2,13 @@
  * @file main.c
  * @author Michael Heil
  * @brief Automated Watering
- * @version 0.1
- * @date 2020-01-04
+ * @version 1.0
+ * @date 2020-01-21
  * 
  * @copyright Copyright (c) 2020
  * 
  * @section Features
- * Watering one plant using one Moisture Sensor and a mini water pump.
+ * Watering one plant using one Moisture Sensor v1.4 and a mini water pump.
  * Sensor has been tested beforehand and is providing values from 
  * c. 675 (digged into water) to 0 (held up in the air).
  * 
@@ -27,8 +27,6 @@
  * @li lifetime of water pump
  * @li amount of watering
  */
-
-// https://github.com/MetreIdeas/ATtinyx4A_ADC_Example/blob/master/ATtinyx4A_ADC_Example.c
 
 #define F_CPU 1000000UL
 
@@ -98,9 +96,10 @@ int main(void)
 
   // enable global interrupts  
   sei();
-  
+
   while(1) 
   {
+/* Measure Input PA0 - Start */
     // Select input channel
     // if bits MUX[5:0] in register ADMUX are set to zero then PA0 is used
       
@@ -112,17 +111,21 @@ int main(void)
         
     // store ADC output
     moistValue = ADC;
+/* Measure Input PA0 - End */    
 
     // if moisture is too dry, activate water pump for 2 seconds
     if(moistValue < MOISTURE_VALUE_THRESHOLD)
     {
-       PORTB |= (1 << WATER_PUMP_PIN1);
-       _delay_ms(5000);
+       PORTB |= (1 << WATER_PUMP_PIN1);       
+       _delay_ms(1000);
        PORTB &= ~(1 << WATER_PUMP_PIN1);
     }
-
-    // "sleep" for c. 64 seconds and repeatedly disable BOD
-    for(int ii = 0; ii < 8; ii++)
+    
+    // watchdog timer reset (wdr)
+    __asm__ __volatile__("wdr");
+    
+    // "sleep" for c. 1 hour and repeatedly disable BOD
+    for(int ii = 0; ii < 480; ii++)
     {
       // If Brown-Out Detector (BOD) is disabled by Software, the BOD function is turned off immediately after entering the
       // sleep mode. Upon wake-up from sleep, BOD is automatically enabled again.
@@ -135,6 +138,8 @@ int main(void)
       // to turn off the BOD for the actual sleep mode. The BODS bit is automatically cleared after three clock cycles.
       MCUCR |= (1 << BODS) | (1 << BODSE); // set both BODS and BODSE at the same time
       MCUCR = (MCUCR & ~(1 << BODSE)) | (1 << BODS); // then set the BODS bit and clear the BODSE bit at the same time
+      
+      // going to sleep
       __asm__ __volatile__("sleep");
     }
   }
