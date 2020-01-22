@@ -158,7 +158,7 @@ int main(void)
 /* Water Plant 1 - End */
     
     // "sleep" for c. 1 hour and repeatedly disable BOD
-    for(int ii = 0; ii < 8; ii++) // 480 = 1 hour
+    for(int ii = 0; ii < 480; ii++) // 480 = 1 hour
     {
       // If Brown-Out Detector (BOD) is disabled by Software, the BOD function is turned off immediately after entering the
       // sleep mode. Upon wake-up from sleep, BOD is automatically enabled again.
