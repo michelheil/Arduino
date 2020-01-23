@@ -29,7 +29,7 @@
 
 const char* ssid = "FRITZ!Box";
 const char* stringNumber = "xxx";
-const char* mqtt_server = "192.168.178.56";
+const char* mqtt_server = "192.168.178.57";
 const int mqtt_port = 1883;
 const char* pubTopicLog = "/log";
 
@@ -48,6 +48,8 @@ const char* pubHumidity = "/humidity";
 char keyHumidity[keyWordLength] = "HU";
 const char* pubPressure = "/pressure";
 char keyPressure[keyWordLength] = "PR";
+const char* pubAltitude = "/altitude";
+char keyAltitude[keyWordLength] = "AL";
 
 
 WiFiClient espClient;
@@ -168,7 +170,14 @@ void loop()
       client.publish(pubPressure, currentValue);
     }
 
-    // grid Values (and everything else)
+    // Altidude
+    else if(strcmp(currentKeyWord, keyAltitude) == 0) {
+      char currentValue[8] = "";
+      substring(usartStr, currentValue, 3, 7);
+      client.publish(pubAltitude, currentValue);
+    }
+
+    // everything else
     else {
       client.publish(pubTopicLog, usartStr);
     }

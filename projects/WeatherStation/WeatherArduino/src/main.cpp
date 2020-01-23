@@ -13,7 +13,6 @@
  * @section Open Points
  * @li Power saving modes of Arduino
  * @li Battery power supply for Arduino
- * @li using ATTiny instead of Arduino
  * @li Verwende "Verteilerbox" und nicht Eier-Pappe
  * 
  * @section Obeservations
@@ -37,6 +36,7 @@
 char compareTempStr[] = "temp";
 char compareHumidStr[] = "humid";
 char comparePressStr[] = "press";
+char compareAltStr[] = "alt";
 
 // Create instance of the BME680 class
 BME680 myBME680; 
@@ -45,6 +45,15 @@ BME680 myBME680;
 volatile uint8_t usartStrCompleteFlag = 0;
 volatile uint8_t usartStrCount = 0;
 volatile char usartStr[USART_MAX_INPUT_STRING_LENGTH + 1] = "";
+
+/**
+ * @brief     This converts a pressure measurement into height in meters
+ * @details   The sea-level pressure is set to 1013.25hPa
+ * @param pressure Pressure value in hPa
+ * @return    altitude in meters as float
+ */
+float altitude(int32_t pressure = 977.20);
+
 
 int main(void)
 {
@@ -59,8 +68,10 @@ int main(void)
     myBME680.setOversampling(TemperatureSensor,Oversample16);
     myBME680.setOversampling(HumiditySensor,   Oversample16);
     myBME680.setOversampling(PressureSensor,   Oversample16);
-    myBME680.setIIRFilter(IIR4);
+    myBME680.setIIRFilter(IIROff);
     myBME680.setGas(320,150); // 320°c for 150 milliseconds
+
+    int32_t temperature, humidity, pressure, gas; // variables to store readings
 
     // activate global interrupt flag
     sei();
@@ -70,9 +81,8 @@ int main(void)
         // RX Commands 
         if(usartStrCompleteFlag == 1)
         { 
-            static int32_t temperature, humidity, pressure, gas; // variables to store readings
-
-            myBME680.getSensorData(temperature, humidity, pressure, gas, true); // "true" ensures that we wait until new readings are available
+            // "true" ensures that we wait until new readings are available
+            myBME680.getSensorData(temperature, humidity, pressure, gas, true); 
 
             // Temperature
             if(cmpString(&usartStr[0], &compareTempStr[0]))
@@ -86,7 +96,7 @@ int main(void)
             }
 
             // Humidity
-            if(cmpString(&usartStr[0], &compareHumidStr[0]))
+            else if(cmpString(&usartStr[0], &compareHumidStr[0]))
             {
                 float humidDisplay = humidity/1000.0f;
 
@@ -97,7 +107,7 @@ int main(void)
             }
 
             // Pressure
-            if(cmpString(&usartStr[0], &comparePressStr[0]))
+            else if(cmpString(&usartStr[0], &comparePressStr[0]))
             {
                 float pressDisplay = pressure/100.0f;
 
@@ -105,6 +115,23 @@ int main(void)
                 char keyPressure[10] = "PR";
                 strcat(&keyPressure[0], float2str(pressDisplay)); // combine key word and the value
                 USART_writeStringLn(&keyPressure[0]);
+            }
+
+            // Altitude
+            else if(cmpString(&usartStr[0], &compareAltStr[0]))
+            {
+                float altDisplay = altitude(pressure);
+
+                // add key word to value to send to MQTT
+                char keyAltitude[10] = "AL";
+                strcat(&keyAltitude[0], float2str(altDisplay)); // combine key word and the value
+                USART_writeStringLn(&keyAltitude[0]);
+            }
+
+            // unknown key word (default)
+            else 
+            {
+                USART_writeStringLn("Unknown");
             }
 
             // reset all RX strings and flags
@@ -133,4 +160,14 @@ ISR(USART_RX_vect)
             usartStrCompleteFlag = 1;
         }
     }
+}
+
+
+// Calculate altidude based on pressure
+float altitude(int32_t pressure) 
+{
+  const float seaLevel = 1013.25;
+
+  static float altitudeResult = 44330.0 * (1.0 - pow( ((float)pressure/100.0) / seaLevel , 0.1903));
+  return(altitudeResult);
 }
