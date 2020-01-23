@@ -2,8 +2,8 @@
  * @file main.c
  * @author Michael Heil
  * @brief Automated Watering
- * @version 1.1
- * @date 2020-01-21
+ * @version 1.2
+ * @date 2020-01-23
  * 
  * @copyright Copyright (c) 2020
  * 
@@ -48,8 +48,10 @@ int main(void)
   DDRA &= ~(1 << MOISTURE_ANALOG_PIN1);
 
   // set water pump pin as output in Data Direction Register
-  DDRB |= (1 << WATER_PUMP_PIN0);
-  DDRB |= (1 << WATER_PUMP_PIN1);
+  DDRB  |= (1 << WATER_PUMP_PIN1) | (1 << WATER_PUMP_PIN0);
+  
+  // set output to logic one to immediately stop the water pumps
+  PORTB |= (1 << WATER_PUMP_PIN1) | (1 << WATER_PUMP_PIN0);
 
 /* ADC INIT - Start */
   // enable ADC
@@ -117,12 +119,12 @@ int main(void)
 /* Measure Input PA0 - End */    
 
 /* Water Plant 0 - Start */
-    // if moisture is too dry, activate water pump for 2 seconds
+    // if moisture is too dry, activate water pump for 2.5 seconds
     if(moistValue0 > MOISTURE_VALUE_THRESHOLD)
     {
-       PORTB |= (1 << WATER_PUMP_PIN0);       
-       _delay_ms(2500);
        PORTB &= ~(1 << WATER_PUMP_PIN0);
+       _delay_ms(2500);
+       PORTB |= (1 << WATER_PUMP_PIN0); 
     }
     
     // watchdog timer reset (wdr)
@@ -145,12 +147,12 @@ int main(void)
 /* Measure Input PA1 - End */
 
 /* Water Plant 1 - Start */
-    // if moisture is too dry, activate water pump for 2 seconds
+    // if moisture is too dry, activate water pump for 2.5 seconds
     if(moistValue1 > MOISTURE_VALUE_THRESHOLD)
     {
-        PORTB |= (1 << WATER_PUMP_PIN1);
-        _delay_ms(2500);
         PORTB &= ~(1 << WATER_PUMP_PIN1);
+        _delay_ms(2500);
+        PORTB |= (1 << WATER_PUMP_PIN1);
     }
 
     // watchdog timer reset (wdr)
