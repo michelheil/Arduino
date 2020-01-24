@@ -10,3 +10,5 @@ projects/WeatherStation/WeatherArduino/.travis.yml
 projects/WeatherStation/WeatherESP8266/.travis.yml
 projects/WeatherStation/WeatherArduino/.vscode/extensions.json
 projects/WeatherStation/WeatherESP8266/.vscode/extensions.json
+projects/WateringATTiny24A_DS3231/.travis.yml
+projects/WateringATTiny24A_DS3231/.vscode/extensions.json
