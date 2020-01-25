@@ -151,6 +151,31 @@ void DS3231_getDayString(char * resPointer) {
     }
 }
 
+// reset Alarm flags
+int DS3231_resetAlarmsFlags(void)
+{
+  // extract current value in status register for masking it while switching the alarm flags off
+  uint8_t status_reg = TWI_getRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_STATUS_REG);
+  status_reg &= ~((1 << DS3231_STATUS_REG_A2F) | (1 << DS3231_STATUS_REG_A1F));
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_STATUS_REG, status_reg);
+
+  return 1;
+}
+
+// set Alarm 2 for once a minute (at 00 seconds)
+int DS3231_setAlarmOncePerMinute(void)
+{
+  // Alarm once per minute (00 seconds of every minute)
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_MINUTES_REG, 0x80);
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_HOURS_REG, 0x80);
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_DAY_DATE_REG, 0x80);
+
+  // set Interrupt Control (INTCN) and Alarm 2 Interrupt Enable (A2IE) and Alarm 1 Interrupt Enable (A1IE)
+  // important to enable both(!) alarm interrupts
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_CONTROL_REG, 6);
+
+  return 1;
+}
 
 
 uint8_t DS3231_combineRegisterBits(uint8_t rawData) {
