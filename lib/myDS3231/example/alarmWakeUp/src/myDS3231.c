@@ -344,6 +344,47 @@ int DS3231_setAlarmDayHoursMinutes(uint8_t day, uint8_t hours, uint8_t minutes)
 }
 
 
+int DS3231_setAlarm(uint8_t alarm_no, uint8_t flag12_24, uint8_t flagAM_PM, uint8_t flagDY_DT,
+                    uint8_t dayDate, uint8_t hours, uint8_t minutes, uint8_t seconds)
+{
+  // Check input parameter range based on the flag selection
+  // A value of != mean the variable is enabled
+  if(seconds != 128 && seconds > 59) return 0;
+  if(minutes != 128 && minutes > 59) return 0;
+  if(flag12_24 == 0 && flagAM_PM == 1) return 0; // selecting PM while choosing 24 hour range does not make sense
+  if(hours   != 128 && flag12_24 == 1 && hours > 12) return 0;
+  if(hours   != 128 && flag12_24 == 0 && hours > 23) return 0;
+  if(dayDate != 128 && flagDY_DT == 1 && dayDate > 7) return 0;
+  if(dayDate != 128 && flagDY_DT == 0 && dayDate > 31) return 0;
+
+  // adjust hours based on the AM_PM flag
+  if(hours   != 128 && flagAM_PM == 1) hours |= (1 << 5);
+  if(dayDate != 128 && flagDY_DT == 1) dayDate |= (1 << 6);
+
+  switch(alarm_no)
+  {
+    case 1:
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_1_DAY_DATE_REG, dayDate);
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_1_HOURS_REG, hours);
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_1_MINUTES_REG, minutes);
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_1_SECONDS_REG, seconds);
+      break;
+    case 2:
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_DAY_DATE_REG, dayDate);
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_HOURS_REG, hours);
+      TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_ALARM_2_MINUTES_REG, minutes);
+      break;
+    default:
+      return 0;
+  }
+
+  // set Interrupt Control (INTCN) and Alarm 2 Interrupt Enable (A2IE) and Alarm 1 Interrupt Enable (A1IE)
+  // important to enable both(!) alarm interrupts
+  TWI_setRegisterByte(DS3231_SLAVE_ADDRESS, DS3231_CONTROL_REG, 6);
+  return 1;
+}
+
+
 uint8_t DS3231_combineRegisterBits(uint8_t rawData) {
     
     return (10*(rawData >> 4) + (rawData & 0x0F));

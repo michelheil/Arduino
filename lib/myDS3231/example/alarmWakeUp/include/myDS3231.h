@@ -55,8 +55,17 @@
 #define DS3231_CONTROL_REG              (0x0E)
 #define DS3231_STATUS_REG               (0x0F)
 
+// Alarm support constants
 #define DS3231_STATUS_REG_A1F           0
 #define DS3231_STATUS_REG_A2F           1
+#define DS3231_SELECT_ALARM_1           1
+#define DS3231_SELECT_ALARM_2           2
+#define DS3231_ALARM_FLAG_1224_12       1
+#define DS3231_ALARM_FLAG_1224_24       0
+#define DS3231_ALARM_FLAG_AMPM_AM       0
+#define DS3231_ALARM_FLAG_AMPM_PM       1
+#define DS3231_ALARM_FLAG_DYDT_DY       1
+#define DS3231_ALARM_FLAG_DYDT_DT       0
 
 /**
  * @brief Initializes DS3231 through the initialisation of TWI
@@ -292,6 +301,21 @@ int DS3231_setAlarmDateHoursMinutes(uint8_t date, uint8_t hours, uint8_t minutes
 int DS3231_setAlarmDayHoursMinutes(uint8_t day, uint8_t hours, uint8_t minutes);
 
 
+/**
+ * @brief 
+ * 
+ * @param alarm_no select alarm 1 or 2 by DS3231 constants
+ * @param flag12_24 select 12hour or 24hour range by DS3231 constants
+ * @param flagAM_PM select am or pm time by DS3231 constants
+ * @param flagDY_DT select day or date by DS3231 constants
+ * @param dayDate day: 1-7 (1=Sunday, ..., 7=Saturday); date: 1-31
+ * @param hours when 12hour range selected: 1-12; when 24hour range selected: 1-23
+ * @param minutes 00-59
+ * @param seconds 00-59
+ * @return int 
+ */
+int DS3231_setAlarm(uint8_t alarm_no, uint8_t flag12_24, uint8_t flagAM_PM, uint8_t flagDY_DT,
+                    uint8_t dayDate, uint8_t hours, uint8_t minutes, uint8_t seconds);
 
 /*
  * Combine the bits of the DS3231 register bytes into decimal numbers

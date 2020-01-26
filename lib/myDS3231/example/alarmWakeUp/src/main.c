@@ -29,7 +29,7 @@ int main(void)
   DS3231_init();
 
   // set alarm once per minute
-  DS3231_setAlarmOncePerMinute();
+  DS3231_setAlarm(DS3231_SELECT_ALARM_2, 0, 0, 0, 128, 128, 128, 0);
 
   // set LED_PIN as output pin
   DDRB |= (1 << LED_PIN);
