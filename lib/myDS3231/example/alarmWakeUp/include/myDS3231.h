@@ -164,9 +164,27 @@ void DS3231_getDayString(char * resPointer);
 
 ///////////////////////////////////////////////////////
 // Alarm
+/*
+ALARM 1 REGISTER MASK BITS (BIT 7)
+DY/DT A1M4  A1M3  A1M2  A1M1  ALARM RATE
+X     1     1     1     1     Alarm once per second
+X     1     1     1     0     Alarm when seconds match
+X     1     1     0     0     Alarm when minutes and seconds match
+X     1     0     0     0     Alarm when hours, minutes, and seconds match
+0     0     0     0     0     Alarm when date, hours, minutes, and seconds match
+1     0     0     0     0     Alarm when day, hours, minutes, and seconds match
+
+ALARM 2 REGISTER MASK BITS (BIT 7)
+DY/DT A2M4  A2M3  A2M2  ALARM RATE
+X     1     1     1     Alarm once per minute (00 seconds of every minute)
+X     1     1     0     Alarm when minutes match
+X     1     0     0     Alarm when hours and minutes match
+0     0     0     0     Alarm when date, hours, and minutes match
+1     0     0     0     Alarm when day, hours, and minutes match
+*/
 
 /**
- * @brief 
+ * @brief This function sets the alarm flags A2F and A1F to logic 0.
  * 
  * @return int 
  */
@@ -177,7 +195,102 @@ int DS3231_resetAlarmsFlags(void);
  * 
  * @return int 
  */
+int DS3231_setAlarmOncePerSecond(void);
+
+/**
+ * @brief 
+ * 
+ * @param sec 00-59
+ * @return int 
+ */
+int DS3231_setAlarmSeconds(uint8_t sec);
+
+/**
+ * @brief 
+ * 
+ * @param minutes 00-59
+ * @param sec 00-59
+ * @return int 
+ */
+int DS3231_setAlarmMinutesSeconds(uint8_t minutes, uint8_t sec);
+
+/**
+ * @brief 
+ * 
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @param sec 00-59
+ * @return int 
+ */
+int DS3231_setAlarmHoursMinutesSeconds(uint8_t hours, uint8_t minutes, uint8_t sec);
+
+/**
+ * @brief 
+ * 
+ * @param date 1-31
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @param sec 00-59
+ * @return int 
+ */
+int DS3231_setAlarmDateHoursMinutesSeconds(uint8_t date, uint8_t hours, uint8_t minutes, uint8_t sec);
+
+/**
+ * @brief 
+ * 
+ * @param day 1-7 (1=Sunday, ..., 7=Saturday)
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @param sec 00-59
+ * @return int 
+ */
+int DS3231_setAlarmDayHoursMinutesSeconds(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t sec);
+
+/**
+ * @brief This function enables the interrupt on the SQW/INT pin (INTCN)
+ *  and sets Alarm 2 Interrupt Enable (A2IE) and Alarm 1 Interrupt Enable (A1IE)
+ * 
+ * @return int 
+ */
 int DS3231_setAlarmOncePerMinute(void);
+
+/**
+ * @brief 
+ * 
+ * @param minutes 00-59
+ * @return int 
+ */
+int DS3231_setAlarmMinutes(uint8_t minutes);
+
+/**
+ * @brief 
+ * 
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @return int 
+ */
+int DS3231_setAlarmHoursMinutes(uint8_t hours, uint8_t minutes);
+
+/**
+ * @brief 
+ * 
+ * @param date 1-31
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @return int 
+ */
+int DS3231_setAlarmDateHoursMinutes(uint8_t date, uint8_t hours, uint8_t minutes);
+
+/**
+ * @brief 
+ * 
+ * @param day 1-7 (1=Sunday, ..., 7=Saturday)
+ * @param hours 1-12 + AM/PM or 00-23
+ * @param minutes 00-59
+ * @return int 
+ */
+int DS3231_setAlarmDayHoursMinutes(uint8_t day, uint8_t hours, uint8_t minutes);
+
 
 
 /*
