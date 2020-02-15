@@ -34,10 +34,6 @@ Source: [DataSheet](https://github.com/michelheil/Arduino/lib/myTCS3200/datashee
 ### Pictures of sensor
 <img src="https://github.com/michelheil/Arduino/blob/master/lib/myTCS3200/pictures/TCS3200_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myTCS3200/pictures/TCS3200_Back.jpg" width="250">
 
-### Other Links and References
-[Adafruit Shop DS3231](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/overview)
-
-
 ## Library Documentation
 
 ### Dependencies
@@ -76,7 +72,8 @@ TCS3200::TCS3200(volatile int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, 
   // output frequency scaling
   sbi(PORTD, s0Pin);
   cbi(PORTD, s1Pin);
-}```
+}
+```
 
 ### APIs
 Measure and store reference colors
