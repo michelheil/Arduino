@@ -25,7 +25,7 @@ S2 and S3 are used to select which group of photodiodes (red,
 green, blue, clear) are active. Photodiodes are 110μm × 110μm
 in size and are on 134μm centers.
 
-Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/ds/DS3231.pdf)
+Source: [DataSheet](https://github.com/michelheil/Arduino/lib/myTCS3200/datasheet)
 
 
 ### Link to data sheet
@@ -41,70 +41,70 @@ Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/
 ## Library Documentation
 
 ### Dependencies
-* <util/twi.h>
-* <stdlib.h>
+* "myGlobalDefines.h"
+* <avr/io.h>
 * <util/delay.h>
-* <string.h>
-* "myLOG.h"
-* "myTWI.h"
 
 ### Init function
-Follow these [instructions](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/arduino-usage) 
-to set up DS3231 for first time
+```/**
+ * @brief Construct a new TCS3200::TCS3200 object
+ * @details Data Direction Registers and Output Frequency Scaling are set
+ * Output Frequency Sclaing (f_0)
+ * S0  S1  Output Frequency Scaling (f_0)
+ * L   L   Power down
+ * L   H   2%
+ * H   L   20%
+ * H   H   100% // Arduino not able to process
+ * 
+ * @param counter used to measure the color frequencies
+ * @param s0p pin S0
+ * @param s1p pin S1
+ * @param s2p pin S2
+ * @param s3p pin S3
+ * @param outp pin OUT
+ */
+TCS3200::TCS3200(volatile int * counter, uint8_t s0p, uint8_t s1p, uint8_t s2p, uint8_t s3p, uint8_t outp):
+   interruptCounter(counter), s0Pin(s0p), s1Pin(s1p), s2Pin(s2p), s3Pin(s3p), outPin(outp)
+{
+  // set data direction registers
+  sbi(DDRD, s0Pin);
+  sbi(DDRD, s1Pin);
+  sbi(DDRD, s2Pin);
+  sbi(DDRD, s3Pin);
+  cbi(DDRD, outPin);
 
+  // output frequency scaling
+  sbi(PORTD, s0Pin);
+  cbi(PORTD, s1Pin);
+}```
 
 ### APIs
-Initializes DS3231 through the initialisation of TWI
+Measure and store reference colors
 
-```void DS3231_init(void);```
+```void TCS3200::calibrate(void);```
 
-Request current seconds
+Measure calibrated color value
 
-```uint8_t DS3231_getSeconds(void);```
+```int TCS3200::measureColor(int color);```
 
-Request current minutes
+Dependent on pins S2 and S3, select color photodiodes for each color
+ @details 
+  S2  S3  Photodiode Type
+  L   L   Red
+  L   H   Blue
+  H   L   Clear (no filter)
+  H   H   Green
+ 
+ @param s2Level status for pin S2
+ @param s3Level status for pin S3
 
-```uint8_t DS3231_getMinutes(void);```
-
-Request current hours
-
-```uint8_t DS3231_getHours(void);```
-
-Request current Seconds, Minutes, and Hours
-
-```void DS3231_getTime(uint8_t * resPointer);```
-
-Get time in format HH:mm:ss
-
-```void DS3231_getTimeString(char * resPointer);```
-
-Request current Date, Month, and Year
-
-```void DS3231_getDMY(uint8_t * resPointer);```
-
-Get date, month, year in format yyyy-DD-mm
-
-```void DS3231_getDMYString(char * resPointer);```
-
-Request current Seconds, Minutes, Hours, Day, Date, Month, and Year
-
-```void DS3231_getTimestamp(uint8_t * resPointer);```
-
-Get timestamp in format yyyy-MM-dd'T'HH:mm:ss
-
-```void DS3231_getTimestampString(char * resPointer);```
-
-Get day as String
-
-```void DS3231_getDayString(char * resPointer);```
-
-Combine the bits of the DS3231 register bytes into decimal numbers
-
-```uint8_t DS3231_combineRegisterBits(uint8_t rawData);```
+```void TCS3200::colorSelection(int s2Level, int s3Level);``` 
 
 
 #### Helper Functions
-ToDo: DS3231_combineRegisterBits als helper functions 
+Measures the OUT activities of a color
+
+```int TCS3200::measureTicks(int color);```
 
 
 ## Example
@@ -112,5 +112,8 @@ Motivation and what to do
 ### Picture of wiring
 Fritzing
 ### Dependencies
-Which other utils are required
+* "myGlobalDefines.h"
+* <avr/interrupt.h>
+* "myUSART.h"
+* "myTCS3200.h"
 
