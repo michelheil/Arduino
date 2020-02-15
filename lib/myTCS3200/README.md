@@ -111,7 +111,8 @@ Measures the OUT activities of a color
 * Enable INT0 (PD2) interrupts
 * The rising edge of INT0 (PD2) generates an interrupt request.
 * activate global interrupt flag
-* Start calibration on white background..."
+* Start calibration on white background
+* Continuously measure red, green and blue
 
 ### Picture of wiring
 Fritzing
