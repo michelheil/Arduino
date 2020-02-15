@@ -32,7 +32,7 @@ Source: [DataSheet](https://github.com/michelheil/Arduino/lib/myTCS3200/datashee
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myTCS3200/datasheet)
 
 ### Pictures of sensor
-<img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Back.jpg" width="250">
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myTCS3200/pictures/TCS3200_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myTCS3200/pictures/TCS3200_Back.jpg" width="250">
 
 ### Other Links and References
 [Adafruit Shop DS3231](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/overview)
@@ -108,9 +108,17 @@ Measures the OUT activities of a color
 
 
 ## Example
-Motivation and what to do
+* deactivate global Interrupts during initialization phase
+* initialize USART
+* construct TCS320 object
+* Enable INT0 (PD2) interrupts
+* The rising edge of INT0 (PD2) generates an interrupt request.
+* activate global interrupt flag
+* Start calibration on white background..."
+
 ### Picture of wiring
 Fritzing
+
 ### Dependencies
 * "myGlobalDefines.h"
 * <avr/interrupt.h>
