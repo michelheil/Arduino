@@ -31,14 +31,14 @@ Been Digitized And Calibrated.
 * Compassing Heading, Hard Iron, Soft Iron, and Auto Calibration Libraries Available
 
 
-Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/ds/DS3231.pdf)
+Source: [DataSheet](https://github.com/michelheil/Arduino/lib/myGY271/datasheet)
 
 
 ### Link to data sheet
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myGY271/datasheet)
 
 ### Pictures of sensor
-<img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Back.jpg" width="250">
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myGY271/pictures/GY271_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myGY271/pictures/GY271_Back.jpg" width="250">
 
 ### Other Links and References
 
@@ -47,75 +47,54 @@ Source: [maxim integrated data sheet](https://datasheets.maximintegrated.com/en/
 ## Library Documentation
 
 ### Dependencies
-* <util/twi.h>
-* <stdlib.h>
+* <avr/io.h>
 * <util/delay.h>
-* <string.h>
-* "myLOG.h"
 * "myTWI.h"
 
+
 ### Init function
+```void GY271_init(void)
+{
+  // Soft Reset
+  TWI_setRegisterByte(GY271_SLAVE_ADDRESS, GY271_CONTROL_REGISTER_2, GY271_CR2_SOFT_RESET);
+  _delay_ms(1);
 
+  // configuration (oversampling, range, rate, mode)
+  TWI_setRegisterByte(GY271_SLAVE_ADDRESS, GY271_CONTROL_REGISTER_1, GY271_CR1_CONTINUOUS_MODE);
 
+  // reset
+  TWI_setRegisterByte(GY271_SLAVE_ADDRESS, GY271_SET_RESET_PERIOD_REGISTER, GY271_FBR_RECOMMENDATION);
+  _delay_ms(1);
+}
+```
 
 ### APIs
-Initializes DS3231 through the initialisation of TWI
+Get raw x,y,z values from device
 
-```void DS3231_init(void);```
+```struct xyzInt16Values GY271_getThreeAxisValues(void);```
 
-Request current seconds
+Get relative raw temperature
 
-```uint8_t DS3231_getSeconds(void);```
-
-Request current minutes
-
-```uint8_t DS3231_getMinutes(void);```
-
-Request current hours
-
-```uint8_t DS3231_getHours(void);```
-
-Request current Seconds, Minutes, and Hours
-
-```void DS3231_getTime(uint8_t * resPointer);```
-
-Get time in format HH:mm:ss
-
-```void DS3231_getTimeString(char * resPointer);```
-
-Request current Date, Month, and Year
-
-```void DS3231_getDMY(uint8_t * resPointer);```
-
-Get date, month, year in format yyyy-DD-mm
-
-```void DS3231_getDMYString(char * resPointer);```
-
-Request current Seconds, Minutes, Hours, Day, Date, Month, and Year
-
-```void DS3231_getTimestamp(uint8_t * resPointer);```
-
-Get timestamp in format yyyy-MM-dd'T'HH:mm:ss
-
-```void DS3231_getTimestampString(char * resPointer);```
-
-Get day as String
-
-```void DS3231_getDayString(char * resPointer);```
-
-Combine the bits of the DS3231 register bytes into decimal numbers
-
-```uint8_t DS3231_combineRegisterBits(uint8_t rawData);```
+```int16_t GY271_getRelativeTemperature(void);```
 
 
 #### Helper Functions
-ToDo: DS3231_combineRegisterBits als helper functions 
 
 
 ## Example
-Motivation and what to do
+* Initialize Serial (USART)
+* Initialiye TWI communication (default 400kHz)
+* Initialize GY271 module by doing software reset and setting operating mode
+* Get three axis values
+* Print values to USART
+
 ### Picture of wiring
 Fritzing
+
 ### Dependencies
-Which other utils are required
+* "myGlobalDefines.h"
+* <util/delay.h>
+* "myTWI.h"
+* "myUSART.h"
+* "myGY271.h"
 
