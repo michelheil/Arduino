@@ -22,32 +22,22 @@ Source: [Texas Instruments data sheet](https://www.google.com/url?sa=t&rct=j&q=&
 [DataSheet used for my Projects](https://github.com/michelheil/Arduino/lib/myINA219/datasheet)
 
 ### Pictures of sensor
-<img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myDS3231/pictures/DS3231_Back.jpg" width="250">
+<img src="https://github.com/michelheil/Arduino/blob/master/lib/myINA219/pictures/INA219_Front.jpg" width="250"> <img src="https://github.com/michelheil/Arduino/blob/master/lib/myINA219/pictures/INA219_Back.jpg" width="250">
 
-### Other Links and References
-[Adafruit Link](https://www.adafruit.com/product/904)
 
 
 ## Library Documentation
 
 ### Dependencies
-* <util/twi.h>
-* <stdlib.h>
-* <util/delay.h>
-* <string.h>
-* "myLOG.h"
-* "myTWI.h"
+
 
 ### Init function
-Follow these [instructions](https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/arduino-usage) 
-to set up DS3231 for first time
-
 
 ### APIs
 
 
 #### Helper Functions
-ToDo: DS3231_combineRegisterBits als helper functions 
+ 
 
 
 ## Example
@@ -55,5 +45,10 @@ Motivation and what to do
 ### Picture of wiring
 Fritzing
 ### Dependencies
-Which other utils are required
+* "myGlobalDefines.h"
+* <util/delay.h>
+* "myTWI.h"
+* "myUSART.h"
+* "myINA219.h"
+* "myLOG.h"
 
