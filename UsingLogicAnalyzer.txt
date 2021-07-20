@@ -1,0 +1,9 @@
+Using LogicAnalyzer
+
+Open PulseView
+
+Connect to Device:
+- Step 1: Choos the driver -  fx2lafw
+- Step 2: USB
+- Step 3: Scan for devices
+- Step 4: Select
